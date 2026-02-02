@@ -1,0 +1,92 @@
+createOrReplace
+
+	ref table Mesure
+
+		measure 'SVG_(Down 3 Sports)' = ```
+				
+				-- ---------------------------------------------------------
+				-- 1. CONFIGURATION & RANG
+				-- ---------------------------------------------------------
+				VAR RangDuFlop = SELECTEDVALUE(Dim_Podium[Rang])
+				VAR CouleurFond   = [COULEUR_(Negatif)]  -- Couleur différente pour le flop
+				VAR CouleurChiffre = "#FFFFFF"
+				VAR CouleurTexte   = "#666666"
+				VAR CouleurKPI    = "#666666"
+				
+				-- Tailles adaptées au format compact
+				VAR TailleCarre   = 22
+				VAR TailleChiffre = "14px"
+				VAR TailleTexte   = "11px"
+				VAR TailleKPI     = "9px"
+				VAR Arrondi       = 4
+				
+				-- Positionnement ajusté avec plus d'espace
+				VAR PosXTexte     = 40  
+				VAR PosYTexte     = 17  
+				VAR HauteurSVG    = 30
+				VAR LargeurSVG    = 130 
+				
+				-- ---------------------------------------------------------
+				-- 2. LOGIQUE : DYNAMISATION DU KPI (ORDRE INVERSE)
+				-- ---------------------------------------------------------
+				VAR NomKPISel = SELECTEDVALUE('Dim_KPI'[Nom_KPI], "KPI_(Profits)")
+				
+				-- On crée la table avec bookmaker et sa valeur
+				VAR TableAvecValeurs = 
+				    ADDCOLUMNS(
+				        SUMMARIZE(BDD, BDD[Sport]),
+				        "@Valeur", 
+				[KPI_(Choix)]
+				    )
+				
+				-- On filtre pour garder seulement les bookmakers avec une valeur
+				VAR TableFiltree = FILTER(TableAvecValeurs, NOT(ISBLANK([@Valeur])))
+				
+				-- On ajoute le rang INVERSÉ (ASC au lieu de DESC)
+				VAR TableAvecRang = 
+				    ADDCOLUMNS(
+				        TableFiltree,
+				        "@Rang", RANKX(TableFiltree, [@Valeur], , ASC, DENSE)
+				    )
+				
+				-- On récupère le bookmaker et la valeur correspondant au rang
+				VAR LigneSelectionnee = FILTER(TableAvecRang, [@Rang] = RangDuFlop)
+				
+				VAR NomSport = MAXX(LigneSelectionnee, BDD[Sport])
+				
+				VAR ValeurKPI = MAXX(LigneSelectionnee, [@Valeur])
+				
+				-- Format récupéré depuis la table Dim_KPI
+				VAR FormatKPISel = SELECTEDVALUE(Dim_KPI[Format_KPI], "#,##0.00 €")
+				
+				-- Formatage dynamique de la valeur
+				VAR ValeurFormatee =
+				    FORMAT(ValeurKPI, FormatKPISel)
+				
+				-- ---------------------------------------------------------
+				-- 3. RENDU : CONSTRUCTION DU SVG
+				-- ---------------------------------------------------------
+				VAR CentreCarreX = 5 + (TailleCarre / 2)
+				VAR CentreCarreY = 4 + (TailleCarre / 2)
+				
+				VAR CodeSVG = 
+				    "data:image/svg+xml;utf8," & 
+				    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " & LargeurSVG & " " & HauteurSVG & "'>" & 
+				        "<rect x='5' y='4' width='" & TailleCarre & "' height='" & TailleCarre & "' rx='" & Arrondi & "' " &
+				        "fill='" & CouleurFond & "' />" & 
+				        "<text x='" & CentreCarreX & "' y='" & CentreCarreY + 1 & "' text-anchor='middle' dominant-baseline='middle' " & 
+				        "style='font-family:Segoe UI, Arial, sans-serif; font-weight:900; font-size:" & TailleChiffre & ";' fill='" & CouleurChiffre & "'>" & 
+				        RangDuFlop & "</text>" & 
+				        "<text x='" & PosXTexte & "' y='" & PosYTexte & "' text-anchor='start' dominant-baseline='middle' " & 
+				        "style='font-family:Segoe UI, Arial, sans-serif; font-weight:700; font-size:" & TailleTexte & ";' fill='" & CouleurTexte & "'>" & 
+				        NomSport & 
+				        "<tspan dx='5' style='font-weight:400; font-size:" & TailleKPI & ";' fill='" & CouleurKPI & "'>" & ValeurFormatee & "</tspan>" &
+				        "</text>" & 
+				    "</svg>"
+				
+				RETURN
+				IF(ISBLANK(NomSport), BLANK(), CodeSVG)
+				```
+			displayFolder: Sport
+			dataCategory: ImageUrl
+

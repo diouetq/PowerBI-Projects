@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "MonSuiviPariSportif"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9fcead59-c0af-4ea9-8999-cc3fc75299ab"
+  }
+}

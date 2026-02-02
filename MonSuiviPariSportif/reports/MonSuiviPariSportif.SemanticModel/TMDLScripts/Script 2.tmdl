@@ -1,0 +1,341 @@
+createOrReplace
+
+	ref table Mesure
+
+		measure 'COULEUR_(Tableau Sport KPI 0 Paris)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Paris)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 1 Taux Reussite %)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Taux Reussite %)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 2 ROI)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(ROI)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 3 Profits)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Profits)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 4 Mise Totale)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Mise Totale)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 5 Gain Total)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Gain Total)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 6 Cote Moyenne)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Cote Moyenne)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 7 Cote Moyenne Gagné)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Cote Moyenne Gagné)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 8 Cote Moyenne Perdu)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Cote Moyenne Perdu)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport KPI 9 Paris % Classique)' = ```
+				
+				
+				-- 1. Identification du KPI sélectionné
+				VAR _KPI_Actuel = SELECTEDVALUE(Dim_KPI[Nom_KPI])
+				VAR _EstROI = (_KPI_Actuel = "KPI_(Paris % Classique)")
+				
+				-- 2. Logique de couleurs pour le ROI (Ta nouvelle palette)
+				VAR PaletteViolet = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI Tableau Fond Cat)],
+				        [COULEUR_(KPI Tableau Fond Total)]
+				    )
+				
+				-- 3. Logique de couleurs standard (Ton ancienne palette - À AJUSTER)
+				VAR PaletteStandard = 
+				    SWITCH(TRUE(),
+				        ISINSCOPE(Dim_Sport[Sport]), [COULEUR_(KPI No Tableau Fond Ss Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", [COULEUR_(KPI No Tableau Fond Cat)],
+				        ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", [COULEUR_(KPI No Tableau Fond Cat)],
+				        [COULEUR_(KPI No Tableau Fond Total)]
+				    )
+				
+				-- 4. Choix de la palette selon le contexte
+				RETURN
+				IF(_EstROI,  PaletteViolet,PaletteStandard)
+				```
+			displayFolder: Sport
+
+
+		measure 'COULEUR_(Tableau Sport Police)' =
+				
+				
+				SWITCH(
+				    TRUE(),
+				
+				    ISINSCOPE(Dim_Sport[Sport]), "",
+				
+				    ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports de NICHE", "blach",
+				
+				    ISINSCOPE(Dim_Sport[Type_Sport]) && SELECTEDVALUE(Dim_Sport[Type_Sport]) = "Sports MAJEURS", "blach",
+				
+				    "white"
+				)
+			displayFolder: Sport
+
+

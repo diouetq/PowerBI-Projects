@@ -1,0 +1,172 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 526.4367991480334,
+        "y": 1795.4023690059269
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 1049.7931034482758,
+            "y": 2596.504983836207
+          },
+          "nodeIndex": "Mesure",
+          "nodeLineageTag": "57679850-7224-45d6-a9ae-cfd5570f1629",
+          "size": {
+            "height": 550,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 2261.815328663793
+          },
+          "nodeIndex": "Dim_Bookmaker",
+          "nodeLineageTag": "1f125e8e-8aa0-4628-aaeb-ea70b4423338",
+          "size": {
+            "height": 150.41379310344826,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 277.10344827586209,
+            "y": 2263.4705010775861
+          },
+          "nodeIndex": "Dim_Sport",
+          "nodeLineageTag": "b2ec8829-6d51-45c1-af68-d1c73a794f1b",
+          "size": {
+            "height": 145,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 566.27586206896558,
+            "y": 2272.0911907327586
+          },
+          "nodeIndex": "Dim_TypeBet",
+          "nodeLineageTag": "d101f6c2-46d5-4df8-a18e-e9ca82b5ecf0",
+          "size": {
+            "height": 145,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 195.86206896551744,
+            "y": 2976.9532596982758
+          },
+          "nodeIndex": "Dim_Odds",
+          "nodeLineageTag": "9b643b2b-94bf-4910-b238-987df00d9fce",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 1163.8620689655174,
+            "y": 2268.4230872844828
+          },
+          "nodeIndex": "Dim_Date",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1739.7241379310346,
+            "y": 1978.3217941810344
+          },
+          "nodeIndex": "Dim_Podium",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1273.7241247769059,
+            "y": 1745.1235183189656
+          },
+          "nodeIndex": "Dim_KPI",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1455.7241379310346,
+            "y": 2434.66015625
+          },
+          "nodeIndex": "Paramètre Temporalité",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2023.7241379310346,
+            "y": 1586.0863415948274
+          },
+          "nodeIndex": "Paramètre Champ",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 629.58620689655174,
+            "y": 2596.504983836207
+          },
+          "nodeIndex": "Fact_BDD",
+          "size": {
+            "height": 544.82758620689651,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2307.7241379310344,
+            "y": 1284.12890625
+          },
+          "nodeIndex": "LastRefresh",
+          "nodeLineageTag": "17723f7f-a60b-4054-8f53-73d232413f51",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Toutes les tables",
+      "zoomValue": 57.999999999999993,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Toutes les tables",
+  "defaultDiagram": "Toutes les tables"
+}
