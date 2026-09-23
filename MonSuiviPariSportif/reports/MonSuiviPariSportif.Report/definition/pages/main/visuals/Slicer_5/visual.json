@@ -154,6 +154,11 @@
         }
       ]
     },
+    "syncGroup": {
+      "groupName": "Odds",
+      "fieldChanges": true,
+      "filterChanges": true
+    },
     "drillFilterOtherVisuals": true
   },
   "parentGroupName": "de2b76d8d55a4c70058a"

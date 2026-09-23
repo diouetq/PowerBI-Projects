@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "0ec524bb1f253ae8a3a4",
   "position": {
     "x": 1007.7015833820396,
@@ -84,7 +84,7 @@
                           [
                             {
                               "Literal": {
-                                "Value": "'''Dim_Date''[Semaine Année]'"
+                                "Value": "'''Dim_Date''[Mois Année]'"
                               }
                             }
                           ]
@@ -112,7 +112,7 @@
                                 "0": [
                                   {
                                     "Literal": {
-                                      "Value": "'''Dim_Date''[Semaine Année]'"
+                                      "Value": "'''Dim_Date''[Mois Année]'"
                                     }
                                   }
                                 ]
@@ -136,7 +136,7 @@
                         },
                         "valueMap": [
                           {
-                            "0": "S"
+                            "0": "M"
                           }
                         ]
                       }

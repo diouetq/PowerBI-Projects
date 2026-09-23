@@ -4,7 +4,7 @@
   "position": {
     "x": 800.77903651698489,
     "y": 469.61617770697808,
-    "z": 64276,
+    "z": 9000,
     "height": 105.12323554139564,
     "width": 256.16236706638938,
     "tabOrder": 13000
@@ -153,6 +153,11 @@
           }
         }
       ]
+    },
+    "syncGroup": {
+      "groupName": "Odds",
+      "fieldChanges": true,
+      "filterChanges": true
     },
     "drillFilterOtherVisuals": true
   },

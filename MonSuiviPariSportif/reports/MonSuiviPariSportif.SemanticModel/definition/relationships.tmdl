@@ -19,12 +19,12 @@ relationship 6f9b94b3-fc43-60b5-997a-77d023ff855b
 	fromColumn: Fact_BDD.Date
 	toColumn: Dim_Date.Date
 
-relationship bd852b26-2054-2d11-d901-b044efffcc21
-	fromColumn: Fact_BDD.Cote
-	toColumn: Dim_Odds.Odds
-
 relationship d1a6533b-6ecf-4a24-8437-cf43b125a12c
 	joinOnDateBehavior: datePartOnly
 	fromColumn: LastRefresh.DerniereActualisation
 	toColumn: LocalDateTable_48a4f6ff-05b8-4b9c-9d23-70fd65e46ca7.Date
+
+relationship bd852b26-2054-2d11-d901-b044efffcc21
+	fromColumn: Fact_BDD.Cote
+	toColumn: Dim_Odds.Odds
 

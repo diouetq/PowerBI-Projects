@@ -4,7 +4,7 @@
   "position": {
     "x": 800.77903651698489,
     "y": 381.37328374185461,
-    "z": 1300,
+    "z": 10000,
     "height": 78.540348392996748,
     "width": 256.16236706638938,
     "tabOrder": 12000
@@ -168,6 +168,11 @@
           }
         }
       ]
+    },
+    "syncGroup": {
+      "groupName": "Type_Sport",
+      "fieldChanges": true,
+      "filterChanges": true
     },
     "drillFilterOtherVisuals": true
   },

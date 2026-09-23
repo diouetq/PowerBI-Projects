@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
   "name": "bc43f99db04533f2240d",
   "position": {
     "x": 272.25730719568026,
@@ -15,6 +15,26 @@
       "queryState": {
         "Values": {
           "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Fact_BDD"
+                        }
+                      },
+                      "Property": "Index"
+                    }
+                  },
+                  "Function": 0
+                }
+              },
+              "queryRef": "Sum(Fact_BDD.Index)",
+              "nativeQueryRef": " Id",
+              "displayName": " Id"
+            },
             {
               "field": {
                 "Column": {
@@ -211,6 +231,13 @@
                   "Value": "false"
                 }
               }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }
@@ -267,6 +294,13 @@
                       "Percent": -0.6
                     }
                   }
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
                 }
               }
             }
@@ -561,7 +595,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "70.18183473225713D"
+                  "Value": "85.8502632000025D"
                 }
               }
             }
@@ -834,6 +868,58 @@
           }
         },
         "type": "Advanced"
+      },
+      {
+        "name": "63660270d20d04be82c2",
+        "ordinal": 11,
+        "field": {
+          "Aggregation": {
+            "Expression": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Fact_BDD"
+                  }
+                },
+                "Property": "Index"
+              }
+            },
+            "Function": 0
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f8b585af63c4c355e64d",
+        "ordinal": 12,
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Dim_Odds"
+              }
+            },
+            "Property": "Cote"
+          }
+        },
+        "type": "Advanced",
+        "howCreated": "User"
+      },
+      {
+        "name": "d6ec56adc69c8b50d0ed",
+        "ordinal": 13,
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Dim_Odds"
+              }
+            },
+            "Property": "Odds"
+          }
+        },
+        "type": "Advanced",
+        "howCreated": "User"
       }
     ],
     "filterSortOrder": "Custom"

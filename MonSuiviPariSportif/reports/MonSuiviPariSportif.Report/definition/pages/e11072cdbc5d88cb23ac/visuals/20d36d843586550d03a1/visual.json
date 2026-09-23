@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "20d36d843586550d03a1",
   "position": {
     "x": 759.40289186110635,
@@ -23,13 +23,13 @@
                       "Entity": "Dim_Date"
                     }
                   },
-                  "Property": "Semaine Année"
+                  "Property": "Mois Année"
                 }
               },
-              "queryRef": "Dim_Date.Semaine Année",
-              "nativeQueryRef": "S",
+              "queryRef": "Dim_Date.Mois Année",
+              "nativeQueryRef": "M",
               "active": true,
-              "displayName": "S"
+              "displayName": "M"
             }
           ],
           "fieldParameters": [
@@ -80,7 +80,7 @@
                     "Entity": "Dim_Date"
                   }
                 },
-                "Property": "Semaine Année"
+                "Property": "Mois Année"
               }
             },
             "direction": "Ascending"

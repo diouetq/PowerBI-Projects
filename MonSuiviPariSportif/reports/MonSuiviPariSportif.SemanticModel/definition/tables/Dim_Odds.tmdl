@@ -9,7 +9,7 @@ table Dim_Odds
 
 	column Odds
 		dataType: decimal
-		formatString: 0.00
+		formatString: 0.000
 		lineageTag: 0a4cc62a-d3a7-4d4c-ab26-c67a983a9814
 		summarizeBy: none
 		sourceColumn: [Value]
@@ -55,7 +55,7 @@ table Dim_Odds
 				
 				
 				ADDCOLUMNS(
-				    GENERATESERIES(1, 40, 0.01),
+				    GENERATESERIES(1, 500, 0.001),
 				    "Cote", [Value],
 				    "Catégorie", 
 				        SWITCH( TRUE(),
@@ -66,7 +66,7 @@ table Dim_Odds
 				            [Value] < 2.50, "[2.25 - 2.50[",
 				            [Value] < 3.00, "[2.50 - 3.00[",
 				            [Value] < 5.00, "[3.00 - 5.00[",
-				            "[5.00 - 50.00]"
+				            ">=5.55"
 				        ),
 				    "Ordre Tri",
 				        SWITCH( TRUE(),

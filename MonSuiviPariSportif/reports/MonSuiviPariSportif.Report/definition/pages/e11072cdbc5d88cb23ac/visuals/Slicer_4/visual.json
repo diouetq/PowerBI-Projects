@@ -1,10 +1,10 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "20e1a38c4b7142d72591",
   "position": {
     "x": 800.77903651698489,
     "y": 381.37328374185461,
-    "z": 64300,
+    "z": 10000,
     "height": 78.540348392996748,
     "width": 256.16236706638938,
     "tabOrder": 12000
@@ -44,12 +44,71 @@
               },
               "queryRef": "Dim_Sport.Sport",
               "nativeQueryRef": "Sport",
-              "active": false
+              "active": true
             }
           ]
         }
       }
     },
+    "expansionStates": [
+      {
+        "roles": [
+          "Values"
+        ],
+        "levels": [
+          {
+            "queryRefs": [
+              "Dim_Sport.Type_Sport"
+            ],
+            "isCollapsed": true,
+            "identityKeys": [
+              {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_Sport"
+                    }
+                  },
+                  "Property": "Type_Sport"
+                }
+              }
+            ],
+            "isPinned": true
+          },
+          {
+            "queryRefs": [
+              "Dim_Sport.Sport"
+            ],
+            "isCollapsed": true,
+            "isPinned": true
+          }
+        ],
+        "root": {
+          "children": [
+            {
+              "identityValues": [
+                {
+                  "Literal": {
+                    "Value": "'Sports de NICHE'"
+                  }
+                }
+              ],
+              "isToggled": true
+            },
+            {
+              "identityValues": [
+                {
+                  "Literal": {
+                    "Value": "'Sports MAJEURS'"
+                  }
+                }
+              ],
+              "isToggled": true
+            }
+          ]
+        }
+      }
+    ],
     "objects": {
       "data": [
         {
@@ -168,6 +227,11 @@
           }
         }
       ]
+    },
+    "syncGroup": {
+      "groupName": "Type_Sport",
+      "fieldChanges": true,
+      "filterChanges": true
     },
     "drillFilterOtherVisuals": true
   },

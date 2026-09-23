@@ -1,10 +1,10 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "4859081f00b54000790d",
   "position": {
     "x": 800.77903651698489,
     "y": 205.4278442046043,
-    "z": 64406,
+    "z": 12000,
     "height": 78.540348392996748,
     "width": 256.16236706638938,
     "tabOrder": 10000
@@ -44,7 +44,7 @@
               },
               "queryRef": "Dim_Bookmaker.Bookmaker",
               "nativeQueryRef": "Bookmaker",
-              "active": true
+              "active": false
             }
           ]
         }
@@ -83,20 +83,7 @@
             "isPinned": true
           }
         ],
-        "root": {
-          "children": [
-            {
-              "identityValues": [
-                {
-                  "Literal": {
-                    "Value": "'Arjel'"
-                  }
-                }
-              ],
-              "isToggled": true
-            }
-          ]
-        }
+        "root": {}
       }
     ],
     "objects": {
@@ -224,6 +211,11 @@
           }
         }
       ]
+    },
+    "syncGroup": {
+      "groupName": "Type_Bookmaker",
+      "fieldChanges": true,
+      "filterChanges": true
     },
     "drillFilterOtherVisuals": true
   },

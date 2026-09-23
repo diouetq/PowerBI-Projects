@@ -233,7 +233,7 @@ table Mesure
 			
 			/
 			
-			CALCULATE(COUNT(Fact_BDD[Événement]), Fact_BDD[Résultat]<>"")
+			CALCULATE(COUNT(Fact_BDD[Événement]), Fact_BDD[Résultat]<>"En cours")
 			
 			
 			RETURN
@@ -265,7 +265,8 @@ table Mesure
 	measure _KPI_(Profits) =
 			
 			
-			[_KPI_(Gain Total)]-[_KPI_(Mise Totale)]
+			IF(SELECTEDVALUE(Fact_BDD[Boost])="Mise Freebet" && SELECTEDVALUE(Fact_BDD[Résultat])="Gagné",[_KPI_(Gain Total)],
+			[_KPI_(Gain Total)]-[_KPI_(Mise Totale)])
 		formatString: #,0\ "€";-#,0\ "€";#,0\ "€"
 		displayFolder: KPI
 		lineageTag: 09a033ea-4231-4d79-9950-ba75b6defc15
@@ -658,9 +659,10 @@ table Mesure
 			RETURN
 			
 			DIVIDE(NUM,DENOM,0)
-		formatString: 0.0\ %;-0.0\ %;0.0\ %
 		displayFolder: KPI
 		lineageTag: 395a69e7-b277-4d5c-9a64-26b348d8e7f4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	measure '_KPI_(Cote Moyenne Gagné)' =
 			
