@@ -1,0 +1,12 @@
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Sauvegardes et fichiers de travail
+_sauvegarde_avant_refonte_*/
+logos_correspondance.csv
+Logo_ff/
+*.pptx
+
+# Données volumineuses (non versionnées)
+data/2025/
+data/*.7z

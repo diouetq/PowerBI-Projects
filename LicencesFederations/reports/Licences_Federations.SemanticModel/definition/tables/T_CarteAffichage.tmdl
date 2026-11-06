@@ -1,0 +1,60 @@
+/// Liaison territoire du segment (P_TerrChoix[Id territoire], relation) × niveau affiché (1 = régions, 2 = départements) → contours à afficher (Id carte du GeoJSON) et leur rôle : Zone (remplie), Sélection (remplie + contour mis en évidence), Contour (contour seul). Aucune ligne pour DROM, COM et AUT (hors carte).
+table T_CarteAffichage
+	lineageTag: f109b634-e7c0-4efe-ad1c-a426df21d88b
+
+	column 'Id territoire'
+		lineageTag: b8327b0c-475b-44e2-8d74-6b4d1805f473
+		isNameInferred
+		sourceColumn: [Id territoire]
+
+	column 'Niveau affiché'
+		lineageTag: 4b518782-e2e0-49f7-8420-03087a0dc838
+		isNameInferred
+		sourceColumn: [Niveau affiché]
+
+	column 'Id carte'
+		lineageTag: bd44b730-3921-4bbd-a539-f3ef0065d49b
+		isNameInferred
+		sourceColumn: [Id carte]
+
+	column Rôle
+		lineageTag: 02950370-f454-4215-8c36-27a8a21104c4
+		isNameInferred
+		sourceColumn: [Rôle]
+
+	column Latitude
+		lineageTag: 1b80ff29-8e0c-4610-a804-62280e2a9bc6
+		dataCategory: Latitude
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Latitude]
+
+	column Longitude
+		lineageTag: ba4a63a8-21f0-407c-935d-93baad95e8aa
+		dataCategory: Longitude
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Longitude]
+
+	partition T_CarteAffichage = calculated
+		mode: import
+		source =
+				-- Territoires couverts par la carte : TOT, MDR, MET et les régions de métropole (R + code région)
+				VAR Totaux = {"TOT", "MDR", "MET"}
+				VAR Choix  = UNION(SELECTCOLUMNS(Totaux, "Id territoire", [Value]), SELECTCOLUMNS(FILTER(T_CarteZone, T_CarteZone[Ordre niveau] = 1), "Id territoire", "R" & T_CarteZone[Code_GDEREG]))
+				VAR Zones  = SELECTCOLUMNS(T_CarteZone, "Id carte", T_CarteZone[Id carte], "@niv", T_CarteZone[Ordre niveau], "@reg", "R" & T_CarteZone[Code_GDEREG], "Latitude", T_CarteZone[Latitude], "Longitude", T_CarteZone[Longitude])
+				-- Niveau affiché 1 : toutes les régions ; la région choisie a le rôle Sélection
+				VAR NivRegion =
+				    SELECTCOLUMNS(FILTER(CROSSJOIN(Choix, Zones), [@niv] = 1),
+				        "Id territoire", [Id territoire], "Niveau affiché", 1, "Id carte", [Id carte],
+				        "Rôle", IF([@reg] = [Id territoire], "Sélection", "Zone"),
+				        "Latitude", [Latitude], "Longitude", [Longitude])
+				-- Niveau affiché 2 : uniquement des départements (tous pour les totaux, ceux de la région choisie sinon) ; pas de contour de région
+				VAR NivDep =
+				    SELECTCOLUMNS(
+				        FILTER(CROSSJOIN(Choix, Zones), [@niv] = 2 && ([Id territoire] IN Totaux || [@reg] = [Id territoire])),
+				        "Id territoire", [Id territoire], "Niveau affiché", 2, "Id carte", [Id carte],
+				        "Rôle", "Zone",
+				        "Latitude", [Latitude], "Longitude", [Longitude])
+				RETURN UNION(NivRegion, NivDep)
+

@@ -1,0 +1,62 @@
+/// Zones du fichier de contours Cartes/Contours_France_regions_departements.geojson (propriété id_carte = Id carte) : 13 régions (R-code région INSEE) et 96 départements (D-code département) de métropole. Uniquement des codes : Code_DEP / Code_GDEREG de T_Territoire. Latitude/longitude = point intérieur de la forme.
+table T_CarteZone
+	isHidden
+	lineageTag: d802fc75-4ff1-4932-8b59-87581678ae0c
+
+	column 'Id carte'
+		lineageTag: 8e4a83e0-e4a8-47d4-a407-af15cd7c4e40
+		isNameInferred
+		sourceColumn: [Id carte]
+
+	column Niveau
+		lineageTag: 3b5c5f50-384c-4417-ba5b-59f5ca31cab7
+		isNameInferred
+		sourceColumn: [Niveau]
+
+	column 'Ordre niveau'
+		lineageTag: 80b50361-6e92-4e67-8b5a-3f0c8e187ba2
+		isNameInferred
+		sourceColumn: [Ordre niveau]
+
+	column Code_DEP
+		lineageTag: ca5254ec-151e-4f3f-9610-69d55ffe2d84
+		isNameInferred
+		sourceColumn: [Code_DEP]
+
+	column Code_GDEREG
+		lineageTag: a7193fec-5025-46cc-9fa1-bb358a29e2da
+		isNameInferred
+		sourceColumn: [Code_GDEREG]
+
+	column Latitude
+		lineageTag: 20643060-2fe3-4e71-bad1-5a2601210a08
+		dataCategory: Latitude
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Latitude]
+
+	column Longitude
+		lineageTag: 6086310c-d8a4-4c4f-982f-3ac756c67f14
+		dataCategory: Longitude
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Longitude]
+
+	partition T_CarteZone = calculated
+		mode: import
+		source =
+				-- Zones du fichier de contours (Id carte = propriété id_carte du GeoJSON) et point intérieur
+				VAR Base = DATATABLE("Id carte", STRING, "Latitude", DOUBLE, "Longitude", DOUBLE, {{"R-11",48.675,2.531},{"R-24",47.643,1.716},{"R-27",47.274,4.954},{"R-28",49.122,0.023},{"R-32",49.963,2.890},{"R-44",48.800,5.758},{"R-52",47.419,-1.144},{"R-53",48.158,-2.675},{"R-75",44.977,0.107},{"R-76",43.689,2.119},{"R-84",45.449,4.804},{"R-93",44.078,6.230},{"R-94",42.176,9.071},{"D-01",46.057,5.280},{"D-02",49.460,3.592},{"D-03",46.368,3.156},{"D-04",44.165,6.177},{"D-05",44.657,6.352},{"D-06",43.923,7.241},{"D-07",44.818,4.404},{"D-08",49.696,4.669},{"D-09",42.947,1.408},{"D-10",48.314,4.196},{"D-11",43.061,2.516},{"D-12",44.314,2.508},{"D-13",43.537,5.379},{"D-14",49.095,-0.239},{"D-15",45.044,2.701},{"D-16",45.665,0.101},{"D-17",45.724,-0.829},{"D-18",47.032,2.565},{"D-19",45.338,1.815},{"D-21",47.470,4.754},{"D-22",48.454,-2.755},{"D-23",46.067,2.049},{"D-24",45.148,0.633},{"D-25",47.061,6.240},{"D-26",44.738,5.200},{"D-27",49.075,0.987},{"D-28",48.446,1.405},{"D-29",48.247,-4.047},{"D-2A",41.873,9.009},{"D-2B",42.419,9.099},{"D-30",43.957,4.296},{"D-31",43.306,0.971},{"D-32",43.687,0.404},{"D-33",44.892,-0.602},{"D-34",43.594,3.377},{"D-35",48.162,-1.652},{"D-36",46.812,1.535},{"D-37",47.229,0.685},{"D-38",45.292,5.637},{"D-39",46.781,5.783},{"D-40",44.028,-0.634},{"D-41",47.659,1.303},{"D-42",45.754,4.051},{"D-43",45.095,3.844},{"D-44",47.345,-1.879},{"D-45",47.910,2.300},{"D-46",44.627,1.664},{"D-47",44.370,0.453},{"D-48",44.537,3.523},{"D-49",47.396,-0.391},{"D-50",49.099,-1.244},{"D-51",48.963,4.320},{"D-52",48.136,5.257},{"D-53",48.143,-0.656},{"D-54",48.957,5.985},{"D-55",49.010,5.427},{"D-56",47.820,-2.791},{"D-57",49.017,6.545},{"D-58",47.120,3.545},{"D-59",50.531,3.083},{"D-60",49.420,2.408},{"D-61",48.579,0.044},{"D-62",50.521,2.230},{"D-63",45.771,3.082},{"D-64",43.186,-0.730},{"D-65",43.144,0.160},{"D-66",42.622,2.507},{"D-67",48.597,7.532},{"D-68",47.866,7.236},{"D-69",45.879,4.615},{"D-70",47.642,6.098},{"D-71",46.658,4.558},{"D-72",48.029,0.245},{"D-73",45.495,6.380},{"D-74",46.047,6.345},{"D-75",48.861,2.321},{"D-76",49.661,0.938},{"D-77",48.617,3.035},{"D-78",48.764,1.897},{"D-79",46.541,-0.300},{"D-80",49.962,2.373},{"D-81",43.790,2.132},{"D-82",44.083,1.205},{"D-83",43.416,6.268},{"D-84",44.002,5.183},{"D-85",46.675,-1.293},{"D-86",46.613,0.463},{"D-87",45.921,1.207},{"D-88",48.160,6.378},{"D-89",47.853,3.645},{"D-90",47.631,6.900},{"D-91",48.529,2.232},{"D-92",48.845,2.197},{"D-93",48.909,2.455},{"D-94",48.778,2.464},{"D-95",49.068,2.212}})
+				VAR Ref = ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Code_GDEREG])
+				RETURN
+				    SELECTCOLUMNS(Base,
+				        "Id carte", [Id carte],
+				        "Niveau", IF(LEFT([Id carte], 1) = "R", "Région", "Département"),
+				        "Ordre niveau", IF(LEFT([Id carte], 1) = "R", 1, 2),
+				        "Code_DEP", IF(LEFT([Id carte], 1) = "D", MID([Id carte], 3, 3)),
+				        "Code_GDEREG",
+				            VAR c = MID([Id carte], 3, 3)
+				            RETURN IF(LEFT([Id carte], 1) = "R", c, MAXX(FILTER(Ref, T_Territoire[Code_DEP] = c), T_Territoire[Code_GDEREG])),
+				        "Latitude", [Latitude],
+				        "Longitude", [Longitude])
+

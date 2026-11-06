@@ -1,0 +1,60 @@
+/// Paramètre de champ du segment Département (équivalent de Param_Federation) : chaque ligne pointe vers la colonne de P_TerrDep du territoire. Filtré par P_TerrChoix via Id territoire (1-1) : il affiche les départements du territoire choisi et vide la sélection quand on change de territoire.
+table Param_Departement
+	lineageTag: cfbdb841-85f9-464f-a17f-83b67d674efb
+
+	column Paramètre
+		lineageTag: 896172a6-f57a-4ca4-a4e3-6f610f60c575
+		sourceColumn: [Value1]
+		sortByColumn: 'Paramètre Commande'
+
+		relatedColumnDetails
+			groupByColumn: 'Paramètre Champs'
+
+	column 'Paramètre Champs'
+		isHidden
+		lineageTag: 74589ccd-222a-4ab4-9a76-be4929d1ad8c
+		sourceColumn: [Value2]
+		sortByColumn: 'Paramètre Commande'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	column 'Paramètre Commande'
+		isHidden
+		formatString: 0
+		lineageTag: 27f1e580-8845-4077-b376-4ff81f0c68b5
+		summarizeBy: none
+		sourceColumn: [Value3]
+
+	column 'Id territoire'
+		lineageTag: 2e6cd5f4-1dee-4992-8d00-2247f7935281
+		sourceColumn: [Value4]
+
+	partition Param_Departement = calculated
+		mode: import
+		source =
+				{
+				    ("Total", NAMEOF('P_TerrDep'[TOT]), 1, "TOT"),
+				    ("Total Métropole + DROM", NAMEOF('P_TerrDep'[MDR]), 2, "MDR"),
+				    ("Métropole", NAMEOF('P_TerrDep'[MET]), 3, "MET"),
+				    ("  Île-de-France", NAMEOF('P_TerrDep'[R11]), 11, "R11"),
+				    ("  Centre-Val de Loire", NAMEOF('P_TerrDep'[R24]), 12, "R24"),
+				    ("  Bourgogne-Franche-Comté", NAMEOF('P_TerrDep'[R27]), 13, "R27"),
+				    ("  Normandie", NAMEOF('P_TerrDep'[R28]), 14, "R28"),
+				    ("  Hauts-de-France", NAMEOF('P_TerrDep'[R32]), 15, "R32"),
+				    ("  Grand Est", NAMEOF('P_TerrDep'[R44]), 16, "R44"),
+				    ("  Pays de la Loire", NAMEOF('P_TerrDep'[R52]), 17, "R52"),
+				    ("  Bretagne", NAMEOF('P_TerrDep'[R53]), 18, "R53"),
+				    ("  Nouvelle-Aquitaine", NAMEOF('P_TerrDep'[R75]), 19, "R75"),
+				    ("  Occitanie", NAMEOF('P_TerrDep'[R76]), 20, "R76"),
+				    ("  Auvergne-Rhône-Alpes", NAMEOF('P_TerrDep'[R84]), 21, "R84"),
+				    ("  Provence-Alpes-Côte d'Azur", NAMEOF('P_TerrDep'[R93]), 22, "R93"),
+				    ("  Corse", NAMEOF('P_TerrDep'[R94]), 23, "R94"),
+				    ("Total DROM", NAMEOF('P_TerrDep'[DROM]), 50, "DROM"),
+				    ("Total COM", NAMEOF('P_TerrDep'[COM]), 51, "COM"),
+				    ("Autres", NAMEOF('P_TerrDep'[AUT]), 52, "AUT")
+				}
+

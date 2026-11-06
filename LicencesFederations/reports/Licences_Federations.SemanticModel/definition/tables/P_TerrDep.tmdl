@@ -1,0 +1,135 @@
+/// Colonnes du segment Département (équivalent de P_Federation) : une ligne par département (clé Code_DEP), une colonne par territoire du segment nommée par son Id (TOT, MDR, MET, R11…R94, DROM, COM, AUT). Reliée à T_Territoire[Code_DEP] (1-1).
+table P_TerrDep
+	lineageTag: 39985f14-c17d-49ed-8ca6-467f51be3f86
+
+	column Code_DEP
+		lineageTag: d14c1f20-a09a-48c7-bc96-304f37dbf411
+		isNameInferred
+		sourceColumn: [Code_DEP]
+
+	column TOT
+		lineageTag: 62dfbb8e-a991-4d62-b4d5-1138db606375
+		isNameInferred
+		sourceColumn: [TOT]
+
+	column MDR
+		lineageTag: 13579240-a8af-4c99-b5d2-2e8ade3a059a
+		isNameInferred
+		sourceColumn: [MDR]
+
+	column MET
+		lineageTag: 74711e02-8f39-4a1a-920d-79720e90dc4a
+		isNameInferred
+		sourceColumn: [MET]
+
+	column R11
+		lineageTag: 0c2e5164-739f-4aa7-9447-26b0b33c756b
+		isNameInferred
+		sourceColumn: [R11]
+
+	column R24
+		lineageTag: 8d27f859-12ba-4f9b-b7f7-b1f6524c0526
+		isNameInferred
+		sourceColumn: [R24]
+
+	column R27
+		lineageTag: 826bf97b-3ac6-4607-b29e-68de45e10a78
+		isNameInferred
+		sourceColumn: [R27]
+
+	column R28
+		lineageTag: e0b6458c-6425-4c09-9d14-ac99d4d186f9
+		isNameInferred
+		sourceColumn: [R28]
+
+	column R32
+		lineageTag: 7d63a9fc-5202-4be6-b2c0-2ccb37d7b20f
+		isNameInferred
+		sourceColumn: [R32]
+
+	column R44
+		lineageTag: 03bcaaa9-b6c1-4401-9b27-2dbf449f811b
+		isNameInferred
+		sourceColumn: [R44]
+
+	column R52
+		lineageTag: a8a1d25e-61b9-4334-9243-a47c3f739534
+		isNameInferred
+		sourceColumn: [R52]
+
+	column R53
+		lineageTag: a156bb5d-e030-4b10-a35a-124070ea5b6d
+		isNameInferred
+		sourceColumn: [R53]
+
+	column R75
+		lineageTag: 43a13e91-e4ab-414e-9324-4a90ca0635ac
+		isNameInferred
+		sourceColumn: [R75]
+
+	column R76
+		lineageTag: ff6c8751-e398-4194-b9c3-dd398d442be6
+		isNameInferred
+		sourceColumn: [R76]
+
+	column R84
+		lineageTag: ead900e5-c206-486e-8391-2172bbd2bf9b
+		isNameInferred
+		sourceColumn: [R84]
+
+	column R93
+		lineageTag: 4cae7f42-246a-4888-b50a-9dc62bdbdd99
+		isNameInferred
+		sourceColumn: [R93]
+
+	column R94
+		lineageTag: 9fc8e084-2b36-4ca4-befa-bf241d15f5d3
+		isNameInferred
+		sourceColumn: [R94]
+
+	column DROM
+		lineageTag: 2521e7dd-88e9-4490-aecd-de197b07c5da
+		isNameInferred
+		sourceColumn: [DROM]
+
+	column COM
+		lineageTag: d38ba16f-9167-4ea6-8bb6-5906d0c9085f
+		isNameInferred
+		sourceColumn: [COM]
+
+	column AUT
+		lineageTag: 6b0009b6-548a-4ea5-932b-19b78c0c39f2
+		isNameInferred
+		sourceColumn: [AUT]
+
+	partition P_TerrDep = calculated
+		mode: import
+		source =
+				-- Une ligne par département (clé Code_DEP), une colonne par territoire du segment (nom de colonne = Id territoire).
+				-- La colonne contient le libellé du département s'il appartient au territoire, sinon vide.
+				-- Param_Departement pointe vers ces colonnes : changer de territoire change de colonne et vide la sélection Département.
+				VAR T = ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Departement], T_Territoire[Code_GDEREG], T_Territoire[GD_Zone_Slicer_Ordre])
+				VAR Pivot =
+				    SELECTCOLUMNS(T,
+				        "Code_DEP", T_Territoire[Code_DEP],
+				        "TOT", T_Territoire[Departement],
+				        "MDR", IF(T_Territoire[GD_Zone_Slicer_Ordre] IN {"1", "2"}, T_Territoire[Departement]),
+				        "MET", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1", T_Territoire[Departement]),
+				        "R11", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "11", T_Territoire[Departement]),
+				        "R24", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "24", T_Territoire[Departement]),
+				        "R27", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "27", T_Territoire[Departement]),
+				        "R28", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "28", T_Territoire[Departement]),
+				        "R32", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "32", T_Territoire[Departement]),
+				        "R44", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "44", T_Territoire[Departement]),
+				        "R52", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "52", T_Territoire[Departement]),
+				        "R53", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "53", T_Territoire[Departement]),
+				        "R75", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "75", T_Territoire[Departement]),
+				        "R76", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "76", T_Territoire[Departement]),
+				        "R84", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "84", T_Territoire[Departement]),
+				        "R93", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "93", T_Territoire[Departement]),
+				        "R94", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "1" && T_Territoire[Code_GDEREG] = "94", T_Territoire[Departement]),
+				        "DROM", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "2", T_Territoire[Departement]),
+				        "COM", IF(T_Territoire[GD_Zone_Slicer_Ordre] = "3", T_Territoire[Departement]),
+				        "AUT", IF(T_Territoire[GD_Zone_Slicer_Ordre] IN {"4", "5"}, T_Territoire[Departement]))
+				RETURN Pivot
+

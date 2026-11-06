@@ -1,0 +1,132 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "Fluent2-CY26SU08",
+      "reportVersionAtImport": {
+        "visual": "2.12.0",
+        "report": "3.4.0",
+        "page": "2.3.1"
+      },
+      "type": "SharedResources"
+    },
+    "customTheme": {
+      "name": "Licences_sportives_-_Marine8911733561926125.json",
+      "reportVersionAtImport": {
+        "visual": "2.14.0",
+        "report": "3.4.0",
+        "page": "2.3.1"
+      },
+      "type": "RegisteredResources"
+    }
+  },
+  "objects": {
+    "section": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Top'"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "publicCustomVisuals": [
+    "htmlContent443BE3AD55E043BF878BED274D3A6865",
+    "htmlContent443BE3AD55E043BF878BED274D3A6855"
+  ],
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "Fluent2-CY26SU08",
+          "path": "BaseThemes/Fluent2-CY26SU08.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "bg-comparer.png",
+          "path": "bg-comparer.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg-portrait.png",
+          "path": "bg-portrait.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg-territoires.png",
+          "path": "bg-territoires.png",
+          "type": "Image"
+        },
+        {
+          "name": "Contours_France_regions_depart37695605924164155.geojson",
+          "path": "Contours_France_regions_depart37695605924164155.geojson",
+          "type": "ShapeMap"
+        },
+        {
+          "name": "federation5163511546147603.png",
+          "path": "federation5163511546147603.png",
+          "type": "Image"
+        },
+        {
+          "name": "Licences_sportives_-_Marine8911733561926125.json",
+          "path": "Licences_sportives_-_Marine8911733561926125.json",
+          "type": "CustomTheme"
+        },
+        {
+          "name": "periode9004672498118443.png",
+          "path": "periode9004672498118443.png",
+          "type": "Image"
+        },
+        {
+          "name": "public6019564848693406.png",
+          "path": "public6019564848693406.png",
+          "type": "Image"
+        },
+        {
+          "name": "reinitialiser22826416004768524.png",
+          "path": "reinitialiser22826416004768524.png",
+          "type": "Image"
+        },
+        {
+          "name": "territoire17804734341022055.png",
+          "path": "territoire17804734341022055.png",
+          "type": "Image"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "exportDataMode": "AllowSummarized",
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useEnhancedTooltips": true,
+    "useDefaultAggregateDisplayName": true
+  }
+}

@@ -1,0 +1,54 @@
+table T_TrancheAge
+	lineageTag: 7c21cbbe-7fa6-472f-ab73-0e1b65e655f5
+
+	column TrancheAge
+		dataType: string
+		lineageTag: 9a9e8248-4241-46e1-a667-7230ff035ae2
+		summarizeBy: none
+		sourceColumn: TrancheAge
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordre
+		dataType: string
+		lineageTag: de3862ac-03e4-4c4c-8138-787ccd8e043e
+		summarizeBy: none
+		sourceColumn: Ordre
+
+		annotation SummarizationSetBy = Automatic
+
+	column EnBase
+		dataType: string
+		lineageTag: e3beb8d0-d24e-417e-b875-3e41d492fac6
+		summarizeBy: none
+		sourceColumn: EnBase
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Catégorie d''âge' = VAR L = T_TrancheAge[TrancheAge] VAR P = SEARCH("(", L, 1, 0) RETURN IF(P = 0, "Non réparti", TRIM(MID(L, 5, P - 5)) & " (" & MID(L, P + 1, LEN(L) - P - 1) & " ans)")
+		dataType: string
+		lineageTag: 6678e332-8e0f-4c19-a15d-9b0fab6f8b4e
+		summarizeBy: none
+		sortByColumn: Ordre
+
+		annotation SummarizationSetBy = Automatic
+
+	partition T_TrancheAge = m
+		mode: import
+		queryGroup: 'Tables de dimensions'
+		source =
+				let
+				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
+				    Navigation = #"Filtered Rows"{[Item = "T_TrancheAge", Kind = "Sheet"]}[Data],
+				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
+				    Colonnes   = Table.ColumnNames(Entetes),
+				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
+				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				in
+				    SansNA
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

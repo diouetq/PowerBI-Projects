@@ -1,0 +1,30 @@
+/// Liaison territoire du segment (P_TerrChoix[Id territoire]) → départements (T_Territoire[Code_DEP]). Équivalent de P_Appartenance. Basée sur les codes (Code_GDEREG, GD_Zone_Slicer_Ordre : 1 métropole, 2 DROM, 3 COM, 4 autres, 5 non réparti).
+table P_TerrAppartenance
+	isHidden
+	lineageTag: f563f41b-bc6d-4f33-9da0-ad9d2e773f75
+
+	column 'Id territoire'
+		lineageTag: 05bef83e-0282-4ad4-a881-e9c329dcde4b
+		isNameInferred
+		sourceColumn: [Id territoire]
+
+	column Code_DEP
+		lineageTag: 670280e2-7922-4e63-bfec-42b91be445c3
+		isNameInferred
+		sourceColumn: [Code_DEP]
+
+	partition P_TerrAppartenance = calculated
+		mode: import
+		source =
+				VAR T = ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Code_GDEREG], T_Territoire[GD_Zone_Slicer_Ordre])
+				RETURN
+				    UNION(
+				        SELECTCOLUMNS(T, "Id territoire", "TOT", "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] IN {"1", "2"}), "Id territoire", "MDR", "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] = "1"), "Id territoire", "MET", "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] = "1"), "Id territoire", "R" & T_Territoire[Code_GDEREG], "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] = "2"), "Id territoire", "DROM", "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] = "3"), "Id territoire", "COM", "Code_DEP", T_Territoire[Code_DEP]),
+				        SELECTCOLUMNS(FILTER(T, T_Territoire[GD_Zone_Slicer_Ordre] IN {"4", "5"}), "Id territoire", "AUT", "Code_DEP", T_Territoire[Code_DEP])
+				    )
+

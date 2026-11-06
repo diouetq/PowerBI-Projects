@@ -1,0 +1,104 @@
+table P_Niveaux
+	lineageTag: 2def1141-610f-418a-8606-5d0be3332da6
+
+	/// Clé unique du regroupement : « F · » famille, « SF · » sous-famille, « G · » groupe, ou « Ensemble ». Relie P_Niveaux à Param_Federation[Cle] et P_Appartenance[Cle].
+	column Cle
+		dataType: string
+		isHidden
+		lineageTag: 9f0d73e2-1a2d-4d4a-895a-e29fefc85d23
+		summarizeBy: none
+		sourceColumn: Cle
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Familles de fédérations (issues du référentiel Excel). La ligne « Ensemble » = toutes les fédérations. Affichée dans le segment Regroupement quand le niveau Famille est choisi.
+	column Famille
+		dataType: string
+		lineageTag: bbc62df1-b6c6-454c-825e-a1b917ad6f47
+		summarizeBy: none
+		sourceColumn: Famille
+		sortByColumn: OrdreFamille
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sous-familles de fédérations (référentiel Excel). La ligne « Ensemble » = toutes les fédérations. Affichée dans le segment Regroupement quand le niveau Sous-famille est choisi.
+	column Sous-famille
+		dataType: string
+		lineageTag: afa7c68e-62c1-470c-a5d5-bfa3428ed96b
+		summarizeBy: none
+		sourceColumn: Sous-famille
+		sortByColumn: OrdreSousFamille
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Groupes de fédérations (référentiel Excel). La ligne « Ensemble » = toutes les fédérations. Affichée dans le segment Regroupement quand le niveau Groupe est choisi.
+	column Groupe
+		dataType: string
+		lineageTag: 8a28db37-b8f7-43ce-9f39-baca5dead2f7
+		summarizeBy: none
+		sourceColumn: Groupe
+		sortByColumn: OrdreGroupe
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Ordre de tri de la colonne Famille (0 = Ensemble, puis alphabétique, 9999 = vide).
+	column OrdreFamille
+		dataType: int64
+		isHidden
+		lineageTag: 5575c315-dfa0-41ad-93b5-6cd0c5df73e1
+		summarizeBy: none
+		sourceColumn: OrdreFamille
+
+	/// Ordre de tri de la colonne Sous-famille (0 = Ensemble, puis alphabétique, 9999 = vide).
+	column OrdreSousFamille
+		dataType: int64
+		isHidden
+		lineageTag: 5ebefe8d-4580-45e4-b8a7-bdabaaefc8c4
+		summarizeBy: none
+		sourceColumn: OrdreSousFamille
+
+	/// Ordre de tri de la colonne Groupe (0 = Ensemble, puis alphabétique, 9999 = vide).
+	column OrdreGroupe
+		dataType: int64
+		isHidden
+		lineageTag: 62b28666-99bb-4805-819c-f1bcbf1f0356
+		summarizeBy: none
+		sourceColumn: OrdreGroupe
+
+	partition P_Niveaux = m
+		mode: import
+		source =
+				let
+				    Source   = T_Federation,
+				    Deplie   = Table.UnpivotOtherColumns(
+				                   Table.SelectColumns(Source, {"Famille de fédérations", "Sous-famille de fédérations", "Groupe de fédérations"}),
+				                   {}, "Niveau", "Valeur"),
+				    Uniques  = Table.Distinct(Table.SelectRows(Deplie, each [Valeur] <> null and [Valeur] <> "")),
+				    Cle      = Table.AddColumn(Uniques, "Cle", each
+				                   (if [Niveau] = "Famille de fédérations" then "F · "
+				                    else if [Niveau] = "Sous-famille de fédérations" then "SF · " else "G · ") & [Valeur], type text),
+				    Famille  = Table.AddColumn(Cle, "Famille",      each if [Niveau] = "Famille de fédérations"      then [Valeur] else null, type text),
+				    SousFam  = Table.AddColumn(Famille, "Sous-famille", each if [Niveau] = "Sous-famille de fédérations" then [Valeur] else null, type text),
+				    Groupe   = Table.AddColumn(SousFam, "Groupe",   each if [Niveau] = "Groupe de fédérations"       then [Valeur] else null, type text),
+				    Colonnes = Table.SelectColumns(Groupe, {"Cle", "Famille", "Sous-famille", "Groupe"}),
+				    // Une seule ligne "Ensemble", visible dans les 3 niveaux (toutes les fédérations)
+				    LigneEns = #table(type table [Cle = text, Famille = text, #"Sous-famille" = text, Groupe = text],
+				                   {{"Ensemble", "Ensemble", "Ensemble", "Ensemble"}}),
+				    Tout     = Table.Combine({LigneEns, Colonnes}),
+				    // Ordres de tri : Ensemble en premier, puis ordre alphabétique
+				    Rang     = (col as text) =>
+				                   let vals = List.Sort(List.RemoveItems(List.Distinct(List.RemoveNulls(Table.Column(Tout, col))), {"Ensemble"}), Comparer.FromCulture("fr-FR", true))
+				                   in (v) => if v = null then 9999 else if v = "Ensemble" then 0 else List.PositionOf(vals, v) + 1,
+				    RF = Rang("Famille"),
+				    RSF = Rang("Sous-famille"),
+				    RG = Rang("Groupe"),
+				    O1 = Table.AddColumn(Tout, "OrdreFamille", each RF([Famille]), Int64.Type),
+				    O2 = Table.AddColumn(O1, "OrdreSousFamille", each RSF([#"Sous-famille"]), Int64.Type),
+				    O3 = Table.AddColumn(O2, "OrdreGroupe", each RG([Groupe]), Int64.Type)
+				in
+				    O3
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

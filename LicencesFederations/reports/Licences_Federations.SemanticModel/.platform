@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Licences_Federations"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "3f94a691-4c71-4200-ad71-1f7231479483"
+  }
+}

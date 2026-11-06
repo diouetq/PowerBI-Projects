@@ -1,0 +1,118 @@
+/// Dimension Fédération (référentiel Excel Referentiel_Excel.xlsx, onglet T_Federation, synchronisé avec SQL). Clé : CodeReference. Contient les regroupements (famille, sous-famille, groupe), le logo et les colonnes perso ajoutées dans l'Excel. Erreurs et NA remplacés par vide.
+table T_Federation
+	lineageTag: a3d3281d-5d4e-4e95-94fc-4859f9e49411
+
+	/// Code fédération (clé, texte). Relie F_Licences, P_Federation et P_Appartenance.
+	column CodeReference
+		dataType: string
+		lineageTag: 9e1b3c73-797f-4e4f-a2f4-23dbe5fdaa15
+		summarizeBy: none
+		sourceColumn: CodeReference
+
+		annotation SummarizationSetBy = Automatic
+
+	column Federation
+		dataType: string
+		lineageTag: ad3b2b3b-0694-4bec-a16e-c7579856d9d1
+		summarizeBy: none
+		sourceColumn: Federation
+
+		annotation SummarizationSetBy = Automatic
+
+	column CodesHistorique
+		dataType: string
+		lineageTag: 2ae6ca89-ebf1-48df-9a95-55343af4a805
+		summarizeBy: none
+		sourceColumn: CodesHistorique
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Famille de fédérations'
+		dataType: string
+		lineageTag: 821a28d4-dc48-44fc-a14b-a36dec7b48ce
+		summarizeBy: none
+		sourceColumn: Famille de fédérations
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sous-famille de fédérations'
+		dataType: string
+		lineageTag: cdf02e0b-b12d-438c-8ae4-85d601f4a0de
+		summarizeBy: none
+		sourceColumn: Sous-famille de fédérations
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Groupe de fédérations'
+		dataType: string
+		lineageTag: 1b523098-1b71-4542-8f3f-7946c3e67385
+		summarizeBy: none
+		sourceColumn: Groupe de fédérations
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Champ constant '
+		dataType: string
+		lineageTag: 448090be-3fbc-4995-88f6-9538e7a5f444
+		summarizeBy: none
+		sourceColumn: "Champ constant "
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Lien vers le logo de la fédération (saisi dans le référentiel Excel). Mettre la catégorie de données « URL d'image » pour l'afficher.
+	column Logo
+		dataType: string
+		lineageTag: db83333e-028d-43b5-8548-d6743797ab0d
+		dataCategory: ImageUrl
+		summarizeBy: none
+		sourceColumn: Logo
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Oui = fédération présente dans SQL ; Non = conservée dans l'Excel mais absente des données (colonne technique de la synchro Excel).
+	column EnBase
+		dataType: string
+		isHidden
+		lineageTag: ce76e8d3-aff4-4966-bd17-bbd839f2d4d5
+		summarizeBy: none
+		sourceColumn: EnBase
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Nom de la fédération sans le préfixe « Fédération Française de … » (calculé dans Power Query). Utilisé dans les segments, titres et légendes.
+	column 'Nom court'
+		dataType: string
+		lineageTag: 868b508d-6598-4b97-a383-3e1478e872a0
+		summarizeBy: none
+		sourceColumn: Nom court
+
+	partition T_Federation = m
+		mode: import
+		queryGroup: 'Tables de dimensions'
+		source =
+				let
+				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
+				    Feuilles   = Table.SelectRows(Source, each ([Kind] = "Sheet")),
+				    Navigation = Feuilles{[Item = "T_Federation", Kind = "Sheet"]}[Data],
+				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
+				    Colonnes   = Table.ColumnNames(Entetes),
+				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
+				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes),
+				    // Nom court : nom sans le préfixe « Fédération Française de … » (segments, titres, légendes).
+				    // La liste est testée dans l'ordre : préfixes les plus longs d'abord.
+				    Prefixes   = {"Fédération Française de la ", "Fédération Française des ", "Fédération Française de ", "Fédération Française du ", "Fédération Française d'", "Fédération Française d’", "Fédération Française Sportive de ", "Fédération Française ", "Fédération Nationale des ", "Fédération Nationale du ", "Fédération des ", "Fédération de ", "Fédération "},
+				    NomCourt   = Table.AddColumn(SansNA, "Nom court", each
+				                     if [Federation] = null then null else
+				                     let
+				                         _Nom     = Text.From([Federation]),
+				                         _Prefixe = List.First(List.Select(Prefixes, (p) => Text.StartsWith(_Nom, p)), null),
+				                         _Court   = if _Prefixe = null then _Nom else Text.Middle(_Nom, Text.Length(_Prefixe))
+				                     in
+				                         Text.Upper(Text.Start(_Court, 1)) & Text.Middle(_Court, 1), type text)
+				in
+				    NomCourt
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

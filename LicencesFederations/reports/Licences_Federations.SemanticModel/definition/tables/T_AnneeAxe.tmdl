@@ -1,0 +1,15 @@
+/// Copie déconnectée des années pour l'axe du graphique d'évolution : le graphique montre toujours 2016-2025 et l'année choisie dans le segment Année est mise en évidence.
+table T_AnneeAxe
+	lineageTag: 1c576d3f-79e6-44fc-bc09-3c80cea00527
+
+	column Annee
+		dataType: string
+		lineageTag: 3739dd66-e5e1-430b-a01d-2fdf9990d37b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Annee]
+
+	partition T_AnneeAxe = calculated
+		mode: import
+		source = SELECTCOLUMNS(ALL(T_Annee[Annee]), "Annee", T_Annee[Annee])
+

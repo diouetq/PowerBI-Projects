@@ -1,0 +1,24 @@
+/// Bascule du graphique d'évolution (segment en tuiles) : Volume ou Base 100.
+table T_VueEvol
+	lineageTag: 35479938-fbd1-4fdb-babf-6d06518dea5a
+
+	column Ordre
+		dataType: int64
+		formatString: 0
+		lineageTag: 0e067229-5fb9-48d5-afcf-091fe7c17bb3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	column Vue
+		dataType: string
+		lineageTag: 5a3e7789-a651-4a5e-b0af-b22f626c4930
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Vue]
+		sortByColumn: Ordre
+
+	partition T_VueEvol = calculated
+		mode: import
+		source = DATATABLE("Ordre", INTEGER, "Vue", STRING, {{1, "Volume"}, {2, "Base 100"}})
+

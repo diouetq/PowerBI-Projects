@@ -1,0 +1,26 @@
+/// Liaison zone de carte (Id carte) → départements (T_Territoire[Code_DEP]) : D-31 → 31 ; R-76 → ses départements de métropole. Utilisée uniquement par Carte Valeur (TREATAS) et Carte Rôle.
+table T_CarteZoneDep
+	isHidden
+	lineageTag: 14a066f5-1c60-4b46-af2f-df0c49bca465
+
+	column 'Id carte'
+		lineageTag: e09bf34b-b915-4a2a-acc7-f4878e98d280
+		isNameInferred
+		sourceColumn: [Id carte]
+
+	column Code_DEP
+		lineageTag: c4190dd2-2205-4956-9bd9-7f05dd5d0d26
+		isNameInferred
+		sourceColumn: [Code_DEP]
+
+	partition T_CarteZoneDep = calculated
+		mode: import
+		source =
+				VAR Ref = SELECTCOLUMNS(FILTER(ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Code_GDEREG], T_Territoire[GD_Zone_Slicer_Ordre]), T_Territoire[GD_Zone_Slicer_Ordre] = "1"), "@dep", T_Territoire[Code_DEP], "@reg", T_Territoire[Code_GDEREG])
+				VAR Zones = SELECTCOLUMNS(T_CarteZone, "Id carte", T_CarteZone[Id carte], "@niv", T_CarteZone[Ordre niveau], "@code", COALESCE(T_CarteZone[Code_DEP], T_CarteZone[Code_GDEREG]))
+				RETURN
+				    SELECTCOLUMNS(
+				        FILTER(CROSSJOIN(Zones, Ref), IF([@niv] = 1, [@reg] = [@code], [@dep] = [@code])),
+				        "Id carte", [Id carte],
+				        "Code_DEP", [@dep])
+

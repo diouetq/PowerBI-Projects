@@ -1,0 +1,24 @@
+/// Liste des indicateurs de la carte (segment déroulant sur la carte).
+table T_CarteIndicateur
+	lineageTag: 25a3d812-70bc-4c1b-89e8-5449d6556874
+
+	column Ordre
+		dataType: int64
+		formatString: 0
+		lineageTag: 8cfc9f12-80bd-49ac-bd96-2ed573eed2f4
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	column Indicateur
+		dataType: string
+		lineageTag: 89039c49-e15f-491e-a8ac-18603f1a1a0e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Indicateur]
+		sortByColumn: Ordre
+
+	partition T_CarteIndicateur = calculated
+		mode: import
+		source = DATATABLE("Ordre", INTEGER, "Indicateur", STRING, {{1, "Licences"}, {2, "Évolution sur 1 an"}, {3, "Évolution depuis 2019"}, {4, "Part des femmes"}, {5, "Indice de spécificité"}})
+

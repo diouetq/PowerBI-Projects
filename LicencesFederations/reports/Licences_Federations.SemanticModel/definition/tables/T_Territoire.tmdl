@@ -1,0 +1,87 @@
+/// Dimension Territoire (référentiel Excel, onglet T_Territoire). Clé : Departement (libellé source, ex. « 01 - Ain »). Région et codes géographiques associés.
+table T_Territoire
+	lineageTag: 4afd6d65-bc67-4ef0-9fa8-01975e3cd7d9
+
+	column Departement
+		dataType: string
+		lineageTag: 1cdc130b-3f8a-470f-b5e1-c647c05aa73f
+		summarizeBy: none
+		sourceColumn: Departement
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: d4713f17-f360-4ccc-9e6b-2d431cc79ef6
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Code_DEP
+		dataType: string
+		lineageTag: 59edb71b-3c47-4b9f-86a6-579e789b32a0
+		summarizeBy: none
+		sourceColumn: Code_DEP
+
+		annotation SummarizationSetBy = Automatic
+
+	column Code_GDEREG
+		dataType: string
+		lineageTag: 4b72e3ac-f1eb-404a-bf5d-c75256c8188f
+		summarizeBy: none
+		sourceColumn: Code_GDEREG
+
+		annotation SummarizationSetBy = Automatic
+
+	column EnBase
+		dataType: string
+		lineageTag: 2c41fb8a-15da-4488-bc40-32e53b68e7ff
+		summarizeBy: none
+		sourceColumn: EnBase
+
+		annotation SummarizationSetBy = Automatic
+
+	column Zone_Slicer
+		dataType: string
+		lineageTag: 3a3cd99e-a0fd-4937-8e95-ad78102350c7
+		summarizeBy: none
+		sourceColumn: Zone_Slicer
+
+		annotation SummarizationSetBy = Automatic
+
+	column GD_Zone_Slicer
+		dataType: string
+		lineageTag: 569614e0-7606-42e3-869e-a74a099fa9f4
+		summarizeBy: none
+		sourceColumn: GD_Zone_Slicer
+
+		annotation SummarizationSetBy = Automatic
+
+	column GD_Zone_Slicer_Ordre
+		dataType: string
+		lineageTag: 355dcc88-e05e-42aa-868f-ca36cc6bc37c
+		summarizeBy: none
+		sourceColumn: GD_Zone_Slicer_Ordre
+
+		annotation SummarizationSetBy = Automatic
+
+	partition T_Territoire = m
+		mode: import
+		queryGroup: 'Tables de dimensions'
+		source =
+				let
+				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
+				    Navigation = #"Filtered Rows"{[Item = "T_Territoire", Kind = "Sheet"]}[Data],
+				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
+				    Colonnes   = Table.ColumnNames(Entetes),
+				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
+				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				in
+				    SansNA
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

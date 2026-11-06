@@ -1,0 +1,97 @@
+/// Paramètre de champ du segment Fédération : chaque ligne pointe vers une colonne de P_Federation. Filtré par P_Niveaux via Cle (1-1), il affiche les fédérations du regroupement choisi et vide la sélection quand on change de regroupement. Code à régénérer (requête Code_Parametre) quand un NOUVEAU regroupement apparaît dans l'Excel.
+table Param_Federation
+	lineageTag: 01052b55-913a-47f6-8cce-de0c448d9d96
+
+	column Paramètre
+		lineageTag: 8c927ba7-43b5-48df-b373-8806ed226438
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Paramètre Commande'
+
+		relatedColumnDetails
+			groupByColumn: 'Paramètre Champs'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Paramètre Champs'
+		isHidden
+		lineageTag: 2d06f144-c2bd-4dc6-a3d3-0f858eb7f6ce
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Paramètre Commande'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Paramètre Commande'
+		isHidden
+		formatString: 0
+		lineageTag: ca4cbd32-f360-45f4-a748-a1ac66eb584d
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Niveau
+		lineageTag: fd970144-e112-48e1-a007-b83172996469
+		summarizeBy: none
+		sourceColumn: [Value4]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cle
+		lineageTag: e6136072-cffa-4a07-9cb5-de346f375515
+		summarizeBy: none
+		sourceColumn: [Value5]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Param_Federation = calculated
+		mode: import
+		source =
+				
+				
+				{
+				    ("Ensemble", NAMEOF('P_Federation'[Ensemble]), 0, "Ensemble", "Ensemble"),
+				    ("Activités d'expression, de la forme et de la force", NAMEOF('P_Federation'[F · Activités d'expression, de la forme et de la force]), 1, "Famille", "F · Activités d'expression, de la forme et de la force"),
+				    ("Généraliste", NAMEOF('P_Federation'[F · Généraliste]), 2, "Famille", "F · Généraliste"),
+				    ("Para-sport", NAMEOF('P_Federation'[F · Para-sport]), 3, "Famille", "F · Para-sport"),
+				    ("Sport scolaire et universitaire", NAMEOF('P_Federation'[F · Sport scolaire et universitaire]), 4, "Famille", "F · Sport scolaire et universitaire"),
+				    ("Sports Individuels", NAMEOF('P_Federation'[F · Sports Individuels]), 5, "Famille", "F · Sports Individuels"),
+				    ("Sports collectifs", NAMEOF('P_Federation'[F · Sports collectifs]), 6, "Famille", "F · Sports collectifs"),
+				    ("Sports d'opposition", NAMEOF('P_Federation'[F · Sports d'opposition]), 7, "Famille", "F · Sports d'opposition"),
+				    ("Sports de nature", NAMEOF('P_Federation'[F · Sports de nature]), 8, "Famille", "F · Sports de nature"),
+				    ("Activités Aériennes", NAMEOF('P_Federation'[SF · Activités Aériennes]), 9, "Sous-famille", "SF · Activités Aériennes"),
+				    ("Activités Nautiques", NAMEOF('P_Federation'[SF · Activités Nautiques]), 10, "Sous-famille", "SF · Activités Nautiques"),
+				    ("Activités Terrestres", NAMEOF('P_Federation'[SF · Activités Terrestres]), 11, "Sous-famille", "SF · Activités Terrestres"),
+				    ("Activités aquatiques", NAMEOF('P_Federation'[SF · Activités aquatiques]), 12, "Sous-famille", "SF · Activités aquatiques"),
+				    ("Activités athlétiques ", NAMEOF('P_Federation'[SF · Activités athlétiques ]), 13, "Sous-famille", "SF · Activités athlétiques "),
+				    ("Activités d'adresse, précision", NAMEOF('P_Federation'[SF · Activités d'adresse, précision]), 14, "Sous-famille", "SF · Activités d'adresse, précision"),
+				    ("Activités de la forme et de la force", NAMEOF('P_Federation'[SF · Activités de la forme et de la force]), 15, "Sous-famille", "SF · Activités de la forme et de la force"),
+				    ("Activités gymniques et d'expression", NAMEOF('P_Federation'[SF · Activités gymniques et d'expression]), 16, "Sous-famille", "SF · Activités gymniques et d'expression"),
+				    ("Arts martiaux", NAMEOF('P_Federation'[SF · Arts martiaux]), 17, "Sous-famille", "SF · Arts martiaux"),
+				    ("Généraliste", NAMEOF('P_Federation'[SF · Généraliste]), 18, "Sous-famille", "SF · Généraliste"),
+				    ("Para-sport", NAMEOF('P_Federation'[SF · Para-sport]), 19, "Sous-famille", "SF · Para-sport"),
+				    ("Sport scolaire", NAMEOF('P_Federation'[SF · Sport scolaire]), 20, "Sous-famille", "SF · Sport scolaire"),
+				    ("Sport universitaire", NAMEOF('P_Federation'[SF · Sport universitaire]), 21, "Sous-famille", "SF · Sport universitaire"),
+				    ("Sports collectif Glace", NAMEOF('P_Federation'[SF · Sports collectif Glace]), 22, "Sous-famille", "SF · Sports collectif Glace"),
+				    ("Sports collectifs Grands Terrains", NAMEOF('P_Federation'[SF · Sports collectifs Grands Terrains]), 23, "Sous-famille", "SF · Sports collectifs Grands Terrains"),
+				    ("Sports collectifs Petits Terrains et salles", NAMEOF('P_Federation'[SF · Sports collectifs Petits Terrains et salles]), 24, "Sous-famille", "SF · Sports collectifs Petits Terrains et salles"),
+				    ("Sports de combats", NAMEOF('P_Federation'[SF · Sports de combats]), 25, "Sous-famille", "SF · Sports de combats"),
+				    ("Sports duels", NAMEOF('P_Federation'[SF · Sports duels]), 26, "Sous-famille", "SF · Sports duels"),
+				    ("Sports mécaniques", NAMEOF('P_Federation'[SF · Sports mécaniques]), 27, "Sous-famille", "SF · Sports mécaniques"),
+				    ("Sports raquettes", NAMEOF('P_Federation'[SF · Sports raquettes]), 28, "Sous-famille", "SF · Sports raquettes"),
+				    ("Affinitaire", NAMEOF('P_Federation'[G · Affinitaire]), 29, "Groupe", "G · Affinitaire"),
+				    ("Délégataire non-olympique", NAMEOF('P_Federation'[G · Délégataire non-olympique]), 30, "Groupe", "G · Délégataire non-olympique"),
+				    ("Olympique", NAMEOF('P_Federation'[G · Olympique]), 31, "Groupe", "G · Olympique"),
+				    ("Para-sport", NAMEOF('P_Federation'[G · Para-sport]), 32, "Groupe", "G · Para-sport"),
+				    ("Scolaire", NAMEOF('P_Federation'[G · Scolaire]), 33, "Groupe", "G · Scolaire")
+				}
+
+	annotation PBI_Id = 775c6f2e0e0d4a238145d1a11d3ecfc1
+

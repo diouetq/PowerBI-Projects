@@ -1,0 +1,19 @@
+/// Liste du segment Niveau géo de la carte (sans relation) : 1 = Région, 2 = Département. Lu par la mesure Carte Niveau ; un département choisi force le niveau 2.
+table T_NiveauGeo
+	lineageTag: 2e9644cc-0c8d-43e7-b330-0df5d3a0dfe8
+
+	column 'Niveau géo'
+		lineageTag: 680bf3ab-acd2-4599-8064-42363078a20f
+		isNameInferred
+		sourceColumn: [Niveau géo]
+		sortByColumn: Ordre
+
+	column Ordre
+		lineageTag: c7f34c74-7bdb-4daf-9ddb-f6c75d83d6de
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	partition T_NiveauGeo = calculated
+		mode: import
+		source = DATATABLE("Niveau géo", STRING, "Ordre", INTEGER, {{"Région", 1}, {"Département", 2}})
+

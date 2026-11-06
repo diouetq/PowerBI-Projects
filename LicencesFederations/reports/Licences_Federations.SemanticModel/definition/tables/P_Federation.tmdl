@@ -1,0 +1,306 @@
+table P_Federation
+	lineageTag: 0b138431-1784-4f44-8615-92f4eea02e04
+
+	column CodeReference
+		dataType: string
+		lineageTag: 0efb43cc-5264-4fb8-b7a4-13e000d09d0e
+		summarizeBy: none
+		sourceColumn: CodeReference
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ensemble
+		dataType: string
+		lineageTag: 8cba8872-a670-48cf-9f66-cfdd71f88565
+		summarizeBy: none
+		sourceColumn: Ensemble
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Activités d''expression, de la forme et de la force'
+		dataType: string
+		lineageTag: 988d6f77-90b3-4e4b-8a99-7455abc2a90f
+		summarizeBy: none
+		sourceColumn: F · Activités d'expression, de la forme et de la force
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Généraliste'
+		dataType: string
+		lineageTag: 91194183-9f5a-4276-b550-b358ce802f70
+		summarizeBy: none
+		sourceColumn: F · Généraliste
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Para-sport'
+		dataType: string
+		lineageTag: 49144dde-68bc-4d32-9a7a-04432ae7c010
+		summarizeBy: none
+		sourceColumn: F · Para-sport
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Sport scolaire et universitaire'
+		dataType: string
+		lineageTag: 7e0c759e-82da-4681-a1ad-b54c63031b4b
+		summarizeBy: none
+		sourceColumn: F · Sport scolaire et universitaire
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Sports Individuels'
+		dataType: string
+		lineageTag: 7435c2e7-7e3f-40ec-ba0b-c05113f9efc4
+		summarizeBy: none
+		sourceColumn: F · Sports Individuels
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Sports collectifs'
+		dataType: string
+		lineageTag: c1c551a6-eba1-49f0-b19d-e3ef4f5b8de3
+		summarizeBy: none
+		sourceColumn: F · Sports collectifs
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Sports d''opposition'
+		dataType: string
+		lineageTag: c95e4333-65e8-41c7-a758-4fc1e72a15ad
+		summarizeBy: none
+		sourceColumn: F · Sports d'opposition
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F · Sports de nature'
+		dataType: string
+		lineageTag: c3cad8fa-ee30-43e9-87e0-86d63e633e83
+		summarizeBy: none
+		sourceColumn: F · Sports de nature
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G · Affinitaire'
+		dataType: string
+		lineageTag: d2fe239c-fc75-402d-9e38-ad0db57f0071
+		summarizeBy: none
+		sourceColumn: G · Affinitaire
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G · Délégataire non-olympique'
+		dataType: string
+		lineageTag: 8b55a10a-cb5a-475a-aef2-9132e1762119
+		summarizeBy: none
+		sourceColumn: G · Délégataire non-olympique
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G · Olympique'
+		dataType: string
+		lineageTag: e67a4719-6caf-4794-90d9-c32f840b8568
+		summarizeBy: none
+		sourceColumn: G · Olympique
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G · Para-sport'
+		dataType: string
+		lineageTag: 50b8504d-0b7c-4ff9-9175-ae35d3d88b60
+		summarizeBy: none
+		sourceColumn: G · Para-sport
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'G · Scolaire'
+		dataType: string
+		lineageTag: 787219c9-633d-45f4-aa3c-563954228089
+		summarizeBy: none
+		sourceColumn: G · Scolaire
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités Aériennes'
+		dataType: string
+		lineageTag: b6e6e33e-0a29-436d-864e-6b3ce3b1286a
+		summarizeBy: none
+		sourceColumn: SF · Activités Aériennes
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités Nautiques'
+		dataType: string
+		lineageTag: e3f66c15-6f6b-4fbc-9928-4ad0b8964cd3
+		summarizeBy: none
+		sourceColumn: SF · Activités Nautiques
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités Terrestres'
+		dataType: string
+		lineageTag: ff3c577d-0024-4f33-8796-04ba2b622c69
+		summarizeBy: none
+		sourceColumn: SF · Activités Terrestres
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités aquatiques'
+		dataType: string
+		lineageTag: 06bea256-c345-4efa-8ec5-ba60477a943f
+		summarizeBy: none
+		sourceColumn: SF · Activités aquatiques
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités athlétiques '
+		dataType: string
+		lineageTag: 9637afc0-f2c3-4710-b938-5acbd250ba87
+		summarizeBy: none
+		sourceColumn: "SF · Activités athlétiques "
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités d''adresse, précision'
+		dataType: string
+		lineageTag: 767a969d-9101-4331-89dd-47ba447e7fec
+		summarizeBy: none
+		sourceColumn: SF · Activités d'adresse, précision
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités de la forme et de la force'
+		dataType: string
+		lineageTag: 83544a6e-d7a4-45da-af76-fc9d0a7a4790
+		summarizeBy: none
+		sourceColumn: SF · Activités de la forme et de la force
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Activités gymniques et d''expression'
+		dataType: string
+		lineageTag: 1d907445-a3e3-430f-8c06-a9022ee10e55
+		summarizeBy: none
+		sourceColumn: SF · Activités gymniques et d'expression
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Arts martiaux'
+		dataType: string
+		lineageTag: b28970fd-9f53-4fdb-9bb6-fd77f1eaf2e1
+		summarizeBy: none
+		sourceColumn: SF · Arts martiaux
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Généraliste'
+		dataType: string
+		lineageTag: 7093f933-d97f-4383-a1dd-7ab8ae1e04db
+		summarizeBy: none
+		sourceColumn: SF · Généraliste
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Para-sport'
+		dataType: string
+		lineageTag: 6cce135b-a025-4d30-9239-6df99cf6868b
+		summarizeBy: none
+		sourceColumn: SF · Para-sport
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sport scolaire'
+		dataType: string
+		lineageTag: a54d217c-80ed-41bd-8163-e0f5c484d38d
+		summarizeBy: none
+		sourceColumn: SF · Sport scolaire
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sport universitaire'
+		dataType: string
+		lineageTag: ae86d3f6-6f78-4c69-b4dc-d34d62b3757e
+		summarizeBy: none
+		sourceColumn: SF · Sport universitaire
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports collectif Glace'
+		dataType: string
+		lineageTag: 7cf79ff2-3ebd-48b7-bbba-e68577dd3363
+		summarizeBy: none
+		sourceColumn: SF · Sports collectif Glace
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports collectifs Grands Terrains'
+		dataType: string
+		lineageTag: f6c3acf9-2d92-49c3-9541-3a14c4903aa2
+		summarizeBy: none
+		sourceColumn: SF · Sports collectifs Grands Terrains
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports collectifs Petits Terrains et salles'
+		dataType: string
+		lineageTag: 6fc44210-dd25-4a1b-b506-81224d63170e
+		summarizeBy: none
+		sourceColumn: SF · Sports collectifs Petits Terrains et salles
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports de combats'
+		dataType: string
+		lineageTag: 0db09d3b-f0de-425f-904c-7ce799969915
+		summarizeBy: none
+		sourceColumn: SF · Sports de combats
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports duels'
+		dataType: string
+		lineageTag: 32a11e9e-ac71-4b9f-9b7e-1f0610671e08
+		summarizeBy: none
+		sourceColumn: SF · Sports duels
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports mécaniques'
+		dataType: string
+		lineageTag: f424bb52-ee7e-4f7d-baf2-ec2eeb0f4413
+		summarizeBy: none
+		sourceColumn: SF · Sports mécaniques
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'SF · Sports raquettes'
+		dataType: string
+		lineageTag: 29f62639-d82b-4b46-80c8-a9c15b20c2c0
+		summarizeBy: none
+		sourceColumn: SF · Sports raquettes
+
+		annotation SummarizationSetBy = Automatic
+
+	partition P_Federation = m
+		mode: import
+		source =
+				let
+				    Source   = T_Federation,
+				    // Le segment Fédération affiche le nom court (sans « Fédération Française de … »)
+				    Colonnes = Table.SelectColumns(Source, {"CodeReference", "Nom court", "Famille de fédérations", "Sous-famille de fédérations", "Groupe de fédérations"}),
+				    Deplie   = Table.UnpivotOtherColumns(Colonnes, {"CodeReference", "Nom court"}, "Niveau", "Valeur"),
+				    SansVide = Table.SelectRows(Deplie, each [Valeur] <> null and [Valeur] <> ""),
+				    NomCol   = Table.AddColumn(SansVide, "Col", each
+				                   (if [Niveau] = "Famille de fédérations" then "F · "
+				                    else if [Niveau] = "Sous-famille de fédérations" then "SF · " else "G · ") & [Valeur], type text),
+				    // Copie du nom AVANT le pivot (le pivot consomme la colonne Nom court)
+				    Copie    = Table.AddColumn(NomCol, "Ensemble", each [Nom court], type text),
+				    Pivot    = Table.Pivot(Table.SelectColumns(Copie, {"CodeReference", "Ensemble", "Nom court", "Col"}),
+				                   List.Sort(List.Distinct(Copie[Col])), "Col", "Nom court", List.First)
+				in
+				    Pivot
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

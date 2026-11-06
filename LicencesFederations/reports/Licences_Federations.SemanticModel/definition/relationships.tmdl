@@ -1,0 +1,66 @@
+relationship AutoDetected_d17de7ed-a564-4f7b-8250-6d3b7c6727de
+	fromColumn: F_Licences.CodeReference
+	toColumn: T_Federation.CodeReference
+
+relationship AutoDetected_9ed5dcdc-8ddd-47a0-93b1-ef9472e4fbb9
+	fromColumn: F_Licences.Sexe
+	toColumn: T_Sexe.Sexe
+
+relationship 0267c403-7515-90a5-8829-ba9a43091619
+	fromColumn: F_Licences.GrandeTrancheAge
+	toColumn: T_TrancheAge.TrancheAge
+
+relationship 9f728e26-cdf8-a3ce-0899-d89c19f313ad
+	fromColumn: F_Licences.Annee
+	toColumn: T_Annee.Annee
+
+relationship ebfca0f3-029b-7575-7627-a2f5dae30f60
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: P_Niveaux.Cle
+	toColumn: Param_Federation.Cle
+
+relationship 03b958b9-1fad-ec32-be75-c62763e2b9d9
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: T_Federation.CodeReference
+	toColumn: P_Federation.CodeReference
+
+relationship a2ac9857-2d6b-bcd3-0e03-c3cb69183f19
+	fromColumn: P_Appartenance.Cle
+	toColumn: P_Niveaux.Cle
+
+relationship 6809f545-3150-aa8f-695d-8ec14f82f91e
+	crossFilteringBehavior: bothDirections
+	fromColumn: P_Appartenance.CodeReference
+	toColumn: T_Federation.CodeReference
+
+relationship P_TerrChoix_Param_Departement
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: P_TerrChoix.'Id territoire'
+	toColumn: Param_Departement.'Id territoire'
+
+relationship P_TerrAppartenance_P_TerrChoix
+	fromColumn: P_TerrAppartenance.'Id territoire'
+	toColumn: P_TerrChoix.'Id territoire'
+
+relationship P_TerrAppartenance_T_Territoire
+	crossFilteringBehavior: bothDirections
+	fromColumn: P_TerrAppartenance.Code_DEP
+	toColumn: T_Territoire.Code_DEP
+
+relationship P_TerrDep_T_Territoire
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: P_TerrDep.Code_DEP
+	toColumn: T_Territoire.Code_DEP
+
+relationship T_CarteAffichage_P_TerrChoix
+	fromColumn: T_CarteAffichage.'Id territoire'
+	toColumn: P_TerrChoix.'Id territoire'
+
+relationship F_Licences_T_Territoire_Code_DEP
+	fromColumn: F_Licences.Code_DEP
+	toColumn: T_Territoire.Code_DEP
+

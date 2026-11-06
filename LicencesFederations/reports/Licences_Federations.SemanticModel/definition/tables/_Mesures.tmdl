@@ -1,0 +1,2189 @@
+/// Table de mesures : regroupe toutes les mesures du rapport (aucune donnée).
+table _Mesures
+	lineageTag: b41e1dc9-0453-4301-a1b5-3635294a63fe
+
+	/// Nombre de licences annuelles. Si plusieurs années sont sélectionnées (ou aucune), prend la plus récente de la sélection, pour ne jamais additionner des années entre elles.
+	measure 'NB Licences' =
+			VAR _AnneeRef = MAX(T_Annee[Annee])          -- année la plus récente de la sélection
+			RETURN
+			    CALCULATE(
+			        SUM(F_Licences[NbLicences]),
+			        T_Annee[Annee] = _AnneeRef
+			    )
+		formatString: #,0
+		displayFolder: 1. Licences
+		lineageTag: 01f1e173-d500-43c9-aca0-5d2f43db538b
+
+	/// Filtre visuel du segment Regroupement (est 1) : masque l'élément « (Vide) ». Un regroupement = 1 ligne de P_Niveaux ; (Vide) = plusieurs.
+	measure 'Filtre Niveau non vide' = IF(COUNTROWS(P_Niveaux) = 1, 1)
+		formatString: 0
+		displayFolder: 3. Filtres de segments
+		lineageTag: 122f75cd-55ec-4f60-abf2-52f55e0260b2
+
+	/// Filtre visuel du segment Fédération (est 1) : masque l'élément « (Vide) ». Une fédération = 1 ligne de P_Federation ; (Vide) = plusieurs.
+	measure 'Filtre Fede non vide' = IF(COUNTROWS(P_Federation) = 1, 1)
+		formatString: 0
+		displayFolder: 3. Filtres de segments
+		lineageTag: 183eae17-c7b1-461d-b47e-65cc206d14a9
+
+	/// Tableau HTML repliable (visuel HTML Content) : catégorie = niveau choisi (Famille / Sous-famille / Groupe), sous-catégorie = fédérations avec logo. +/− pour déplier, colonne Fédération, en-tête et Total figés. Indicateurs : licences, évol. 1 an, évol. depuis 2019, âge moyen, % enfants, % femmes. Chiffres indépendants de tous les segments (dernière année disponible) ; les segments servent seulement à mettre en avant le regroupement et la fédération choisis. Réglages et CSS en haut de la mesure.
+	measure 'HTML Tableau Federations' =
+			-- =====================================================================
+			-- HTML Tableau Federations | page Détails fédération | visuel HTML Content ~876 x 862
+			-- Tableau repliable : regroupements (famille, sous-famille ou groupe selon le segment Niveau),
+			-- puis fédérations (nom court, nom complet au survol). Indépendant des segments : dernière année.
+			-- Le regroupement / la fédération choisis sont mis en avant. Styles : HTML Tableau Federations CSS.
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _AnneeComparaison = 2019                       -- 2e évolution (avant Covid)
+			VAR _TrancheEnfants   = "1 - Enfants (1-13)"       -- libellé source de la tranche enfants
+			VAR _CodeFemmes       = "F"
+			VAR _LibelleNonClasse = "Non classé"
+			VAR _OuvrirTout       = TRUE()                     -- TRUE = tout déplié au départ ; FALSE = seule la catégorie choisie
+			VAR _SeuilNeutre      = 0.01                       -- évolution entre -1 % et +1 % = neutre (≈)
+			VAR _LargeurNom       = 236                        -- largeur de la colonne Fédération (px) : nom court, nom complet au survol
+			VAR _LargeurCol       = 100                        -- largeur des colonnes d'indicateurs (px) ; 236 + 6 x 100 = 836 px < largeur du visuel
+			-- Styles : mesure HTML Tableau Federations CSS (charte commune, dossier 0. Style)
+			VAR _CSS = [HTML Tableau Federations CSS]
+			VAR _FlecheHaut = "▲"
+			VAR _FlecheBas  = "▼"
+			VAR _FlecheNeutre = "≈"
+			VAR _FormatNombre = "#,0"
+			VAR _FormatPct    = "0.0 %"
+			VAR _FormatEvol   = "+0.0 %;-0.0 %;0.0 %"
+			VAR _FormatAge    = "0.0"
+			-- 2. Sélections (mise en avant seulement)
+			VAR _Niveau     = SWITCH(SELECTEDVALUE(Param_Niveau[Paramètre Commande]), 1, "Sous-famille", 2, "Groupe", "Famille")
+			VAR _RegroupSel =
+			    SWITCH(_Niveau,
+			        "Famille",      SELECTEDVALUE(P_Niveaux[Famille]),
+			        "Sous-famille", SELECTEDVALUE(P_Niveaux[Sous-famille]),
+			        "Groupe",       SELECTEDVALUE(P_Niveaux[Groupe]))
+			VAR _FedSel     = IF(ISFILTERED(P_Federation), SELECTEDVALUE(P_Federation[CodeReference]))
+			-- 3. Données : indépendantes de TOUS les segments (dernière année disponible)
+			VAR _AnneeMax = CALCULATE(MAX(F_Licences[Annee]), REMOVEFILTERS())
+			VAR _Base =
+			    CALCULATETABLE(
+			        ADDCOLUMNS(
+			            ALL(T_Federation[CodeReference], T_Federation[Federation], T_Federation[Nom court], T_Federation[Logo],
+			                T_Federation[Famille de fédérations], T_Federation[Sous-famille de fédérations], T_Federation[Groupe de fédérations]),
+			            "@Cat",
+			                VAR _c = SWITCH(_Niveau,
+			                            "Famille",      T_Federation[Famille de fédérations],
+			                            "Sous-famille", T_Federation[Sous-famille de fédérations],
+			                            T_Federation[Groupe de fédérations])
+			                RETURN IF(ISBLANK(_c) || _c = "", _LibelleNonClasse, _c),
+			            "@Lic",    CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax) + 0,
+			            "@LicN1",  CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax - 1),
+			            "@LicRef", CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeComparaison),
+			            "@Enf",    CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax, F_Licences[GrandeTrancheAge] = _TrancheEnfants),
+			            "@Fem",    CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax, F_Licences[Sexe] = _CodeFemmes),
+			            "@AgeNb",  CALCULATE(SUM(F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax, NOT ISBLANK(F_Licences[Age])),
+			            "@AgeSom", CALCULATE(SUMX(F_Licences, F_Licences[Age] * F_Licences[NbLicences]), F_Licences[Annee] = _AnneeMax, NOT ISBLANK(F_Licences[Age]))
+			        ),
+			        REMOVEFILTERS()
+			    )
+			VAR _MaxFed = MAXX(_Base, [@Lic])
+			VAR _Cats =
+			    ADDCOLUMNS(
+			        DISTINCT(SELECTCOLUMNS(_Base, "@Cat", [@Cat])),
+			        "@Lic",    VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@Lic]),
+			        "@LicN1",  VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@LicN1]),
+			        "@LicRef", VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@LicRef]),
+			        "@Enf",    VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@Enf]),
+			        "@Fem",    VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@Fem]),
+			        "@AgeNb",  VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@AgeNb]),
+			        "@AgeSom", VAR _c = [@Cat] RETURN SUMX(FILTER(_Base, [@Cat] = _c), [@AgeSom]),
+			        "@Nb",     VAR _c = [@Cat] RETURN COUNTROWS(FILTER(_Base, [@Cat] = _c)),
+			        "@Sel",    IF([@Cat] = _RegroupSel, 1, 0)
+			    )
+			VAR _MaxCat = MAXX(_Cats, [@Lic])
+			-- 4. Affichage (en-têtes avec infobulle de définition)
+			VAR _Colonnes = "grid-template-columns:" & _LargeurNom & "px repeat(6, " & _LargeurCol & "px);"
+			VAR _MinLarg  = _LargeurNom + 6 * _LargeurCol
+			VAR _Entete =
+			    "<div class='lg ent' style='" & _Colonnes & "'>" &
+			    "<div class='nom' title='Cliquez sur un regroupement pour le replier ou le déplier'>" & _Niveau & " / Fédération</div>" &
+			    "<div title='Nombre de licences en " & _AnneeMax & "'>Licences " & _AnneeMax & "</div>" &
+			    "<div title='Évolution des licences entre " & (_AnneeMax - 1) & " et " & _AnneeMax & " (≈ : entre -1 % et +1 %)'>Évol. 1 an</div>" &
+			    "<div title='Évolution des licences depuis " & _AnneeComparaison & ", avant Covid'>Évol. " & _AnneeComparaison & "</div>" &
+			    "<div title='Âge exact moyen des licenciés, pondéré par le nombre de licences'>Âge moyen</div>" &
+			    "<div title='Part des licences détenues par des enfants de 1 à 13 ans'>% enfants</div>" &
+			    "<div title='Part des licences détenues par des femmes'>% femmes</div></div>"
+			VAR _Lignes =
+			    CONCATENATEX(
+			        _Cats,
+			        VAR _c      = [@Cat]
+			        VAR _estSel = [@Sel] = 1
+			        VAR _lic = [@Lic]
+			        VAR _e1  = DIVIDE(_lic, [@LicN1]) - 1
+			        VAR _er  = DIVIDE(_lic, [@LicRef]) - 1
+			        VAR _Pill1 = IF(ISBLANK([@LicN1]), "–", "<span class='" & IF(_e1 > _SeuilNeutre, "up", IF(_e1 < -_SeuilNeutre, "dn", "eq")) & "'>" & IF(ABS(_e1) <= _SeuilNeutre, _FlecheNeutre, IF(_e1 > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_e1, _FormatEvol) & "</span>")
+			        VAR _PillR = IF(ISBLANK([@LicRef]), "–", "<span class='" & IF(_er > _SeuilNeutre, "up", IF(_er < -_SeuilNeutre, "dn", "eq")) & "'>" & IF(ABS(_er) <= _SeuilNeutre, _FlecheNeutre, IF(_er > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_er, _FormatEvol) & "</span>")
+			        VAR _Resume =
+			            "<summary class='lg " & IF(_estSel, "csel", "cat") & "' style='" & _Colonnes & "'>" &
+			            "<div class='nom'><span class='pm'></span>" & SUBSTITUTE(_c, "&", "&amp;") & " <span class='nb'>(" & [@Nb] & ")</span></div>" &
+			            "<div>" & FORMAT(_lic, _FormatNombre) & "<div class='trk' style='width:" & (_LargeurCol - 20) & "px'><div class='barre' style='width:" & ROUND(DIVIDE(_lic, _MaxCat) * (_LargeurCol - 20), 0) & "px'></div></div></div>" &
+			            "<div>" & _Pill1 & "</div><div>" & _PillR & "</div>" &
+			            "<div>" & FORMAT(DIVIDE([@AgeSom], [@AgeNb]), _FormatAge) & "</div>" &
+			            "<div>" & FORMAT(DIVIDE([@Enf], _lic), _FormatPct) & "</div>" &
+			            "<div>" & FORMAT(DIVIDE([@Fem], _lic), _FormatPct) & "</div></summary>"
+			        VAR _LignesFed =
+			            CONCATENATEX(
+			                FILTER(_Base, [@Cat] = _c),
+			                VAR _f   = [@Lic]
+			                VAR _fe1 = DIVIDE(_f, [@LicN1]) - 1
+			                VAR _fer = DIVIDE(_f, [@LicRef]) - 1
+			                VAR _fp1 = IF(ISBLANK([@LicN1]) || _f = 0, "–", "<span class='" & IF(_fe1 > _SeuilNeutre, "up", IF(_fe1 < -_SeuilNeutre, "dn", "eq")) & "'>" & IF(ABS(_fe1) <= _SeuilNeutre, _FlecheNeutre, IF(_fe1 > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_fe1, _FormatEvol) & "</span>")
+			                VAR _fpr = IF(ISBLANK([@LicRef]) || _f = 0, "–", "<span class='" & IF(_fer > _SeuilNeutre, "up", IF(_fer < -_SeuilNeutre, "dn", "eq")) & "'>" & IF(ABS(_fer) <= _SeuilNeutre, _FlecheNeutre, IF(_fer > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_fer, _FormatEvol) & "</span>")
+			                VAR _img = IF(ISBLANK([Logo]) || [Logo] = "", "<span class='logo'></span>", "<img class='logo' src='" & SUBSTITUTE([Logo], "'", "%27") & "'>")
+			                RETURN
+			                    "<div class='lg " & IF([CodeReference] = _FedSel, "fsel", "fed") & "' style='" & _Colonnes & "'>" &
+			                    "<div class='nom' title='" & SUBSTITUTE(SUBSTITUTE([Federation], "&", "&amp;"), "'", "&#39;") & "'>" & _img & "<span style='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>" & SUBSTITUTE([Nom court], "&", "&amp;") & "</span></div>" &
+			                    "<div>" & IF(_f = 0, "–", FORMAT(_f, _FormatNombre)) & "<div class='trk' style='width:" & (_LargeurCol - 20) & "px'><div class='barre' style='width:" & ROUND(DIVIDE(_f, _MaxFed) * (_LargeurCol - 20), 0) & "px'></div></div></div>" &
+			                    "<div>" & _fp1 & "</div><div>" & _fpr & "</div>" &
+			                    "<div>" & IF(_f = 0, "–", FORMAT(DIVIDE([@AgeSom], [@AgeNb]), _FormatAge)) & "</div>" &
+			                    "<div>" & IF(_f = 0, "–", FORMAT(DIVIDE([@Enf], _f), _FormatPct)) & "</div>" &
+			                    "<div>" & IF(_f = 0, "–", FORMAT(DIVIDE([@Fem], _f), _FormatPct)) & "</div></div>",
+			                "",
+			                [@Lic], DESC
+			            )
+			        RETURN "<details" & IF(_OuvrirTout || _estSel, " open", "") & ">" & _Resume & _LignesFed & "</details>",
+			        "",
+			        [@Sel], DESC,
+			        [@Lic], DESC
+			    )
+			-- 5. Total (figé en bas)
+			VAR _T    = SUMX(_Base, [@Lic])
+			VAR _TN1  = SUMX(_Base, [@LicN1])
+			VAR _TRef = SUMX(_Base, [@LicRef])
+			VAR _te1  = DIVIDE(_T, _TN1) - 1
+			VAR _ter  = DIVIDE(_T, _TRef) - 1
+			VAR _Total =
+			    "<div class='lg tot' style='" & _Colonnes & "'>" &
+			    "<div class='nom'>Ensemble des fédérations</div>" &
+			    "<div>" & FORMAT(_T, _FormatNombre) & "</div>" &
+			    "<div>" & IF(ABS(_te1) <= _SeuilNeutre, _FlecheNeutre, IF(_te1 > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_te1, _FormatEvol) & "</div>" &
+			    "<div>" & IF(ABS(_ter) <= _SeuilNeutre, _FlecheNeutre, IF(_ter > 0, _FlecheHaut, _FlecheBas)) & " " & FORMAT(_ter, _FormatEvol) & "</div>" &
+			    "<div>" & FORMAT(DIVIDE(SUMX(_Base, [@AgeSom]), SUMX(_Base, [@AgeNb])), _FormatAge) & "</div>" &
+			    "<div>" & FORMAT(DIVIDE(SUMX(_Base, [@Enf]), _T), _FormatPct) & "</div>" &
+			    "<div>" & FORMAT(DIVIDE(SUMX(_Base, [@Fem]), _T), _FormatPct) & "</div></div>"
+			RETURN
+			    "<style>" & _CSS & "</style>" &
+			    "<div class='tb'><div style='min-width:" & _MinLarg & "px'>" &
+			    _Entete & _Lignes & _Total &
+			    "</div></div>"
+		displayFolder: 2. Affichage
+		lineageTag: b81be063-a1b9-4db0-b6dc-9724a9252bd2
+
+	/// Année de référence (la plus récente de la sélection), en nombre.
+	measure 'Annee Ref' = VALUE(MAX(T_Annee[Annee]))
+		formatString: 0
+		isHidden
+		displayFolder: 4. Indicateurs\Outils
+		lineageTag: 478237db-a6cc-4395-a1e9-487816d2f33d
+
+	/// Licences de l'année précédant l'année de référence, mêmes filtres.
+	measure 'Licences N-1' =
+			VAR _A = [Annee Ref]
+			RETURN CALCULATE([NB Licences], REMOVEFILTERS(T_Annee), T_Annee[Annee] = FORMAT(_A - 1, "0"))
+		formatString: #,0
+		displayFolder: 4. Indicateurs\Évolutions
+		lineageTag: da1e206a-fcdb-4653-8f71-02e19441111e
+
+	/// Licences en 2019 (année de comparaison avant crise sanitaire), mêmes filtres.
+	measure 'Licences 2019' = CALCULATE([NB Licences], REMOVEFILTERS(T_Annee), T_Annee[Annee] = "2019")
+		formatString: #,0
+		displayFolder: 4. Indicateurs\Évolutions
+		lineageTag: 5673c8ec-7ddc-4a39-a99e-9b6648c13a9a
+
+	/// Évolution des licences par rapport à l'année précédente.
+	measure 'Évol 1 an' =
+			VAR _P = [Licences N-1]
+			RETURN IF(NOT ISBLANK(_P), DIVIDE([NB Licences], _P) - 1)
+		formatString: +0.0 %;-0.0 %;0.0 %
+		displayFolder: 4. Indicateurs\Évolutions
+		lineageTag: 08d802b4-c0bc-45c4-bfaf-7e469408e700
+
+	/// Évolution des licences depuis 2019.
+	measure 'Évol depuis 2019' =
+			VAR _P = [Licences 2019]
+			RETURN IF(NOT ISBLANK(_P), DIVIDE([NB Licences], _P) - 1)
+		formatString: +0.0 %;-0.0 %;0.0 %
+		displayFolder: 4. Indicateurs\Évolutions
+		lineageTag: d908aeb6-722f-41e2-ab7d-aa38215d5479
+
+	/// Licences féminines (ignore le segment Sexe).
+	measure 'Licences femmes' = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "F")
+		formatString: #,0
+		displayFolder: 4. Indicateurs\Publics
+		lineageTag: c53ffdb6-6530-45b1-af26-e6510e929ed5
+
+	/// Part des femmes parmi les licences (ignore le segment Sexe).
+	measure 'Part femmes' = DIVIDE([Licences femmes], CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe)))
+		formatString: 0.0 %
+		displayFolder: 4. Indicateurs\Publics
+		lineageTag: c91b9309-5cea-482b-86c6-7858c37a2d27
+
+	/// Licences de toutes les fédérations (retire les filtres fédération, garde territoire, public et année).
+	measure 'Licences ensemble' =
+			CALCULATE(
+			    [NB Licences],
+			    REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux),
+			    REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation)
+			)
+		formatString: #,0
+		displayFolder: 4. Indicateurs\Comparaisons
+		lineageTag: 3b80aad6-ab71-46b7-b41a-0223bc1a0b67
+
+	/// Poids de la sélection dans l'ensemble des licences du même territoire.
+	measure 'Part dans l''ensemble' = DIVIDE([NB Licences], [Licences ensemble])
+		formatString: 0.0 %
+		displayFolder: 4. Indicateurs\Comparaisons
+		lineageTag: 0f625843-6e48-4c86-a405-46bdd1dd77c4
+
+	/// Poids de la sélection dans le territoire divisé par son poids en France entière. 1 = même poids qu'en France ; 1,45 = 45 % de plus.
+	measure 'Indice de spécificité' =
+			DIVIDE(
+			    [Part dans l'ensemble],
+			    CALCULATE(
+			        [Part dans l'ensemble],
+			        REMOVEFILTERS(T_Territoire), REMOVEFILTERS(P_TerrChoix), REMOVEFILTERS(P_TerrAppartenance),
+			        REMOVEFILTERS(P_TerrDep), REMOVEFILTERS(Param_Departement)
+			    )
+			)
+		formatString: 0.00
+		displayFolder: 4. Indicateurs\Comparaisons
+		lineageTag: 6b5b133d-1081-4de8-82d6-781e2960f5d2
+
+	/// Nom du niveau de regroupement choisi dans le segment Niveau (Sous-famille par défaut).
+	measure 'Niveau choisi' = SWITCH(SELECTEDVALUE(Param_Niveau[Paramètre Commande], 1), 0, "Famille", 1, "Sous-famille", 2, "Groupe")
+		isHidden
+		displayFolder: 4. Indicateurs\Outils
+		lineageTag: 8a4ecf4c-076a-44de-ad87-14edb7e1195c
+
+	/// Nom du regroupement de la sélection au niveau choisi (vide si la sélection couvre plusieurs regroupements).
+	measure 'Nom regroupement' =
+			IF(
+			    ISCROSSFILTERED(T_Federation),
+			    SWITCH(
+			        SELECTEDVALUE(Param_Niveau[Paramètre Commande], 1),
+			        0, SELECTEDVALUE(T_Federation[Famille de fédérations]),
+			        1, TRIM(SELECTEDVALUE(T_Federation[Sous-famille de fédérations])),
+			        2, SELECTEDVALUE(T_Federation[Groupe de fédérations])
+			    )
+			)
+		displayFolder: 4. Indicateurs\Outils
+		lineageTag: b6057f40-4c7d-41d6-8c9b-8fc97070f241
+
+	/// Licences de chaque fédération de T_FedNuage, indépendamment des segments fédération (garde territoire, public, année).
+	measure 'Nuage Licences' =
+			CALCULATE(
+			    [NB Licences],
+			    REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation),
+			    TREATAS(VALUES(T_FedNuage[CodeReference]), T_Federation[CodeReference])
+			)
+		formatString: #,0
+		displayFolder: 5. Nuage (page Comparer)
+		lineageTag: a4003af6-e745-4635-b1ea-dd10e4738c12
+
+	/// Évolution depuis 2019 de chaque fédération de T_FedNuage (axe X du nuage).
+	measure 'Nuage Évol depuis 2019' =
+			CALCULATE(
+			    [Évol depuis 2019],
+			    REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation),
+			    TREATAS(VALUES(T_FedNuage[CodeReference]), T_Federation[CodeReference])
+			)
+		formatString: +0.0 %;-0.0 %;0.0 %
+		displayFolder: 5. Nuage (page Comparer)
+		lineageTag: 7b3c6548-4f08-4ee4-8e9b-4f5a3f15f6df
+
+	/// Part de femmes de chaque fédération de T_FedNuage (axe Y du nuage).
+	measure 'Nuage Part femmes' =
+			CALCULATE(
+			    [Part femmes],
+			    REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation),
+			    TREATAS(VALUES(T_FedNuage[CodeReference]), T_Federation[CodeReference])
+			)
+		formatString: 0.0 %
+		displayFolder: 5. Nuage (page Comparer)
+		lineageTag: 557e5c55-41e4-4f3d-bf89-da840e27a302
+
+	/// Couleur du point : orange si la fédération fait partie de la sélection des segments, bleu clair sinon (mise en forme conditionnelle).
+	measure 'Nuage Couleur' =
+			VAR _Code = SELECTEDVALUE(T_FedNuage[CodeReference])
+			RETURN IF(ISCROSSFILTERED(T_Federation) && _Code IN VALUES(T_Federation[CodeReference]), [Style Couleur regroupement], [Style Couleur sélection clair])
+		displayFolder: 5. Nuage (page Comparer)
+		lineageTag: fba7419d-2c98-470a-a5b4-43d3993793a0
+
+	/// Filtre visuel du nuage (est 1) : garde les fédérations de plus de 20 000 licences, plus celles de la sélection.
+	measure 'Nuage Filtre' =
+			VAR _Code = SELECTEDVALUE(T_FedNuage[CodeReference])
+			VAR _Sel = ISCROSSFILTERED(T_Federation) && _Code IN VALUES(T_Federation[CodeReference])
+			RETURN IF(NOT ISBLANK([Nuage Évol depuis 2019]) && ([Nuage Licences] >= 20000 || _Sel), 1)
+		formatString: 0
+		displayFolder: 5. Nuage (page Comparer)
+		lineageTag: 097560c6-6b1b-47fc-a06b-c7af04080b58
+
+	/// Nom du territoire sélectionné (France entière, zone, région ou département).
+	measure 'Libellé territoire' =
+			-- Segment Territoire (Param_Departement ou P_TerrChoix) et segment Département (valeurs du champ Param_Departement → P_TerrDep)
+			VAR _DepChoisi = ISFILTERED(P_TerrDep)
+			VAR _NbDep     = COUNTROWS(VALUES(T_Territoire[Code_DEP]))
+			VAR _NbTot     = COUNTROWS(ALLNOBLANKROW(T_Territoire[Code_DEP]))
+			VAR _Choix     = IF(ISCROSSFILTERED(P_TerrChoix), SELECTEDVALUE(P_TerrChoix[Libellé]))
+			VAR _Dep       = SELECTEDVALUE(T_Territoire[Departement])
+			RETURN
+			    SWITCH(TRUE(),
+			        _DepChoisi && _NbDep = 1, TRIM(MID(_Dep, SEARCH(" - ", _Dep, 1, 0) + 3, 100)),
+			        _DepChoisi, "Plusieurs départements",
+			        NOT ISBLANK(_Choix) && SELECTEDVALUE(P_TerrChoix[Id territoire]) = "TOT", "Tous territoires",
+			        NOT ISBLANK(_Choix), _Choix,
+			        NOT ISCROSSFILTERED(T_Territoire) || _NbDep >= _NbTot, "Tous territoires",
+			        _NbDep = 1, TRIM(MID(_Dep, SEARCH(" - ", _Dep, 1, 0) + 3, 100)),
+			        HASONEVALUE(T_Territoire[Zone_Slicer]), SELECTEDVALUE(T_Territoire[Zone_Slicer]),
+			        HASONEVALUE(T_Territoire[GD_Zone_Slicer]), SELECTEDVALUE(T_Territoire[GD_Zone_Slicer]),
+			        "Plusieurs territoires")
+		isHidden
+		displayFolder: 4. Indicateurs\Outils
+		lineageTag: b75cd7e6-6681-462b-937d-7bb1a2ca3eca
+
+	/// En-tête de la page Portrait (visuel HTML Content) : logo et nom de la fédération choisie, puis ses étiquettes Famille / Sous-famille / Groupe. Sans fédération unique : le regroupement choisi ou « Toutes les fédérations ». Les filtres (territoire, public, année) sont dans HTML Filtres actifs.
+	measure 'HTML Titre' =
+			-- =====================================================================
+			-- HTML Titre | haut des pages Détails / Comparaison | visuel HTML Content ~1544 x 66
+			-- Une seule ligne : logo, nom de la sélection, rattachement ou nombre de fédérations.
+			-- Même logique et mêmes libellés que HTML En-tête (page Portrait).
+			-- Hauteur bloquée (100vh + overflow:hidden) : jamais de barre de défilement.
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _TailleLogo = 56
+			VAR _MargeLogo  = 6
+			-- 2. Charte
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColBord = [Style Couleur bordure]
+			VAR _ColFond = [Style Couleur fond cadre]
+			-- 3. Contexte
+			VAR _Mode    = [Sélection mode]
+			VAR _UneFed  = _Mode = "Fédération"
+			VAR _Logo    = IF(_UneFed, SELECTEDVALUE(T_Federation[Logo]))
+			VAR _NomLong = IF(_UneFed, SELECTEDVALUE(T_Federation[Federation]), [Sélection libellé])
+			VAR _AnRef   = MAX(T_Annee[Annee])
+			VAR _NbFed   = [Sélection nb fédérations]
+			-- 4. Gabarits
+			VAR _Gras     = "<b style='color:" & _ColTxt & ";font-weight:600'>"
+			VAR _Pastille = "<span style='flex:none;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:13px;background:#FFFFFF;border:1px solid " & _ColBord & ";font-size:13px;color:" & _ColLib & ";white-space:nowrap'>"
+			VAR _IcoToutes = "<svg width='30' height='30' viewBox='0 0 24 24' fill='none' stroke='" & [Style Couleur icône] & "' stroke-width='1.8'><rect x='4' y='4' width='7' height='7' rx='1.5'/><rect x='13' y='4' width='7' height='7' rx='1.5'/><rect x='4' y='13' width='7' height='7' rx='1.5'/><rect x='13' y='13' width='7' height='7' rx='1.5'/></svg>"
+			VAR _Visuel =
+			    IF(NOT ISBLANK(_Logo) && _Logo <> "",
+			        "<img src='" & SUBSTITUTE(_Logo, "'", "%27") & "' style='max-width:" & (_TailleLogo - 2 * _MargeLogo) & "px;max-height:" & (_TailleLogo - 2 * _MargeLogo) & "px;object-fit:contain'/>",
+			        _IcoToutes)
+			VAR _Rattachement =
+			    SWITCH(_Mode,
+			        "Fédération",
+			            _Pastille & "Famille " & _Gras & SELECTEDVALUE(T_Federation[Famille de fédérations]) & "</b></span>"
+			            & _Pastille & "Sous-famille " & _Gras & TRIM(SELECTEDVALUE(T_Federation[Sous-famille de fédérations])) & "</b></span>"
+			            & _Pastille & "Groupe " & _Gras & SELECTEDVALUE(T_Federation[Groupe de fédérations]) & "</b></span>",
+			        "Ensemble",
+			            _Pastille & _Gras & _NbFed & "</b> fédérations agréées en " & _AnRef & "</span>",
+			        _Pastille & _Gras & _NbFed & "</b> fédération" & IF(_NbFed > 1, "s") & "</span>")
+			-- 5. Assemblage (nom complet en infobulle native : rien ne déborde du visuel)
+			RETURN
+			    [Style CSS commun]
+			    & "<div style='font-family:" & [Style Police] & ";display:flex;align-items:center;gap:16px;height:100vh;overflow:hidden'>"
+			    & "<div style='width:" & _TailleLogo & "px;height:" & _TailleLogo & "px;flex:none;border-radius:14px;background:" & _ColFond & ";border:1px solid " & _ColBord & ";display:flex;align-items:center;justify-content:center'>" & _Visuel & "</div>"
+			    & "<span class='el' title='" & SUBSTITUTE(SUBSTITUTE(_NomLong, "&", "&amp;"), "'", "&#39;") & "' style='font-size:24px;font-weight:700;color:" & _ColTxt & ";letter-spacing:-.01em'>" & SUBSTITUTE(_NomLong, "&", "&amp;") & "</span>"
+			    & "<div style='display:flex;gap:8px;flex:none'>" & _Rattachement & "</div>"
+			    & "</div>"
+		displayFolder: 2. Affichage
+		lineageTag: e51f50f3-071c-41a7-88eb-57001e95ae57
+
+	/// Licences de l'année de l'axe (T_AnneeAxe). Ignore le segment Année pour que le graphique montre toujours toute la période.
+	measure 'Evo Licences' =
+			CALCULATE(
+			    [NB Licences],
+			    REMOVEFILTERS(T_Annee),
+			    TREATAS(VALUES(T_AnneeAxe[Annee]), T_Annee[Annee])
+			)
+		formatString: #,0
+		displayFolder: 6. Portrait\Évolution
+		lineageTag: 6c282a2b-f7c0-479a-b958-34f451b1b8e2
+
+	/// Base 100 = première année disponible, sur l'axe T_AnneeAxe.
+	measure 'Evo Indice' =
+			VAR _A0 = CALCULATE(MIN(T_Annee[Annee]), REMOVEFILTERS(T_Annee))
+			RETURN
+			    DIVIDE(
+			        [Evo Licences],
+			        CALCULATE([NB Licences], REMOVEFILTERS(T_Annee), T_Annee[Annee] = _A0)
+			    ) * 100
+		formatString: 0.0
+		isHidden
+		displayFolder: 6. Portrait\Évolution
+		lineageTag: 6aad76c0-d7db-4d80-8c82-3b2aebaf1535
+
+	/// Ligne 1 du graphique Base 100.
+	measure 'Evo Indice sélection' = CALCULATE([Evo Indice], Comparaison[Comparaison] = "Sélection")
+		formatString: 0.0
+		displayFolder: 6. Portrait\Évolution
+		lineageTag: cafb8414-c439-45a7-849f-9f5cad3b678b
+
+	/// Ligne 2 du graphique Base 100 : regroupement de la sélection au niveau choisi.
+	measure 'Evo Indice regroupement' = CALCULATE([Evo Indice], Comparaison[Comparaison] = "Regroupement")
+		formatString: 0.0
+		displayFolder: 6. Portrait\Évolution
+		lineageTag: cc97025c-81aa-4a07-ba35-97fc585a1900
+
+	/// Ligne 3 du graphique Base 100 : toutes les fédérations.
+	measure 'Evo Indice ensemble' = CALCULATE([Evo Indice], Comparaison[Comparaison] = "Ensemble")
+		formatString: 0.0
+		displayFolder: 6. Portrait\Évolution
+		lineageTag: 9090f2f0-9a1b-4200-b8a4-fe7d4403956c
+
+	/// Valeur de l'indicateur pour la zone dessinée (Id carte) : ignore les segments territoire et applique les départements de la zone (T_CarteZoneDep, codes). Seul TREATAS de la carte.
+	measure 'Carte Valeur' =
+			VAR _Ind  = SELECTEDVALUE(T_CarteIndicateur[Ordre], 1)
+			-- départements (codes) de la zone dessinée
+			VAR _Ids  = VALUES(T_CarteAffichage[Id carte])
+			VAR _Deps = SELECTCOLUMNS(FILTER(T_CarteZoneDep, T_CarteZoneDep[Id carte] IN _Ids), "Code_DEP", T_CarteZoneDep[Code_DEP])
+			RETURN
+			    CALCULATE(
+			        SWITCH(_Ind,
+			            1, [NB Licences],
+			            2, [Évol 1 an],
+			            3, [Évol depuis 2019],
+			            4, [Part femmes],
+			            5, [Indice de spécificité]
+			        ),
+			        REMOVEFILTERS(T_Territoire), REMOVEFILTERS(P_TerrChoix), REMOVEFILTERS(P_TerrAppartenance),
+			        REMOVEFILTERS(P_TerrDep), REMOVEFILTERS(Param_Departement),
+			        TREATAS(_Deps, T_Territoire[Code_DEP])
+			    )
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 8ca56dc4-be06-48da-b081-785fbfbcf0a7
+
+		formatStringDefinition = SWITCH(SELECTEDVALUE(T_CarteIndicateur[Ordre], 1), 1, "#,0", 4, "0.0 %", 5, "0.00", "+0.0 %;-0.0 %;0.0 %")
+
+	/// 1 si la zone est dessinée (filtre du visuel Azure Maps : Carte Visible = 1). Zones données par T_CarteAffichage (territoire × niveau) ; sans territoire choisi, celles de TOT.
+	measure 'Carte Visible' =
+			-- Territoire choisi : segment sur Param_Departement (ou P_TerrChoix), d'où ISCROSSFILTERED
+			VAR _Niv = [Carte Niveau]
+			VAR _NbLignes =
+			    IF(ISCROSSFILTERED(P_TerrChoix),
+			        CALCULATE(COUNTROWS(T_CarteAffichage), T_CarteAffichage[Niveau affiché] = _Niv),
+			        CALCULATE(COUNTROWS(T_CarteAffichage), T_CarteAffichage[Niveau affiché] = _Niv, T_CarteAffichage[Id territoire] = "TOT"))
+			RETURN IF(_NbLignes > 0, 1)
+		formatString: 0
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 68700e5c-8968-4fa6-a75c-a590eea7da8b
+
+	/// Plus petite valeur de l'indicateur parmi les zones dessinées au niveau courant.
+	measure 'Carte Min' =
+			VAR _Pref = IF([Carte Niveau] = 1, "R", "D")
+			RETURN
+			    CALCULATE(
+			        MINX(FILTER(VALUES(T_CarteAffichage[Id carte]), LEFT(T_CarteAffichage[Id carte], 1) = _Pref && [Carte Visible] = 1), [Carte Valeur]),
+			        REMOVEFILTERS(T_CarteAffichage[Id carte], T_CarteAffichage[Latitude], T_CarteAffichage[Longitude], T_CarteAffichage[Rôle])
+			    )
+		isHidden
+		displayFolder: 6. Portrait\Carte
+		lineageTag: dc3590cd-ce49-4d9c-b625-59ad19b73073
+
+	/// Plus grande valeur de l'indicateur parmi les zones dessinées au niveau courant.
+	measure 'Carte Max' =
+			VAR _Pref = IF([Carte Niveau] = 1, "R", "D")
+			RETURN
+			    CALCULATE(
+			        MAXX(FILTER(VALUES(T_CarteAffichage[Id carte]), LEFT(T_CarteAffichage[Id carte], 1) = _Pref && [Carte Visible] = 1), [Carte Valeur]),
+			        REMOVEFILTERS(T_CarteAffichage[Id carte], T_CarteAffichage[Latitude], T_CarteAffichage[Longitude], T_CarteAffichage[Rôle])
+			    )
+		isHidden
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 700dfcc2-7c34-41fb-af51-ed50ec573832
+
+	/// RÉGLAGES DES COULEURS DE LA CARTE (lus par Carte Couleur et HTML Carte). Renvoie « début|milieu|fin » (codes #RRGGBB). Palette continue pour volumes et parts, divergente pour évolutions et indice de spécificité.
+	measure 'Carte Palette' =
+			-- =====================================================================
+			-- Carte Palette : 3 couleurs « début|milieu|fin » (codes #RRGGBB à 7 caractères)
+			-- =====================================================================
+			-- 1. Réglages : palette continue (volumes, parts), indigo soutenu dès le début
+			VAR _Debut  = "#B4C2F8"
+			VAR _Milieu = "#6580EA"
+			VAR _Fin    = [Style Couleur icône]
+			-- 2. Réglages : palette divergente (évolutions, indice de spécificité)
+			VAR _Baisse = "#E5484D"
+			VAR _Neutre = "#DDE2EA"
+			VAR _Hausse = "#12A150"
+			-- 3. Choix selon l'indicateur
+			VAR _Ind = SELECTEDVALUE(T_CarteIndicateur[Ordre], 1)
+			RETURN IF(_Ind IN {2, 3, 5}, _Baisse & "|" & _Neutre & "|" & _Hausse, _Debut & "|" & _Milieu & "|" & _Fin)
+		isHidden
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 493c2166-c690-48c5-9886-923aa8783bcd
+
+	/// Couleur de remplissage d'une zone (Azure Maps, fx valeur de champ) : dégradé de Carte Palette ; pour les volumes et parts, l'échelle mélange la valeur (30 %) et le rang parmi les zones affichées (70 %) afin de bien distinguer les territoires malgré les valeurs extrêmes ; échelle linéaire centrée pour les évolutions et l'indice ; couleur « sans donnée » si la valeur est absente (ou 0 licence) ; transparent pour une zone en rôle Contour.
+	measure 'Carte Couleur' =
+			-- =====================================================================
+			-- Carte Couleur : couleur #RRGGBB d'une zone de la carte
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _ContourSeul = "rgba(0,0,0,0)"            -- zone dont on ne montre que le contour
+			VAR _SansDonnee  = [Style Couleur sans donnée] -- pas de licence ou calcul impossible
+			VAR _PartRang    = 0.7                          -- poids du rang (0 = valeur seule, 1 = rang seul) pour volumes et parts
+			-- 2. Valeur et bornes
+			VAR _Ind    = SELECTEDVALUE(T_CarteIndicateur[Ordre], 1)
+			VAR _Diverg = _Ind IN {2, 3, 5}
+			VAR _Centre = IF(_Ind = 5, 1, 0)
+			VAR _V      = [Carte Valeur]
+			VAR _Vide   = ISBLANK(_V) || (_Ind = 1 && _V = 0)
+			VAR _Lo     = [Carte Min]
+			VAR _Hi     = [Carte Max]
+			VAR _Amp    = MAX(ABS(_Hi - _Centre), ABS(_Lo - _Centre))
+			-- 2b. Rang de la zone parmi les zones affichées (volumes et parts seulement)
+			VAR _Pref  = IF([Carte Niveau] = 1, "R", "D")
+			VAR _Zones =
+			    CALCULATETABLE(
+			        FILTER(VALUES(T_CarteAffichage[Id carte]), LEFT(T_CarteAffichage[Id carte], 1) = _Pref && [Carte Visible] = 1),
+			        REMOVEFILTERS(T_CarteAffichage[Id carte], T_CarteAffichage[Latitude], T_CarteAffichage[Longitude], T_CarteAffichage[Rôle])
+			    )
+			VAR _NbZones = COUNTROWS(_Zones)
+			VAR _Rang    = IF(_Diverg || _Vide, 0, COUNTROWS(FILTER(_Zones, [Carte Valeur] < _V)))
+			VAR _TRang   = DIVIDE(_Rang, _NbZones - 1, 0.5)
+			VAR _TLin    = DIVIDE(_V - _Lo, _Hi - _Lo, 0.5)
+			VAR _T0      = IF(_Diverg, 0.5 + DIVIDE(_V - _Centre, 2 * _Amp, 0), _PartRang * _TRang + (1 - _PartRang) * _TLin)
+			VAR _T       = MAX(0, MIN(1, _T0))
+			-- 3. Interpolation entre deux couleurs de la palette
+			VAR _Pal = [Carte Palette]
+			VAR _C1  = LEFT(_Pal, 7)
+			VAR _C2  = MID(_Pal, 9, 7)
+			VAR _C3  = RIGHT(_Pal, 7)
+			VAR _CA  = IF(_T <= 0.5, _C1, _C2)
+			VAR _CB  = IF(_T <= 0.5, _C2, _C3)
+			VAR _U   = IF(_T <= 0.5, _T / 0.5, (_T - 0.5) / 0.5)
+			VAR _Hex = "0123456789ABCDEF"
+			VAR _Degrade =
+			    "#" & CONCATENATEX(
+			        GENERATESERIES(0, 2),
+			        VAR _P = 2 + 2 * [Value]
+			        VAR _A = (SEARCH(MID(_CA, _P, 1), _Hex) - 1) * 16 + SEARCH(MID(_CA, _P + 1, 1), _Hex) - 1
+			        VAR _B = (SEARCH(MID(_CB, _P, 1), _Hex) - 1) * 16 + SEARCH(MID(_CB, _P + 1, 1), _Hex) - 1
+			        VAR _X = ROUND(_A + (_B - _A) * _U, 0)
+			        RETURN MID(_Hex, INT(_X / 16) + 1, 1) & MID(_Hex, MOD(_X, 16) + 1, 1),
+			        "", [Value], ASC)
+			-- 4. Résultat
+			RETURN
+			    SWITCH(TRUE(),
+			        [Carte Rôle] = "Contour", _ContourSeul,
+			        NOT HASONEVALUE(T_CarteAffichage[Id carte]), BLANK(),
+			        _Vide, _SansDonnee,
+			        _Degrade)
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 97e71a85-d9b8-4a66-b6d4-4f76b56fb4c2
+
+	/// Légende de la carte (visuel HTML Content) : nom de l'indicateur, barre de dégradé (couleurs de Carte Palette), minimum et maximum des zones affichées, territoire choisi.
+	measure 'HTML Légende carte' =
+			-- Réglages
+			VAR _Police      = [Style Police]
+			VAR _CouleurTexte = [Style Couleur texte]
+			VAR _CouleurSecondaire = [Style Couleur texte secondaire]
+			VAR _CouleurSelection  = [Style Couleur marine]   -- même couleur que Carte Contour couleur
+			-- Données
+			VAR _Ind    = SELECTEDVALUE(T_CarteIndicateur[Ordre], 1)
+			VAR _Nom    = SELECTEDVALUE(T_CarteIndicateur[Indicateur], "Licences")
+			VAR _Diverg = _Ind IN {2, 3, 5}
+			VAR _Centre = IF(_Ind = 5, 1, 0)
+			VAR _Fmt    = SWITCH(_Ind, 1, "#,0", 4, "0.0 %", 5, "0.00", "+0.0 %;-0.0 %;0.0 %")
+			VAR _Lo     = [Carte Min]
+			VAR _Hi     = [Carte Max]
+			VAR _Amp    = MAX(ABS(_Hi - _Centre), ABS(_Lo - _Centre))
+			VAR _Pal    = [Carte Palette]
+			VAR _C1     = LEFT(_Pal, 7)
+			VAR _C2     = MID(_Pal, 9, 7)
+			VAR _C3     = RIGHT(_Pal, 7)
+			VAR _Niv    = [Carte Niveau]
+			VAR _Force  = ISFILTERED(P_TerrDep) && SELECTEDVALUE(T_NiveauGeo[Ordre], 1) = 1
+			VAR _Annee  = MAX(T_Annee[Annee])
+			VAR _Titre  = _Nom & IF(_Ind IN {1, 4, 5}, " " & _Annee, " (" & _Annee & ")") & " · " & IF(_Niv = 1, "par région", "par département" & IF(_Force, " (département choisi)"))
+			VAR _Terr   = [Libellé territoire]
+			VAR _L1     = IF(_Diverg, FORMAT(_Centre - _Amp, _Fmt), FORMAT(_Lo, _Fmt))
+			VAR _L2     = IF(_Diverg, "<span>" & FORMAT(_Centre, _Fmt) & "</span>", "")
+			VAR _L3     = IF(_Diverg, FORMAT(_Centre + _Amp, _Fmt), FORMAT(_Hi, _Fmt))
+			VAR _Choix  =
+			    IF(_Terr <> "Tous territoires",
+			        "<div style='margin-top:10px;font-size:12px;color:" & _CouleurSecondaire & ";display:flex;align-items:center;gap:7px'><i style='flex:none;display:inline-block;width:14px;height:10px;border:2.5px solid " & _CouleurSelection & ";border-radius:2px'></i><span>Territoire choisi : <b style='color:" & _CouleurTexte & "'>" & _Terr & "</b></span></div>")
+			-- carte affichée ? (aucune zone pour DROM, COM, Autres)
+			VAR _SurCarte = NOT ISEMPTY(FILTER(ALL(T_CarteAffichage[Id carte]), [Carte Visible] = 1))
+			RETURN
+			    IF(NOT _SurCarte,
+			        "<div style='font-family:" & _Police & ";font-size:13px;color:" & _CouleurSecondaire & ";line-height:1.5'><b style='color:" & [Style Couleur filtre actif texte] & "'>Territoire hors carte</b><br>La carte couvre la métropole. Les chiffres de la page portent sur : <b style='color:" & _CouleurTexte & "'>" & _Terr & "</b></div>",
+			    IF(NOT ISBLANK(_Hi),
+			        "<div style='font-family:" & _Police & ";color:" & _CouleurTexte & "'>"
+			        & "<div style='font-size:12.5px;font-weight:600;margin-bottom:7px'>" & _Titre & "</div>"
+			        & "<div style='height:12px;border-radius:6px;background:linear-gradient(90deg," & _C1 & "," & _C2 & "," & _C3 & ")'></div>"
+			        & "<div style='display:flex;justify-content:space-between;font-size:12px;color:" & _CouleurSecondaire & ";margin-top:5px'><span>" & _L1 & "</span>" & _L2 & "<span>" & _L3 & "</span></div>"
+			        & IF(_Diverg, "<div style='display:flex;justify-content:space-between;font-size:11px;color:" & _CouleurSecondaire & "'><span>" & IF(_Ind = 5, "moins représenté", "baisse") & "</span><span>" & IF(_Ind = 5, "plus représenté", "hausse") & "</span></div>")
+			        & _Choix
+			        & "</div>"
+			    ))
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 41baf7ed-af56-41d4-b8a6-f1e640d5df8b
+
+	/// Chiffres clés de la page Portrait (visuel HTML Content, ~1500 x 205) : 4 cartes. Licences (+ logo de la fédération) ; évolution sur 1 an ; évolution depuis 2019 ; poids. Libellés longs tronqués avec « … » et texte complet au survol ; chiffres jamais coupés ; infobulles de lecture.
+	measure 'HTML Chiffres clés' =
+			-- =====================================================================
+			-- HTML Chiffres clés | page Portrait | visuel HTML Content ~1558 x 205
+			-- 4 cartes : Licences / Évolution 1 an / Évolution depuis 2019 / Poids
+			-- Mise en page FIXE : chaque carte garde les mêmes lignes quels que soient les segments
+			-- (une valeur sans objet s'affiche « – » en gris, avec la raison au survol).
+			-- Dépend de : Sélection mode, Sélection libellé, Évol 1 an, Évol depuis 2019,
+			--             Licences ensemble, charte (dossier 0. Style)
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _Colonnes        = "1fr 1fr 1fr 1.15fr"   -- largeur relative des 4 cartes
+			VAR _AnneeAvantCovid = 2019
+			VAR _FmtEvol         = "+0.0 %;-0.0 %;0.0 %"
+			VAR _FmtEcart        = "+#,0;-#,0;0"
+			VAR _TexteHerosClair = "#B7C9F0"
+			-- 2. Charte
+			VAR _Police  = [Style Police]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColFort = [Style Couleur texte fort]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColNeut = [Style Couleur neutre]
+			VAR _ColGril = [Style Couleur grille]
+			VAR _ColVide = [Style Couleur bordure forte]
+			VAR _TxtTxt  = [Style Taille texte]
+			VAR _TxtPet  = [Style Taille petit]
+			VAR _TxtChif = [Style Taille chiffre]
+			-- 3. Contexte (sélection)
+			VAR _Mode    = [Sélection mode]
+			VAR _UneFed  = _Mode = "Fédération"
+			VAR _AvecReg = _Mode IN {"Fédération", "Plusieurs fédérations"} && NOT ISBLANK([Nom regroupement])
+			VAR _NomSel  = [Sélection libellé]
+			VAR _ModeReg = _Mode = "Regroupement"      -- regroupement entier sélectionné : il occupe la ligne « regroupement » (orange)
+			VAR _NomReg  = IF(_AvecReg, [Niveau choisi] & " · " & [Nom regroupement], IF(_ModeReg, [Niveau choisi] & " · " & _NomSel, "Regroupement"))
+			VAR _PourquoiPasReg =
+			    SWITCH(_Mode,
+			        "Ensemble",     "Aucun regroupement : choisissez une fédération ou un regroupement.",
+			        "Regroupement", "La sélection est déjà un regroupement.",
+			        "Les fédérations choisies n'appartiennent pas au même regroupement.")
+			VAR _AnRef   = VALUE(MAX(T_Annee[Annee]))
+			VAR _Logo    = IF(_UneFed, SELECTEDVALUE(T_Federation[Logo]))
+			-- 4. Données
+			VAR _Lic     = [NB Licences]
+			VAR _LicN1   = [Licences N-1]
+			VAR _Lic19   = [Licences 2019]
+			VAR _E1      = [Évol 1 an]
+			VAR _E19     = IF(_AnRef > _AnneeAvantCovid, [Évol depuis 2019])
+			VAR _E1Reg   = IF(_AvecReg, CALCULATE([Évol 1 an], Comparaison[Comparaison] = "Regroupement"), IF(_ModeReg, _E1))
+			VAR _E19Reg  = IF(_AvecReg && _AnRef > _AnneeAvantCovid, CALCULATE([Évol depuis 2019], Comparaison[Comparaison] = "Regroupement"), IF(_ModeReg, _E19))
+			VAR _E1Ens   = CALCULATE([Évol 1 an], Comparaison[Comparaison] = "Ensemble")
+			VAR _E19Ens  = IF(_AnRef > _AnneeAvantCovid, CALCULATE([Évol depuis 2019], Comparaison[Comparaison] = "Ensemble"))
+			VAR _LicEns  = [Licences ensemble]
+			VAR _Groupe  = IF(_UneFed, SELECTEDVALUE(T_Federation[Groupe de fédérations]))
+			VAR _Famille = IF(_UneFed, SELECTEDVALUE(T_Federation[Famille de fédérations]))
+			VAR _LicGroupe = IF(_UneFed, CALCULATE([NB Licences], REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation), T_Federation[Groupe de fédérations] = _Groupe))
+			VAR _LicFam    = IF(_UneFed, CALCULATE([NB Licences], REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation), T_Federation[Famille de fédérations] = _Famille))
+			VAR _Ecart1  = IF(NOT ISBLANK(_LicN1), _Lic - _LicN1)
+			VAR _Ecart19 = IF(_AnRef > _AnneeAvantCovid && NOT ISBLANK(_Lic19), _Lic - _Lic19)
+			-- 5. Icônes (CC = couleur du trait, PP = tracé de la flèche)
+			VAR _Svg     = "<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='CC' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'>"
+			VAR _IcoLic  = _Svg & "<circle cx='9' cy='8' r='3.2'/><path d='M3 20c.7-3.4 3-5.2 6-5.2s5.3 1.8 6 5.2'/><circle cx='17' cy='9' r='2.4'/><path d='M16.5 14.6c2.3.2 4 1.8 4.5 4.4'/></svg>"
+			VAR _IcoE1   = _Svg & "<path d='M4 17l6-6 4 4 6-7'/><path d='M14 8h6v6'/></svg>"
+			VAR _IcoE19  = _Svg & "<path d='M3 12a9 9 0 1 0 3-6.7'/><path d='M3 4v5h5'/><path d='M12 8v4l3 2'/></svg>"
+			VAR _IcoPds  = _Svg & "<path d='M12 3a9 9 0 1 0 9 9h-9z'/><path d='M15 3.5A9 9 0 0 1 20.5 9H15z'/></svg>"
+			VAR _Fleche  = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='CC' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='PP'/></svg>"
+			VAR _Haut    = "M12 19V5M5 12l7-7 7 7"
+			VAR _Bas     = "M12 5v14M5 12l7 7 7-7"
+			-- 6. Gabarits
+			VAR _Carte   = "<div style='background:#FFFFFF;border:1px solid " & _ColGril & ";border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;min-width:0;box-shadow:0 1px 2px rgba(16,24,40,.04)'>"
+			VAR _Tete    = "<div style='display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid " & [Style Couleur fond neutre] & "'><span style='flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:"
+			VAR _TeteMil = "'>"
+			VAR _TeteTxt = "</span><span class='el' style='font-size:" & _TxtTxt & "px;font-weight:700;color:" & _ColTxt & "'>"
+			VAR _TeteFin = "</span></div>"
+			VAR _Note    = "<div class='el' style='font-size:" & _TxtPet & "px;color:" & _ColNeut & ";margin-top:4px'>"
+			VAR _Vide    = "<span style='font-size:" & _TxtChif & "px;font-weight:700;color:" & _ColVide & ";line-height:1'>–</span>"
+			-- lignes de comparaison (toujours 2) : regroupement (grisé si sans objet) et ensemble
+			VAR _LigneReg = "<div class='tt' style='display:flex;align-items:center;gap:8px;font-size:" & _TxtPet & "px;color:" & _ColLib & ";OPA'><i style='flex:none;width:8px;height:8px;border-radius:50%;background:" & [Style Couleur regroupement] & "'></i><span class='el' style='flex:1'>" & _NomReg & "</span><b class='nb' style='font-weight:600;color:" & _ColFort & "'>VAL</b><div class='tip'>TIP</div></div>"
+			VAR _LigneEns = "<div class='tt' style='display:flex;align-items:center;gap:8px;font-size:" & _TxtPet & "px;color:" & _ColLib & "'><i style='flex:none;width:8px;height:8px;border-radius:50%;background:" & [Style Couleur ensemble] & "'></i><span class='el' style='flex:1'>Ensemble des fédérations</span><b class='nb' style='font-weight:600;color:" & _ColFort & "'>VAL</b><div class='tip'>TIP</div></div>"
+			VAR _DebComp  = "<div style='margin-top:auto;padding-top:7px;display:flex;flex-direction:column;gap:3px;border-top:1px dashed " & _ColGril & "'>"
+			VAR _TipRegVide = "<b>Regroupement</b><br>" & _PourquoiPasReg
+			VAR _Comp1 =
+			    _DebComp
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneReg, "OPA", IF(ISBLANK(_E1Reg), "opacity:.45", "")), "VAL", IF(ISBLANK(_E1Reg), "–", FORMAT(_E1Reg, _FmtEvol))), "TIP", IF(ISBLANK(_E1Reg), _TipRegVide, "<b>" & _NomReg & "</b><br>Évolution sur 1 an : " & FORMAT(_E1Reg, _FmtEvol)))
+			    & SUBSTITUTE(SUBSTITUTE(_LigneEns, "VAL", IF(ISBLANK(_E1Ens), "–", FORMAT(_E1Ens, _FmtEvol))), "TIP", "<b>Ensemble des fédérations</b><br>Évolution sur 1 an : " & IF(ISBLANK(_E1Ens), "non calculable", FORMAT(_E1Ens, _FmtEvol)))
+			    & "</div>"
+			VAR _Comp19 =
+			    _DebComp
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneReg, "OPA", IF(ISBLANK(_E19Reg), "opacity:.45", "")), "VAL", IF(ISBLANK(_E19Reg), "–", FORMAT(_E19Reg, _FmtEvol))), "TIP", IF(ISBLANK(_E19Reg), _TipRegVide, "<b>" & _NomReg & "</b><br>Évolution depuis " & _AnneeAvantCovid & " : " & FORMAT(_E19Reg, _FmtEvol)))
+			    & SUBSTITUTE(SUBSTITUTE(_LigneEns, "VAL", IF(ISBLANK(_E19Ens), "–", FORMAT(_E19Ens, _FmtEvol))), "TIP", "<b>Ensemble des fédérations</b><br>Évolution depuis " & _AnneeAvantCovid & " : " & IF(ISBLANK(_E19Ens), "non calculable", FORMAT(_E19Ens, _FmtEvol)))
+			    & "</div>"
+			-- 7. Données absentes
+			VAR _SansDonnees =
+			    "<div style='font-family:" & _Police & ";height:100%;display:flex;align-items:center;gap:16px;padding:18px 22px;background:#FFFFFF;border:1px dashed " & _ColVide & ";border-radius:16px'>"
+			    & "<span style='display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:" & [Style Couleur fond neutre] & "'>" & SUBSTITUTE(SUBSTITUTE(_Svg, "CC", _ColLib), "16", "22") & "<circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg></span>"
+			    & "<div><div style='font-size:" & _TxtTxt & "px;font-weight:700;color:" & _ColTxt & "'>Aucune licence pour cette sélection en " & _AnRef & "</div>"
+			    & "<div style='font-size:" & _TxtPet & "px;color:" & _ColLib & ";margin-top:4px'>Cette combinaison de fédération, territoire, public et année ne compte aucune licence. Élargissez un filtre ou réinitialisez la sélection.</div></div></div>"
+			-- 8. Carte 1 : licences (+ logo)
+			VAR _Mini    = "<div class='tt' style='flex:1;min-width:0;padding:5px 10px;border-radius:9px;background:rgba(255,255,255,.08)'><div style='font-size:13px;color:" & _TexteHerosClair & "'>"
+			VAR _LogoHtml =
+			    IF(NOT ISBLANK(_Logo) && _Logo <> "",
+			        "<span style='flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:#FFFFFF;box-shadow:0 2px 6px rgba(0,0,0,.25)'><img src='" & SUBSTITUTE(_Logo, "'", "%27") & "' style='max-width:32px;max-height:32px;object-fit:contain'></span>")
+			VAR _C1 =
+			    "<div style='border-radius:16px;padding:12px 16px;color:#FFFFFF;background:linear-gradient(135deg," & [Style Couleur marine] & " 0%," & [Style Couleur marine 2] & " 100%);display:flex;flex-direction:column;min-width:0'>"
+			    & "<div style='display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.14);height:37px'>"
+			    & "<span style='flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.14)'>" & SUBSTITUTE(_IcoLic, "CC", "#FFFFFF") & "</span>"
+			    & "<div class='tt' style='display:flex;min-width:0'><span class='el' style='font-size:" & _TxtTxt & "px;font-weight:700'>" & _NomSel & "</span>"
+			    & "<div class='tip bas'><b>" & _NomSel & "</b>" & IF(_Mode = "Plusieurs fédérations", "<br>" & [Sélection liste]) & "<br><span>Licences " & _AnRef & " · " & [Libellé territoire] & "</span></div></div>"
+			    & _LogoHtml & "</div>"
+			    & "<div class='nb' style='font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-top:8px'>" & FORMAT(_Lic, "#,0") & "</div>"
+			    & "<div class='el' style='font-size:13px;color:" & _TexteHerosClair & "'>licences en " & _AnRef & " · " & [Libellé territoire] & "</div>"
+			    & "<div style='display:flex;gap:8px;margin-top:auto'>"
+			    & _Mini & "en un an</div><div class='nb' style='font-size:" & _TxtTxt & "px;font-weight:700'>" & IF(ISBLANK(_Ecart1), "–", FORMAT(_Ecart1, _FmtEcart)) & "</div>"
+			    & "<div class='tip'>" & IF(ISBLANK(_Ecart1), "Pas de licence en " & (_AnRef - 1) & " : écart non calculable", "<b>" & FORMAT(_Ecart1, _FmtEcart) & " licences</b> entre " & (_AnRef - 1) & " et " & _AnRef & "<br><span>" & FORMAT(_LicN1, "#,0") & " → " & FORMAT(_Lic, "#,0") & "</span>") & "</div></div>"
+			    & _Mini & "depuis " & _AnneeAvantCovid & "</div><div class='nb' style='font-size:" & _TxtTxt & "px;font-weight:700'>" & IF(ISBLANK(_Ecart19), "–", FORMAT(_Ecart19, _FmtEcart)) & "</div>"
+			    & "<div class='tip'>" & IF(ISBLANK(_Ecart19), "Pas de licence en " & _AnneeAvantCovid & " (ou année choisie ≤ " & _AnneeAvantCovid & ") : écart non calculable", "<b>" & FORMAT(_Ecart19, _FmtEcart) & " licences</b> entre " & _AnneeAvantCovid & " et " & _AnRef & "<br><span>" & FORMAT(_Lic19, "#,0") & " → " & FORMAT(_Lic, "#,0") & "</span>") & "</div></div>"
+			    & "</div></div>"
+			-- 9. Cartes 2 et 3 : évolutions (même gabarit)
+			VAR _Evo    = "<div class='tt' style='display:flex;align-items:center;gap:10px;margin-top:8px;width:max-content'>"
+			VAR _ValEvo = "<span class='nb' style='font-size:" & _TxtChif & "px;font-weight:700;letter-spacing:-.02em;line-height:1;color:"
+			VAR _Coul1  = IF(_E1 < 0, [Style Couleur baisse], [Style Couleur hausse])
+			VAR _C2 =
+			    _Carte & _Tete & [Style Couleur accent fond] & _TeteMil & SUBSTITUTE(_IcoE1, "CC", [Style Couleur accent]) & _TeteTxt & "Évolution sur 1 an" & _TeteFin
+			    & IF(ISBLANK(_E1), "<div class='tt' style='margin-top:8px;width:max-content'>" & _Vide & "<div class='tip bas'>Pas de licence en " & (_AnRef - 1) & " pour la sélection :<br>évolution non calculable. Les comparaisons restent affichées.</div></div>",
+			        _Evo & "<span style='display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:" & IF(_E1 < 0, [Style Couleur baisse fond], [Style Couleur hausse fond]) & "'>" & SUBSTITUTE(SUBSTITUTE(_Fleche, "CC", _Coul1), "PP", IF(_E1 < 0, _Bas, _Haut)) & "</span>"
+			        & _ValEvo & _Coul1 & "'>" & FORMAT(_E1, _FmtEvol) & "</span>"
+			        & "<div class='tip bas'><b>Note de lecture</b><br>" & FORMAT(_Lic, "#,0") & " licences en " & _AnRef & " contre " & FORMAT(_LicN1, "#,0") & " en " & (_AnRef - 1) & ",<br>soit " & FORMAT(_E1, _FmtEvol) & " (" & FORMAT(_Ecart1, _FmtEcart) & " licences).</div></div>")
+			    & _Note & IF(ISBLANK(_E1), "Pas de licence en " & (_AnRef - 1) & " : non calculable", "vs " & (_AnRef - 1) & " · " & FORMAT(_LicN1, "#,0") & " licences") & "</div>"
+			    & _Comp1 & "</div>"
+			VAR _Coul19 = IF(_E19 < 0, [Style Couleur baisse], [Style Couleur hausse])
+			VAR _C3 =
+			    _Carte & _Tete & [Style Couleur accent fond] & _TeteMil & SUBSTITUTE(_IcoE19, "CC", [Style Couleur accent]) & _TeteTxt & "Évolution depuis " & _AnneeAvantCovid & _TeteFin
+			    & IF(ISBLANK(_E19), "<div class='tt' style='margin-top:8px;width:max-content'>" & _Vide & "<div class='tip bas'>" & IF(_AnRef <= _AnneeAvantCovid, "L'année choisie est " & _AnRef & ".", "Pas de licence en " & _AnneeAvantCovid & " pour la sélection :<br>évolution non calculable. Les comparaisons restent affichées.") & "</div></div>",
+			        _Evo & "<span style='display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:" & IF(_E19 < 0, [Style Couleur baisse fond], [Style Couleur hausse fond]) & "'>" & SUBSTITUTE(SUBSTITUTE(_Fleche, "CC", _Coul19), "PP", IF(_E19 < 0, _Bas, _Haut)) & "</span>"
+			        & _ValEvo & _Coul19 & "'>" & FORMAT(_E19, _FmtEvol) & "</span>"
+			        & "<div class='tip bas'><b>Note de lecture</b><br>" & FORMAT(_Lic, "#,0") & " licences en " & _AnRef & " contre " & FORMAT(_Lic19, "#,0") & " en " & _AnneeAvantCovid & " (avant Covid),<br>soit " & FORMAT(_E19, _FmtEvol) & " (" & FORMAT(_Ecart19, _FmtEcart) & " licences).</div></div>")
+			    & _Note & SWITCH(TRUE(),
+			        _AnRef <= _AnneeAvantCovid, "Non calculée : l'année choisie est " & _AnRef,
+			        ISBLANK(_E19), "Pas de licence en " & _AnneeAvantCovid & " : non calculable",
+			        "vs " & _AnneeAvantCovid & ", avant Covid · " & FORMAT(_Lic19, "#,0") & " licences") & "</div>"
+			    & _Comp19 & "</div>"
+			-- 10. Carte 4 : poids (toujours 3 lignes : groupe, famille, ensemble)
+			VAR _PGroupe = DIVIDE(_Lic, _LicGroupe)
+			VAR _PFam    = DIVIDE(_Lic, _LicFam)
+			VAR _PEns    = DIVIDE(_Lic, _LicEns)
+			VAR _TitrePoids = SWITCH(_Mode, "Fédération", "Poids de la fédération", "Regroupement", "Poids du regroupement", "Plusieurs fédérations", "Poids de la sélection", "Poids de l'ensemble")
+			VAR _PasFed  = "Choisissez une seule fédération pour voir son poids<br>dans son groupe et dans sa famille."
+			VAR _Barre   = "<div class='tt' style='"
+			VAR _BarreLb = "'><div style='display:flex;align-items:baseline;gap:8px;font-size:" & _TxtPet & "px;color:" & _ColLib & "'><span class='el' style='flex:1'>"
+			VAR _BarreVal = "</span><b class='nb' style='font-size:" & _TxtTxt & "px;color:" & _ColTxt & ";font-weight:700'>"
+			VAR _BarrePiste = "</b></div><div style='height:7px;border-radius:4px;background:" & [Style Couleur poids fond] & ";margin-top:4px'><div style='height:7px;border-radius:4px;background:" & [Style Couleur poids] & ";"
+			VAR _B1 = _Barre & IF(ISBLANK(_PGroupe), "opacity:.45", "") & _BarreLb & "dans le groupe <b style='color:" & _ColFort & ";font-weight:600'>" & COALESCE(_Groupe, "…") & "</b>" & _BarreVal & IF(ISBLANK(_PGroupe), "–", IF(NOT ISBLANK(_PGroupe) && _PGroupe < 0.001, "< 0,1 %", FORMAT(_PGroupe, "0.0 %"))) & _BarrePiste & "width:" & FORMAT(MIN(_PGroupe + 0, 1) * 100, "0.0", "en-US") & "%'></div></div><div class='tip'>" & IF(ISBLANK(_PGroupe), _PasFed, "<b>" & IF(NOT ISBLANK(_PGroupe) && _PGroupe < 0.001, "< 0,1 %", FORMAT(_PGroupe, "0.0 %")) & "</b> des licences du groupe " & _Groupe & "<br><span>" & FORMAT(_Lic, "#,0") & " sur " & FORMAT(_LicGroupe, "#,0") & "</span>") & "</div></div>"
+			VAR _B2 = _Barre & IF(ISBLANK(_PFam), "opacity:.45", "") & _BarreLb & "dans la famille <b style='color:" & _ColFort & ";font-weight:600'>" & COALESCE(_Famille, "…") & "</b>" & _BarreVal & IF(ISBLANK(_PFam), "–", IF(NOT ISBLANK(_PFam) && _PFam < 0.001, "< 0,1 %", FORMAT(_PFam, "0.0 %"))) & _BarrePiste & "opacity:.75;width:" & FORMAT(MIN(_PFam + 0, 1) * 100, "0.0", "en-US") & "%'></div></div><div class='tip'>" & IF(ISBLANK(_PFam), _PasFed, "<b>" & IF(NOT ISBLANK(_PFam) && _PFam < 0.001, "< 0,1 %", FORMAT(_PFam, "0.0 %")) & "</b> des licences de la famille " & _Famille & "<br><span>" & FORMAT(_Lic, "#,0") & " sur " & FORMAT(_LicFam, "#,0") & "</span>") & "</div></div>"
+			VAR _B3 = _Barre & _BarreLb & "dans l'ensemble <b style='color:" & _ColFort & ";font-weight:600'>des fédérations</b>" & _BarreVal & IF(NOT ISBLANK(_PEns) && _PEns < 0.001, "< 0,1 %", FORMAT(_PEns, "0.0 %")) & _BarrePiste & "opacity:.5;width:" & FORMAT(MIN(_PEns, 1) * 100, "0.0", "en-US") & "%'></div></div><div class='tip'><b>" & IF(NOT ISBLANK(_PEns) && _PEns < 0.001, "< 0,1 %", FORMAT(_PEns, "0.0 %")) & "</b> de l'ensemble des licences<br><span>" & FORMAT(_Lic, "#,0") & " sur " & FORMAT(_LicEns, "#,0") & " · " & [Libellé territoire] & "</span></div></div>"
+			VAR _C4 =
+			    _Carte & _Tete & [Style Couleur poids fond] & _TeteMil & SUBSTITUTE(_IcoPds, "CC", [Style Couleur poids]) & _TeteTxt & _TitrePoids & _TeteFin
+			    & "<div style='display:flex;flex-direction:column;justify-content:space-between;gap:4px;flex:1;margin-top:6px'>" & _B1 & _B2 & _B3 & "</div></div>"
+			-- 11. Assemblage (hauteur et débordements bloqués : jamais de barre de défilement)
+			RETURN
+			    [Style CSS commun]
+			    & IF(ISBLANK(_Lic),
+			        _SansDonnees,
+			        "<div style='font-family:" & _Police & ";display:grid;grid-template-columns:" & _Colonnes & ";gap:14px;width:100%;height:100vh;overflow:hidden;padding:1px;color:" & _ColTxt & "'>"
+			        & _C1 & _C2 & _C3 & _C4 & "</div>")
+		displayFolder: 6. Portrait\HTML
+		lineageTag: 49c5a780-d93f-4119-924e-87c1692dd47f
+
+	/// Bloc PROFIL de la page Portrait (visuel HTML Content ~680 x 870) : assemble les sections Genre (HTML Qui Profil), Âge (HTML Qui Âges) et Pyramide (HTML Qui Pyramide).
+	measure 'HTML Qui' =
+			-- =====================================================================
+			-- HTML Qui | bloc PROFIL | page Portrait | visuel HTML Content ~680 x 984
+			-- Assemble : HTML Qui Profil (Genre), HTML Qui Âges (Âge), HTML Qui Pyramide
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _HauteurCadre = 985      -- hauteur du visuel (984) - 19 : jamais de barre de défilement
+			-- 2. Contexte : filtres de public actifs (pastille en haut à droite)
+			VAR _GSel  = IF(ISFILTERED(T_Sexe) && HASONEVALUE(T_Sexe[Sexe]), SELECTEDVALUE(T_Sexe[Sexe]))
+			VAR _CSel  = IF(ISFILTERED(T_TrancheAge) && HASONEVALUE(T_TrancheAge[Ordre]), SELECTEDVALUE(T_TrancheAge[Ordre]))
+			VAR _CLib  = IF(NOT ISBLANK(_CSel), SELECTEDVALUE(T_TrancheAge[TrancheAge]))
+			VAR _CNom  = IF(NOT ISBLANK(_CLib), TRIM(MID(_CLib, 5, SEARCH("(", _CLib, 1, LEN(_CLib) + 1) - 5)))
+			VAR _GNom  = SWITCH(_GSel, "F", "Femmes", "H", "Hommes")
+			VAR _Actif = CONCATENATEX(FILTER({_GNom, _CNom}, NOT ISBLANK([Value])), [Value], " · ")
+			VAR _NbLic = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe))
+			-- 3. Gabarits
+			VAR _Pastille =
+			    IF(NOT ISBLANK(_Actif),
+			        "<span class='tt' style='flex:none;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:13px;background:" & [Style Couleur filtre actif fond] & ";border:1px solid " & [Style Couleur filtre actif bordure] & ";color:" & [Style Couleur filtre actif texte] & ";font-size:" & [Style Taille petit] & "px;font-weight:600'><i style='width:6px;height:6px;border-radius:50%;background:" & [Style Couleur filtre actif point] & "'></i>" & _Actif
+			        & "<span class='tip bas'>Filtre de public actif : les chiffres portent sur ce public.<br><span>Le genre ou l'âge choisi est mis en évidence dans les graphiques.</span></span></span>")
+			VAR _Titre =
+			    "<div style='display:flex;align-items:flex-start;justify-content:space-between;gap:12px'>"
+			    & "<div style='min-width:0'><div style='" & [Style CSS ligne titre] & "'>"
+			    & "<span style='" & [Style CSS rubrique] & "'>PROFIL</span>"
+			    & "<span style='" & [Style CSS titre bloc] & "'>Profil des licenciés</span></div>"
+			    & "<div class='el' style='" & [Style CSS sous-titre] & "'>Genre et âge · " & [Sélection libellé] & " · " & [Libellé territoire] & " · " & MAX(T_Annee[Annee]) & "</div></div>"
+			    & _Pastille & "</div>"
+			VAR _Corps =
+			    IF(ISBLANK(_NbLic),
+			        "<div style='flex:1;margin-top:16px;border:1.5px dashed " & [Style Couleur bordure forte] & ";border-radius:10px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-align:center;font-size:" & [Style Taille texte] & "px;color:" & [Style Couleur texte libellé] & "'><b style='color:" & [Style Couleur texte] & "'>Aucune licence pour cette sélection</b><span style='font-size:" & [Style Taille petit] & "px'>Élargissez un filtre (fédération, territoire, public).</span></div>",
+			        "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px'>" & [HTML Qui Profil] & [HTML Qui Âges] & "</div>"
+			        & "<div style='margin-top:30px'>" & [HTML Qui Pyramide] & "</div>")
+			-- 4. Assemblage
+			RETURN
+			    [Style CSS commun]
+			    & "<div style='" & [Style CSS cadre] & ";height:" & _HauteurCadre & "px;color:" & [Style Couleur texte] & "'>"
+			    & _Titre & _Corps & "</div>"
+		displayFolder: 6. Portrait\HTML
+		lineageTag: 91681c6c-4982-48c1-b4a9-c972ea6275b8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Bloc ÉVOLUTION de la page Portrait (visuel HTML Content ~745 x 390) : licences par année (vue Volume) ou indice base 100 (vue Base 100) pour la sélection, son regroupement et l'ensemble. Courbes tracées seulement quand l'indice est calculable ; étiquettes de l'année choisie réparties sans chevauchement ; infobulles au survol.
+	measure 'HTML Évolution' =
+			-- =====================================================================
+			-- HTML Évolution | page Portrait | visuel HTML Content ~745 x 390
+			-- Vue Volume (T_VueEvol = 1) : barres des licences par année
+			-- Vue Base 100 (T_VueEvol = 2) : indice de la sélection, du regroupement, de l'ensemble
+			-- Regroupement entier sélectionné : courbe orange (couleur regroupement), entrée « Fédération » grisée.
+			-- Mise en page FIXE : la légende garde ses 3 entrées quel que soit le segment (grisées si sans objet)
+			-- Si l'indice de la sélection est impossible, regroupement et ensemble restent tracés.
+			-- Dépend de : Evo Licences, Evo Indice sélection / regroupement / ensemble,
+			--             Sélection mode, Sélection libellé, Sélection liste, charte
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _HauteurCadre = 370      -- hauteur du visuel - 20 environ (barre de défilement sinon)
+			VAR _PlaceSegment = 230      -- place libre en haut à droite pour le segment Volume / Base 100
+			VAR _W = 709                 -- zone du graphique (unités SVG)
+			VAR _H = 272
+			VAR _PL = 66                 -- marge gauche (axe)
+			VAR _PR = 78                 -- marge droite (étiquettes de la dernière année)
+			VAR _PT = 26
+			VAR _PB = 34
+			VAR _LargeurBulle = 280
+			VAR _EcartEtiq = 27          -- écart vertical minimal entre deux étiquettes
+			-- 2. Charte
+			VAR _Police  = [Style Police]
+			VAR _ColSel  = [Style Couleur sélection]
+			VAR _ColReg  = [Style Couleur regroupement]
+			VAR _ColEns  = [Style Couleur ensemble]
+			VAR _ColBar  = [Style Couleur sélection clair]
+			VAR _ColBand = [Style Couleur accent fond]
+			VAR _ColGril = [Style Couleur grille]
+			VAR _ColAxe  = [Style Couleur texte discret]
+			VAR _ColEtiq = [Style Couleur texte secondaire]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _TxtPet  = [Style Taille petit]
+			VAR _TxtTxt  = [Style Taille texte]
+			VAR _F1      = "0.0"
+			-- 3. Contexte (sélection, vue, année)
+			VAR _Mode    = [Sélection mode]
+			VAR _AvecSel = _Mode <> "Ensemble"
+			VAR _AvecReg = _Mode IN {"Fédération", "Plusieurs fédérations"} && NOT ISBLANK([Nom regroupement])
+			VAR _Vue     = SELECTEDVALUE(T_VueEvol[Ordre], 2)
+			VAR _AnSel   = MAX(T_Annee[Annee])
+			VAR _NomSel  = [Sélection libellé]
+			VAR _NomReg  = [Nom regroupement]
+			VAR _NomSelB = IF(LEN(_NomSel) > 26, LEFT(_NomSel, 25) & "…", _NomSel)
+			VAR _NomRegB = IF(LEN(_NomReg) > 26, LEFT(_NomReg, 25) & "…", _NomReg)
+			VAR _Liste   = IF(_Mode = "Plusieurs fédérations", [Sélection liste])
+			-- regroupement entier sélectionné (sans fédération) : sa courbe prend la couleur « regroupement »
+			VAR _ModeReg   = _Mode = "Regroupement"
+			VAR _ColCourbe = IF(_ModeReg, _ColReg, _ColSel)
+			-- 4. Données (une ligne par année de l'axe)
+			VAR _A0  = MINX(ALL(T_AnneeAxe[Annee]), VALUE(T_AnneeAxe[Annee]))
+			VAR _Tab0 =
+			ADDCOLUMNS(
+			ALL(T_AnneeAxe[Annee]),
+			"@i", VALUE(T_AnneeAxe[Annee]) - _A0,
+			"@v", [Evo Licences],
+			"@s", [Evo Indice sélection],
+			"@r", IF(_AvecReg, [Evo Indice regroupement]),
+			"@e", IF(_AvecSel, [Evo Indice ensemble])
+			)
+			VAR _Tab  = ADDCOLUMNS(_Tab0, "@p", VAR _Rang = [@i] RETURN MAXX(FILTER(_Tab0, [@i] = _Rang - 1), [@v]))
+			VAR _N    = COUNTROWS(_Tab)
+			VAR _ISel = VALUE(_AnSel) - _A0
+			VAR _YAn  = _H - 8
+			VAR _Css  = [Style CSS commun]
+			VAR _Ombre = "<defs><filter id='omb' x='-20%' y='-20%' width='140%' height='160%'><feDropShadow dx='0' dy='3' stdDeviation='4' flood-color='#101828' flood-opacity='.14'/></filter></defs>"
+			-- 5. Vue Volume (grands nombres en M / k ; valeur exacte dans l'infobulle)
+			VAR _VMax    = MAXX(_Tab, [@v])
+			VAR _PasBrut = MAX(_VMax, 1) * 1.12 / 4
+			VAR _Mag     = POWER(10, INT(LOG10(_PasBrut)))
+			VAR _Norm    = _PasBrut / _Mag
+			VAR _Pas     = SWITCH(TRUE(), _Norm <= 1, 1, _Norm <= 2, 2, _Norm <= 2.5, 2.5, _Norm <= 3, 3, _Norm <= 4, 4, _Norm <= 5, 5, 10) * _Mag
+			VAR _Plafond = 4 * _Pas
+			VAR _StV     = (_W - _PL - 4) / _N
+			VAR _YV0     = _H - _PB
+			VAR _FmtAxeK = SWITCH(TRUE(), _Plafond >= 2000000, "M", _Plafond >= 10000, "k", "")
+			VAR _GrilleV =
+			CONCATENATEX(GENERATESERIES(0, 4),
+			VAR _t = _Plafond * [Value] / 4
+			VAR _y = _YV0 - (_t / _Plafond) * (_H - _PT - _PB)
+			RETURN "<line x1='" & _PL & "' x2='" & (_W - 4) & "' y1='" & FORMAT(_y, _F1, "en-US") & "' y2='" & FORMAT(_y, _F1, "en-US") & "' stroke='" & _ColGril & "'/>"
+			& "<text x='" & (_PL - 14) & "' y='" & FORMAT(_y + 5, _F1, "en-US") & "' text-anchor='end' font-size='" & _TxtPet & "' fill='" & _ColAxe & "'>"
+			& SWITCH(_FmtAxeK,
+			"M", FORMAT(_t / 1000000, IF(MOD(_t, 1000000) = 0, "0", "0.0")) & " M",
+			"k", FORMAT(_t / 1000, IF(MOD(_t, 1000) = 0, "#,0", "#,0.0")) & " k",
+			FORMAT(_t, "#,0")) & "</text>",
+			"", [Value], ASC)
+			VAR _Barres =
+			CONCATENATEX(FILTER(_Tab, NOT ISBLANK([@v])),
+			VAR _x  = _PL + [@i] * _StV + _StV * 0.17
+			VAR _bw = _StV * 0.66
+			VAR _y  = _YV0 - DIVIDE([@v], _Plafond) * (_H - _PT - _PB)
+			VAR _cx = _x + _bw / 2
+			VAR _Lab = SWITCH(TRUE(), [@v] >= 1000000, FORMAT([@v] / 1000000, "0.00") & " M", [@v] >= 10000, FORMAT([@v] / 1000, "#,0") & " k", FORMAT([@v], "#,0"))
+			VAR _EstSel = [@i] = _ISel
+			RETURN
+			"<rect x='" & FORMAT(_x, _F1, "en-US") & "' y='" & FORMAT(_y, _F1, "en-US") & "' width='" & FORMAT(_bw, _F1, "en-US") & "' height='" & FORMAT(_YV0 - _y, _F1, "en-US") & "' rx='4' fill='" & IF(_EstSel, _ColSel, _ColBar) & "'/>"
+			& IF(_EstSel,
+			"<rect x='" & FORMAT(_cx - 38, _F1, "en-US") & "' y='" & FORMAT(_y - 27, _F1, "en-US") & "' width='76' height='22' rx='5' fill='" & _ColTxt & "'/>"
+			& "<text x='" & FORMAT(_cx, _F1, "en-US") & "' y='" & FORMAT(_y - 11, _F1, "en-US") & "' text-anchor='middle' font-size='" & _TxtPet & "' font-weight='700' fill='#FFFFFF'>" & _Lab & "</text>",
+			"<text x='" & FORMAT(_cx, _F1, "en-US") & "' y='" & FORMAT(_y - 7, _F1, "en-US") & "' text-anchor='middle' font-size='13' font-weight='600' fill='" & _ColEtiq & "'>" & _Lab & "</text>"),
+			"", [@i], ASC)
+			VAR _AnneesV =
+			CONCATENATEX(_Tab,
+			VAR _cx = _PL + [@i] * _StV + _StV / 2
+			RETURN IF([@i] = _ISel,
+			"<rect x='" & FORMAT(_cx - 27, _F1, "en-US") & "' y='" & (_YAn - 17) & "' width='54' height='23' rx='11.5' fill='" & _ColSel & "'/><text x='" & FORMAT(_cx, _F1, "en-US") & "' y='" & _YAn & "' text-anchor='middle' font-size='" & _TxtPet & "' font-weight='700' fill='#FFFFFF'>" & T_AnneeAxe[Annee] & "</text>",
+			"<text x='" & FORMAT(_cx, _F1, "en-US") & "' y='" & _YAn & "' text-anchor='middle' font-size='" & _TxtPet & "' fill='" & _ColAxe & "'>" & T_AnneeAxe[Annee] & "</text>"),
+			"", [@i], ASC)
+			VAR _BullesV =
+			CONCATENATEX(_Tab,
+			VAR _x0 = _PL + [@i] * _StV
+			VAR _cx = _x0 + _StV / 2
+			VAR _y  = _YV0 - DIVIDE([@v], _Plafond) * (_H - _PT - _PB)
+			VAR _PosX = IF(_cx + 12 + _LargeurBulle > _W, _cx - 12 - _LargeurBulle, _cx + 12)
+			VAR _PosY = MAX(2, MIN(_y - 24, _YV0 - 76))
+			VAR _EvoAn = DIVIDE([@v], [@p]) - 1
+			RETURN
+			"<g class='pt'><rect x='" & FORMAT(_x0, _F1, "en-US") & "' y='0' width='" & FORMAT(_StV, _F1, "en-US") & "' height='" & _H & "' fill='#000' fill-opacity='0'/>"
+			& "<rect class='hl' x='" & FORMAT(_x0 + 2, _F1, "en-US") & "' y='" & (_PT - 8) & "' width='" & FORMAT(_StV - 4, _F1, "en-US") & "' height='" & (_H - _PT - _PB + 8) & "' rx='6' fill='" & _ColSel & "' fill-opacity='.07' pointer-events='none'/>"
+			& "<g class='ptip' pointer-events='none'><rect x='" & FORMAT(_PosX, _F1, "en-US") & "' y='" & FORMAT(_PosY, _F1, "en-US") & "' width='" & _LargeurBulle & "' height='72' rx='8' fill='#FFFFFF' stroke='" & [Style Couleur bordure] & "' filter='url(#omb)'/>"
+			& "<text x='" & FORMAT(_PosX + 12, _F1, "en-US") & "' y='" & FORMAT(_PosY + 23, _F1, "en-US") & "' font-size='" & _TxtTxt & "' font-weight='700' fill='" & _ColTxt & "'>" & T_AnneeAxe[Annee] & "</text>"
+			& "<text x='" & FORMAT(_PosX + 12, _F1, "en-US") & "' y='" & FORMAT(_PosY + 44, _F1, "en-US") & "' font-size='" & _TxtPet & "' fill='" & _ColEtiq & "'>Licences <tspan font-weight='700' fill='" & _ColTxt & "'>" & IF(ISBLANK([@v]), "aucune", FORMAT([@v], "#,0")) & "</tspan></text>"
+			& "<text x='" & FORMAT(_PosX + 12, _F1, "en-US") & "' y='" & FORMAT(_PosY + 63, _F1, "en-US") & "' font-size='" & _TxtPet & "' fill='" & _ColEtiq & "'>Sur 1 an <tspan font-weight='700' fill='" & IF(_EvoAn < 0, [Style Couleur baisse], [Style Couleur hausse]) & "'>" & IF(ISBLANK([@p]) || ISBLANK([@v]), "non calculable", FORMAT(_EvoAn, "+0.0 %;-0.0 %;0.0 %")) & "</tspan></text></g></g>",
+			"", [@i], ASC)
+			-- 6. Vue Base 100 : échelle sur les seules valeurs calculables (jamais négative)
+			VAR _Vals =
+			UNION(
+			SELECTCOLUMNS(FILTER(_Tab, NOT ISBLANK([@s])), "v", [@s]),
+			SELECTCOLUMNS(FILTER(_Tab, NOT ISBLANK([@r])), "v", [@r]),
+			SELECTCOLUMNS(FILTER(_Tab, NOT ISBLANK([@e])), "v", [@e]))
+			VAR _IndiceOk = NOT ISEMPTY(FILTER(_Tab, NOT ISBLANK([@s])))
+			VAR _MinI = MINX(_Vals, [v])
+			VAR _MaxI = MAXX(_Vals, [v])
+			VAR _Lo   = MAX(0, FLOOR(_MinI - 2, 5))
+			VAR _Rng  = MAX(CEILING(_MaxI + 2 - _Lo, 20), 20)
+			VAR _Hi   = _Lo + _Rng
+			VAR _StB  = (_W - _PL - _PR) / (_N - 1)
+			VAR _XSel = _PL + _ISel * _StB
+			VAR _GrilleB =
+			CONCATENATEX(GENERATESERIES(0, 4),
+			VAR _t = _Lo + _Rng * [Value] / 4
+			VAR _y = _PT + (_Hi - _t) / _Rng * (_H - _PT - _PB)
+			RETURN "<line x1='" & _PL & "' x2='" & (_W - _PR + 24) & "' y1='" & FORMAT(_y, _F1, "en-US") & "' y2='" & FORMAT(_y, _F1, "en-US") & "' stroke='" & _ColGril & "'/>"
+			& "<text x='" & (_PL - 14) & "' y='" & FORMAT(_y + 5, _F1, "en-US") & "' text-anchor='end' font-size='" & _TxtPet & "' fill='" & _ColAxe & "'>" & FORMAT(_t, "0") & "</text>",
+			"", [Value], ASC)
+			VAR _Y100  = _PT + (_Hi - 100) / _Rng * (_H - _PT - _PB)
+			VAR _Bande = "<rect x='" & FORMAT(_XSel - _StB / 2 + 4, _F1, "en-US") & "' y='" & (_PT - 12) & "' width='" & FORMAT(_StB - 8, _F1, "en-US") & "' height='" & (_H - _PB - _PT + 12) & "' rx='8' fill='" & _ColBand & "'/>"
+			VAR _AnneesB =
+			CONCATENATEX(_Tab,
+			VAR _x = _PL + [@i] * _StB
+			RETURN IF([@i] = _ISel,
+			"<rect x='" & FORMAT(_x - 27, _F1, "en-US") & "' y='" & (_YAn - 17) & "' width='54' height='23' rx='11.5' fill='" & _ColSel & "'/><text x='" & FORMAT(_x, _F1, "en-US") & "' y='" & _YAn & "' text-anchor='middle' font-size='" & _TxtPet & "' font-weight='700' fill='#FFFFFF'>" & T_AnneeAxe[Annee] & "</text>",
+			"<text x='" & FORMAT(_x, _F1, "en-US") & "' y='" & _YAn & "' text-anchor='middle' font-size='" & _TxtPet & "' fill='" & _ColAxe & "'>" & T_AnneeAxe[Annee] & "</text>"),
+			"", [@i], ASC)
+			-- tracés : un segment ne relie que deux années calculables qui se suivent
+			VAR _CheminS = CONCATENATEX(FILTER(_Tab, NOT ISBLANK([@s])), VAR _i = [@i] VAR _Prec = MAXX(FILTER(_Tab, [@i] = _i - 1), [@s]) RETURN IF(ISBLANK(_Prec), "M", "L") & FORMAT(_PL + _i * _StB, _F1, "en-US") & "," & FORMAT(_PT + (_Hi - [@s]) / _Rng * (_H - _PT - _PB), _F1, "en-US"), " ", [@i], ASC)
+			VAR _CheminR = CONCATENATEX(FILTER(_Tab, NOT ISBLANK([@r])), VAR _i = [@i] VAR _Prec = MAXX(FILTER(_Tab, [@i] = _i - 1), [@r]) RETURN IF(ISBLANK(_Prec), "M", "L") & FORMAT(_PL + _i * _StB, _F1, "en-US") & "," & FORMAT(_PT + (_Hi - [@r]) / _Rng * (_H - _PT - _PB), _F1, "en-US"), " ", [@i], ASC)
+			VAR _CheminE = CONCATENATEX(FILTER(_Tab, NOT ISBLANK([@e])), VAR _i = [@i] VAR _Prec = MAXX(FILTER(_Tab, [@i] = _i - 1), [@e]) RETURN IF(ISBLANK(_Prec), "M", "L") & FORMAT(_PL + _i * _StB, _F1, "en-US") & "," & FORMAT(_PT + (_Hi - [@e]) / _Rng * (_H - _PT - _PB), _F1, "en-US"), " ", [@i], ASC)
+			VAR _Traces =
+			IF(NOT ISBLANK(_CheminE), "<path d='" & _CheminE & "' fill='none' stroke='" & _ColEns & "' stroke-width='2' stroke-linejoin='round'/>")
+			& IF(NOT ISBLANK(_CheminR), "<path d='" & _CheminR & "' fill='none' stroke='" & _ColReg & "' stroke-width='2' stroke-linejoin='round'/>")
+			& IF(NOT ISBLANK(_CheminS), "<path d='" & _CheminS & "' fill='none' stroke='" & _ColCourbe & "' stroke-width='3' stroke-linejoin='round'/>")
+			VAR _Marqueurs =
+			CONCATENATEX(_Tab,
+			VAR _x = FORMAT(_PL + [@i] * _StB, _F1, "en-US")
+			RETURN
+			IF(NOT ISBLANK([@e]), "<circle cx='" & _x & "' cy='" & FORMAT(_PT + (_Hi - [@e]) / _Rng * (_H - _PT - _PB), _F1, "en-US") & "' r='3.5' fill='#FFFFFF' stroke='" & _ColEns & "' stroke-width='2'/>")
+			& IF(NOT ISBLANK([@r]), "<circle cx='" & _x & "' cy='" & FORMAT(_PT + (_Hi - [@r]) / _Rng * (_H - _PT - _PB), _F1, "en-US") & "' r='3.5' fill='#FFFFFF' stroke='" & _ColReg & "' stroke-width='2'/>")
+			& IF(NOT ISBLANK([@s]), "<circle cx='" & _x & "' cy='" & FORMAT(_PT + (_Hi - [@s]) / _Rng * (_H - _PT - _PB), _F1, "en-US") & "' r='4.5' fill='#FFFFFF' stroke='" & _ColCourbe & "' stroke-width='2.5'/>"),
+			"", [@i], ASC)
+			-- étiquettes de l'année choisie : à droite du point, réparties verticalement sans chevauchement
+			VAR _VS = MAXX(FILTER(_Tab, [@i] = _ISel), [@s])
+			VAR _VR = MAXX(FILTER(_Tab, [@i] = _ISel), [@r])
+			VAR _VE = MAXX(FILTER(_Tab, [@i] = _ISel), [@e])
+			VAR _PtsSel =
+			FILTER(
+			UNION(ROW("n", 1, "v", _VS, "c", _ColCourbe), ROW("n", 2, "v", _VR, "c", _ColReg), ROW("n", 3, "v", _VE, "c", _ColEns)),
+			NOT ISBLANK([v]))
+			VAR _PtsSel2 = ADDCOLUMNS(_PtsSel, "@y", _PT + (_Hi - [v]) / _Rng * (_H - _PT - _PB), "@k", RANKX(_PtsSel, [v] + [n] / 1000000, , DESC))
+			VAR _Y1  = MAXX(FILTER(_PtsSel2, [@k] = 1), [@y])
+			VAR _Y2  = IF(COUNTROWS(_PtsSel2) >= 2, MAX(MAXX(FILTER(_PtsSel2, [@k] = 2), [@y]), _Y1 + _EcartEtiq))
+			VAR _Y3  = IF(COUNTROWS(_PtsSel2) >= 3, MAX(MAXX(FILTER(_PtsSel2, [@k] = 3), [@y]), _Y2 + _EcartEtiq))
+			VAR _YBas = COALESCE(_Y3, _Y2, _Y1)
+			VAR _Recul = MAX(0, _YBas - (_H - _PB - 6))
+			VAR _XEtiq = IF(_XSel + 12 + 56 > _W, _XSel - 68, _XSel + 12)
+			VAR _Pastilles =
+			CONCATENATEX(_PtsSel2,
+			VAR _yy = SWITCH([@k], 1, _Y1, 2, _Y2, _Y3) - _Recul
+			RETURN "<circle cx='" & FORMAT(_XSel, _F1, "en-US") & "' cy='" & FORMAT([@y], _F1, "en-US") & "' r='6' fill='" & [c] & "' stroke='#FFFFFF' stroke-width='2'/>"
+			& IF(ABS(_yy - [@y]) > 3, "<line x1='" & FORMAT(_XSel + 6, _F1, "en-US") & "' x2='" & FORMAT(_XEtiq, _F1, "en-US") & "' y1='" & FORMAT([@y], _F1, "en-US") & "' y2='" & FORMAT(_yy, _F1, "en-US") & "' stroke='" & [c] & "' stroke-width='1.2'/>")
+			& "<rect x='" & FORMAT(_XEtiq, _F1, "en-US") & "' y='" & FORMAT(_yy - 11.5, _F1, "en-US") & "' width='56' height='23' rx='5' fill='" & [c] & "'/>"
+			& "<text x='" & FORMAT(_XEtiq + 28, _F1, "en-US") & "' y='" & FORMAT(_yy + 5, _F1, "en-US") & "' text-anchor='middle' font-size='" & _TxtPet & "' font-weight='700' fill='#FFFFFF'>" & FORMAT([v], "0.0") & "</text>",
+			"", [n], DESC)
+			-- bulles au survol (Base 100)
+			VAR _NbLignes = 1 + IF(_AvecReg, 1, 0) + IF(_AvecSel, 1, 0)
+			VAR _HB = 54 + 21 * _NbLignes
+			VAR _LigneB = "<text font-size='" & _TxtPet & "' fill='" & _ColEtiq & "' x='"
+			VAR _BullesB =
+			CONCATENATEX(_Tab,
+			VAR _x = _PL + [@i] * _StB
+			VAR _PosX = IF(_x + 12 + _LargeurBulle > _W, _x - 12 - _LargeurBulle, _x + 12)
+			VAR _PosY = 2
+			VAR _Ligne = "<circle cx='" & FORMAT(_PosX + 16, _F1, "en-US") & "' r='4.5' fill='"
+			RETURN
+			"<g class='pt'><rect x='" & FORMAT(_x - _StB / 2, _F1, "en-US") & "' y='0' width='" & FORMAT(_StB, _F1, "en-US") & "' height='" & _H & "' fill='#000' fill-opacity='0'/>"
+			& "<line class='hl' x1='" & FORMAT(_x, _F1, "en-US") & "' x2='" & FORMAT(_x, _F1, "en-US") & "' y1='" & (_PT - 8) & "' y2='" & (_H - _PB) & "' stroke='" & [Style Couleur neutre] & "' stroke-dasharray='3 3' pointer-events='none'/>"
+			& "<g class='ptip' pointer-events='none'><rect x='" & FORMAT(_PosX, _F1, "en-US") & "' y='" & _PosY & "' width='" & _LargeurBulle & "' height='" & _HB & "' rx='8' fill='#FFFFFF' stroke='" & [Style Couleur bordure] & "' filter='url(#omb)'/>"
+			& "<text x='" & FORMAT(_PosX + 12, _F1, "en-US") & "' y='" & (_PosY + 23) & "' font-size='" & _TxtTxt & "' font-weight='700' fill='" & _ColTxt & "'>" & T_AnneeAxe[Annee] & "<tspan font-weight='400' font-size='" & _TxtPet & "' fill='" & _ColAxe & "'> · base 100 en " & _A0 & "</tspan></text>"
+			& SUBSTITUTE(_Ligne, "r=", "cy='" & (_PosY + 41) & "' r=") & _ColCourbe & "'/>" & _LigneB & FORMAT(_PosX + 27, _F1, "en-US") & "' y='" & (_PosY + 46) & "'>" & _NomSelB & " <tspan font-weight='700' fill='" & _ColTxt & "'>" & IF(ISBLANK([@s]), "n.c.", FORMAT([@s], "0.0")) & "</tspan></text>"
+			& IF(_AvecReg, SUBSTITUTE(_Ligne, "r=", "cy='" & (_PosY + 62) & "' r=") & _ColReg & "'/>" & _LigneB & FORMAT(_PosX + 27, _F1, "en-US") & "' y='" & (_PosY + 67) & "'>" & _NomRegB & " <tspan font-weight='700' fill='" & _ColTxt & "'>" & IF(ISBLANK([@r]), "n.c.", FORMAT([@r], "0.0")) & "</tspan></text>")
+			& IF(_AvecSel, SUBSTITUTE(_Ligne, "r=", "cy='" & (_PosY + 41 + 21 * IF(_AvecReg, 2, 1)) & "' r=") & _ColEns & "'/>" & _LigneB & FORMAT(_PosX + 27, _F1, "en-US") & "' y='" & (_PosY + 46 + 21 * IF(_AvecReg, 2, 1)) & "'>Ensemble des fédérations <tspan font-weight='700' fill='" & _ColTxt & "'>" & IF(ISBLANK([@e]), "n.c.", FORMAT([@e], "0.0")) & "</tspan></text>")
+			& "<text x='" & FORMAT(_PosX + 12, _F1, "en-US") & "' y='" & (_PosY + _HB - 10) & "' font-size='13' fill='" & _ColAxe & "'>" & IF(ISBLANK([@s]), "n.c. : pas de licence en " & _A0 & " ou cette année", "Lecture : " & FORMAT([@s], "0") & " = " & FORMAT([@s] / 100 - 1, "+0 %;-0 %;0 %") & " par rapport à " & _A0) & "</text></g></g>",
+			"", [@i], ASC)
+			-- 7. Titre et légende
+			VAR _Titre =
+			"<div style='padding-right:" & _PlaceSegment & "px'>"
+			& "<div style='" & [Style CSS ligne titre] & "'>"
+			& "<span style='" & [Style CSS rubrique] & "'>ÉVOLUTION</span>"
+			& "<span style='" & [Style CSS titre bloc] & "'>Nombre de licences depuis " & _A0 & "</span></div>"
+			& "<div style='" & [Style CSS sous-titre] & "'>"
+			& IF(_Vue = 1, "Licences par année", "Indice base 100 en " & _A0)
+			& " · " & [Libellé territoire] & "</div></div>"
+			VAR _Trait = "<span class='tt' style='display:inline-flex;align-items:center;gap:7px'><i style='flex:none;display:inline-block;width:16px;height:3px;border-radius:2px;background:"
+			VAR _Carre = "<span style='display:inline-flex;align-items:center;gap:7px'><i style='flex:none;display:inline-block;width:11px;height:11px;border-radius:3px;background:"
+			VAR _TipSel = IF(NOT ISBLANK(_Liste), "<span class='tip bas'><b>" & [Sélection nb fédérations] & " fédérations</b><br>" & _Liste & "</span>")
+			-- légende FIXE en vue Base 100 : toujours 3 entrées (sélection / regroupement / ensemble),
+			-- une entrée sans objet reste à sa place, grisée, avec la raison au survol
+			VAR _Gris = "opacity:.4;"
+			VAR _PourquoiPasReg =
+			SWITCH(_Mode,
+			"Ensemble",     "Choisissez une fédération pour la comparer à son regroupement.",
+			"Regroupement", "La sélection est déjà un regroupement.",
+			"Les fédérations choisies n'appartiennent pas au même regroupement.")
+			VAR _EntreeSel =
+			IF(_ModeReg,
+			SUBSTITUTE(_Trait, "gap:7px", "gap:7px;" & _Gris) & _ColSel & "'></i>Fédération<span class='tip bas'>Aucune fédération choisie :<br>le regroupement entier est sélectionné.</span></span>",
+			IF(_IndiceOk,
+			_Trait & _ColSel & "'></i>" & _NomSel & _TipSel & "</span>",
+			SUBSTITUTE(_Trait, "gap:7px", "gap:7px;" & _Gris) & _ColSel & "'></i>" & _NomSelB & " · n.c."
+			& "<span class='tip bas'><b>Indice non calculable</b><br>" & _NomSel & " ne compte aucune licence en " & _A0 & ",<br>année de référence de l'indice.<br><span>Regroupement et ensemble restent affichés ; la vue Volume montre les licences.</span></span></span>"))
+			VAR _EntreeReg =
+			IF(_ModeReg,
+			_Trait & _ColReg & "'></i>" & _NomSelB & "<span class='tip bas'><b>" & _NomSel & "</b><br>Regroupement sélectionné</span></span>",
+			IF(_AvecReg,
+			_Trait & _ColReg & "'></i>" & _NomRegB & "<span class='tip bas'><b>" & [Niveau choisi] & " · " & _NomReg & "</b><br>Regroupement de la sélection</span></span>",
+			SUBSTITUTE(_Trait, "gap:7px", "gap:7px;" & _Gris) & _ColReg & "'></i>Regroupement<span class='tip bas'>" & _PourquoiPasReg & "</span></span>"))
+			VAR _EntreeEns =
+			IF(_AvecSel,
+			_Trait & _ColEns & "'></i>Ensemble des fédérations</span>",
+			SUBSTITUTE(_Trait, "gap:7px", "gap:7px;" & _Gris) & _ColEns & "'></i>Ensemble<span class='tip bas'>La sélection est déjà l'ensemble des fédérations.</span></span>")
+			VAR _Legende =
+			"<div style='display:flex;flex-wrap:nowrap;column-gap:18px;white-space:nowrap;" & [Style CSS légende] & ";margin:10px 0 4px 0;height:22px;align-items:center'>"
+			& IF(_Vue = 1,
+			_Carre & _ColSel & "'></i>Année choisie (" & _AnSel & ")</span>" & _Carre & _ColBar & "'></i>Autres années</span>"
+			& "<span class='tt' style='color:" & _ColAxe & "'>" & _NomSel & _TipSel & "</span>",
+			_EntreeSel & _EntreeReg & _EntreeEns)
+			& "</div>"
+			-- 8. Messages (seulement si rien n'est traçable)
+			VAR _Message = "<div style='flex:1;margin-top:14px;border:1.5px dashed " & [Style Couleur bordure forte] & ";border-radius:10px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-align:center;padding:0 30px;font-size:" & _TxtTxt & "px;color:" & [Style Couleur texte libellé] & "'>"
+			VAR _SansDonnees = _Message & "<b style='color:" & _ColTxt & "'>Aucune licence pour cette sélection</b><span style='font-size:" & _TxtPet & "px'>Élargissez un filtre (fédération, territoire, public) pour afficher l'évolution.</span></div>"
+			VAR _IndiceKo = _Message & "<b style='color:" & _ColTxt & "'>Indice base 100 non calculable</b><span style='font-size:" & _TxtPet & "px'>Aucune licence en " & _A0 & ", année de référence de l'indice. Passez en vue Volume pour voir les licences par année.</span></div>"
+			-- 9. Assemblage
+			VAR _Svg =
+			IF(_Vue = 1,
+			_GrilleV & _Barres & _AnneesV & _BullesV,
+			_Bande & _GrilleB
+			& IF(_Y100 >= _PT && _Y100 <= _H - _PB, "<line x1='" & _PL & "' x2='" & (_W - _PR + 24) & "' y1='" & FORMAT(_Y100, _F1, "en-US") & "' y2='" & FORMAT(_Y100, _F1, "en-US") & "' stroke='" & [Style Couleur bordure forte] & "' stroke-dasharray='3 3'/>")
+			& _AnneesB & _Traces & _Marqueurs & _Pastilles & _BullesB)
+			VAR _Corps =
+			SWITCH(TRUE(),
+			_Vue = 1 && ISBLANK(_VMax), _Legende & _SansDonnees,
+			_Vue <> 1 && ISEMPTY(_Vals), _Legende & _IndiceKo,
+			_Legende
+			& "<div style='flex:1;min-height:0'><svg viewBox='0 0 " & _W & " " & _H & "' width='100%' height='100%' preserveAspectRatio='xMidYMid meet' font-family='" & _Police & "' style='display:block;overflow:visible'>" & _Ombre & _Svg & "</svg></div>")
+			RETURN
+			_Css
+			& "<div style='" & [Style CSS cadre] & ";height:" & _HauteurCadre & "px;color:" & _ColTxt & "'>"
+			& _Titre & _Corps & "</div>"
+		displayFolder: 6. Portrait\HTML
+		lineageTag: 513884f8-b6b6-4bf8-86f7-248dcf73c517
+
+	/// En-tête de page sur deux lignes (visuel HTML Content). Ligne 1 = identité : logo, type, nom, famille / sous-famille / groupe. Ligne 2 = barre « Votre sélection » : territoire et année (texte avec icône), genre et âge en pastilles orange s'ils sont choisis.
+	measure 'HTML En-tête' =
+			-- =====================================================================
+			-- HTML En-tête | haut de page Portrait | visuel HTML Content ~1527 x 150 (marges 0)
+			-- Ligne 1 : identité de la sélection (logo, nom, rattachement ou nombre de fédérations)
+			-- Ligne 2 : barre « Votre sélection » (territoire, année, public)
+			-- Mise en page FIXE : mêmes lignes et mêmes emplacements quels que soient les segments.
+			-- Hauteur bloquée (100vh + overflow:hidden) : jamais de barre de défilement ;
+			-- les infobulles de la ligne 2 s'ouvrent donc vers le haut.
+			-- Dépend de : Sélection mode / libellé / liste / nb fédérations, Libellé territoire, charte
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _TailleLogo = 72           -- carré du logo (px)
+			VAR _MargeLogo  = 8
+			VAR _TailleNom  = 26
+			-- 2. Charte
+			VAR _Police  = [Style Police]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColDisc = [Style Couleur texte discret]
+			VAR _ColBord = [Style Couleur bordure]
+			VAR _ColFond = [Style Couleur fond cadre]
+			VAR _ColReg  = [Style Couleur regroupement]
+			-- 3. Contexte
+			VAR _Mode    = [Sélection mode]
+			VAR _UneFed  = _Mode = "Fédération"
+			VAR _Logo    = IF(_UneFed, SELECTEDVALUE(T_Federation[Logo]))
+			VAR _NomLong = IF(_UneFed, SELECTEDVALUE(T_Federation[Federation]), [Sélection libellé])
+			VAR _AnRef   = MAX(T_Annee[Annee])
+			VAR _Statut  = CALCULATE(MAX(T_Annee[Statut]), REMOVEFILTERS(T_Annee), T_Annee[Annee] = _AnRef)
+			VAR _NbFed   = [Sélection nb fédérations]
+			VAR _Terr    = [Libellé territoire]
+			VAR _Genres  = IF(ISFILTERED(T_Sexe), CONCATENATEX(VALUES(T_Sexe[Genre]), T_Sexe[Genre], " + "))
+			VAR _Ages    = IF(ISFILTERED(T_TrancheAge), CONCATENATEX(SUMMARIZE(T_TrancheAge, T_TrancheAge[Catégorie d'âge], T_TrancheAge[Ordre]), T_TrancheAge[Catégorie d'âge], " + ", T_TrancheAge[Ordre], ASC))
+			-- 4. Gabarits
+			VAR _Gras    = "<b style='color:" & _ColTxt & ";font-weight:600'>"
+			VAR _Pastille = "<span class='tt' style='display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:13px;background:" & _ColFond & ";border:1px solid " & _ColBord & ";font-size:13px;color:" & _ColLib & ";white-space:nowrap'>"
+			VAR _Ico     = "<svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='" & _ColDisc & "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+			VAR _IcoTerr = _Ico & "<path d='M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z'/><circle cx='12' cy='9.5' r='2.5'/></svg>"
+			VAR _IcoAn   = _Ico & "<rect x='4' y='5' width='16' height='15' rx='2'/><path d='M4 10h16M9 3v4M15 3v4'/></svg>"
+			VAR _IcoPub  = _Ico & "<circle cx='9' cy='8' r='3.2'/><path d='M3 20c.7-3.4 3-5.2 6-5.2s5.3 1.8 6 5.2'/></svg>"
+			VAR _IcoToutes = "<svg width='38' height='38' viewBox='0 0 24 24' fill='none' stroke='" & [Style Couleur icône] & "' stroke-width='1.8'><rect x='4' y='4' width='7' height='7' rx='1.5'/><rect x='13' y='4' width='7' height='7' rx='1.5'/><rect x='4' y='13' width='7' height='7' rx='1.5'/><rect x='13' y='13' width='7' height='7' rx='1.5'/></svg>"
+			-- 5. Ligne 1 : identité
+			VAR _Visuel =
+			    IF(NOT ISBLANK(_Logo) && _Logo <> "",
+			        "<img src='" & SUBSTITUTE(_Logo, "'", "%27") & "' style='max-width:" & (_TailleLogo - 2 * _MargeLogo) & "px;max-height:" & (_TailleLogo - 2 * _MargeLogo) & "px;object-fit:contain'/>",
+			        _IcoToutes)
+			VAR _Rattachement =      -- pastilles sous le nom : rattachement (une fédération) ou nombre de fédérations
+			    SWITCH(_Mode,
+			        "Fédération",
+			            _Pastille & "Famille " & _Gras & SELECTEDVALUE(T_Federation[Famille de fédérations]) & "</b></span>"
+			            & _Pastille & "Sous-famille " & _Gras & TRIM(SELECTEDVALUE(T_Federation[Sous-famille de fédérations])) & "</b></span>"
+			            & _Pastille & "Groupe " & _Gras & SELECTEDVALUE(T_Federation[Groupe de fédérations]) & "</b></span>",
+			        "Regroupement",
+			            _Pastille & "<i style='width:8px;height:8px;border-radius:50%;background:" & _ColReg & "'></i>" & [Niveau choisi] & " " & _Gras & _NomLong & "</b></span>"
+			            & _Pastille & _Gras & _NbFed & "</b> fédération" & IF(_NbFed > 1, "s") & "<span class='tip bas'>" & [Sélection liste] & "</span></span>",
+			        "Plusieurs fédérations",
+			            _Pastille & _Gras & _NbFed & "</b> fédérations choisies<span class='tip bas'>" & [Sélection liste] & "</span></span>",
+			        _Pastille & _Gras & _NbFed & "</b> fédérations agréées en " & _AnRef & "</span>")
+			VAR _Ligne1 =
+			    "<div style='display:flex;align-items:center;gap:18px'>"
+			    & "<div style='width:" & _TailleLogo & "px;height:" & _TailleLogo & "px;flex:none;border-radius:16px;background:#FFFFFF;border:1px solid " & _ColBord & ";box-shadow:0 1px 2px rgba(16,24,40,.05);display:flex;align-items:center;justify-content:center'>" & _Visuel & "</div>"
+			    & "<div style='min-width:0;flex:1'>"
+			    & "<div class='tt' style='display:flex;min-width:0'><span class='el' style='font-size:" & _TailleNom & "px;font-weight:700;color:" & _ColTxt & ";line-height:1.2;letter-spacing:-.01em'>" & SUBSTITUTE(_NomLong, "&", "&amp;") & "</span>"
+			    & "<span class='tip bas'><b>" & SUBSTITUTE(_NomLong, "&", "&amp;") & "</b>" & IF(_Mode = "Plusieurs fédérations", "<br>" & [Sélection liste]) & "</span></div>"
+			    & "<div style='display:flex;gap:8px;flex-wrap:nowrap;overflow:hidden;margin-top:8px'>" & _Rattachement & "</div>"
+			    & "</div></div>"
+			-- 6. Ligne 2 : votre sélection (territoire, année, public)
+			VAR _Elem   = "<span class='tt' style='display:inline-flex;align-items:center;gap:6px;font-size:14px;color:" & _ColLib & ";white-space:nowrap'>"
+			VAR _Sep    = "<span style='flex:none;width:4px;height:4px;border-radius:50%;background:" & [Style Couleur bordure forte] & "'></span>"
+			VAR _Actif  = "<span style='display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 11px;border-radius:13px;background:" & [Style Couleur filtre actif fond] & ";border:1px solid " & [Style Couleur filtre actif bordure] & ";font-size:13px;color:" & [Style Couleur filtre actif texte] & ";font-weight:600;white-space:nowrap'><i style='width:7px;height:7px;border-radius:50%;background:" & [Style Couleur filtre actif point] & "'></i>"
+			VAR _SemiDef = CONTAINSSTRING(_Statut, "semi")
+			VAR _Public =
+			    IF(ISBLANK(_Genres) && ISBLANK(_Ages),
+			        _Elem & _IcoPub & "Tous publics</span>",
+			        _Elem & _IcoPub & "Public</span>" & IF(NOT ISBLANK(_Genres), _Actif & _Genres & "</span>") & IF(NOT ISBLANK(_Ages), _Actif & _Ages & "</span>"))
+			VAR _Ligne2 =
+			    "<div style='display:flex;align-items:center;gap:14px;margin-top:12px;padding:0 14px;height:42px;flex:none;border-radius:10px;background:" & _ColFond & ";border:1px solid " & _ColBord & "'>"
+			    & "<span style='font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:" & _ColDisc & ";white-space:nowrap'>Votre sélection</span>"
+			    & _Elem & _IcoTerr & _Gras & _Terr & "</b></span>" & _Sep
+			    & _Elem & _IcoAn & _Gras & _AnRef & "</b>" & IF(_SemiDef, " · semi-définitive<span class='tip'>Données " & _AnRef & " semi-définitives :<br>elles peuvent encore être légèrement révisées.</span>") & "</span>" & _Sep
+			    & _Public
+			    & "</div>"
+			-- 7. Assemblage (hauteur bloquée : aucun défilement)
+			RETURN
+			    [Style CSS commun]
+			    & "<div style='font-family:" & _Police & ";display:flex;flex-direction:column;justify-content:center;height:100vh;overflow:hidden;padding:1px'>"
+			    & _Ligne1 & _Ligne2 & "</div>"
+		displayFolder: 2. Affichage
+		lineageTag: beec849e-ca2c-46e7-b673-19d01a7e8063
+
+	/// Niveau affiché sur la carte : 1 = régions, 2 = départements (segment T_NiveauGeo). Un département choisi dans le segment Département force le niveau 2.
+	measure 'Carte Niveau' =
+			VAR _NiveauSegment = SELECTEDVALUE(T_NiveauGeo[Ordre], 1)
+			RETURN IF(ISFILTERED(P_TerrDep), 2, _NiveauSegment)
+		formatString: 0
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 96830fee-5c0c-4af5-b580-77e19c2349da
+
+	/// Rôle de la zone : Zone (remplie), Sélection (remplie + contour mis en évidence), Contour (contour seul). Vient de T_CarteAffichage ; un département choisi dans le segment Département passe en Sélection.
+	measure 'Carte Rôle' =
+			VAR _Niv = [Carte Niveau]
+			-- Territoire choisi : segment sur Param_Departement (ou P_TerrChoix), d'où ISCROSSFILTERED
+			VAR _RoleTable =
+			    IF(ISCROSSFILTERED(P_TerrChoix),
+			        CALCULATE(MAX(T_CarteAffichage[Rôle]), T_CarteAffichage[Niveau affiché] = _Niv),
+			        "Zone")
+			VAR _Ids      = VALUES(T_CarteAffichage[Id carte])
+			VAR _DepsZone = SELECTCOLUMNS(FILTER(T_CarteZoneDep, T_CarteZoneDep[Id carte] IN _Ids), "Code_DEP", T_CarteZoneDep[Code_DEP])
+			VAR _DepChoisi =
+			    ISFILTERED(P_TerrDep)
+			        && LEFT(SELECTEDVALUE(T_CarteAffichage[Id carte]), 1) = "D"
+			        && NOT ISEMPTY(INTERSECT(_DepsZone, VALUES(T_Territoire[Code_DEP])))
+			RETURN IF(HASONEVALUE(T_CarteAffichage[Id carte]), IF(_DepChoisi, "Sélection", _RoleTable))
+		displayFolder: 6. Portrait\Carte
+		lineageTag: e8977879-f5fb-406c-99b9-23d3d40ef20f
+
+	/// Couleur du contour des zones (Azure Maps, fx valeur de champ) : bleu nuit pour la sélection, blanc sinon.
+	measure 'Carte Contour couleur' = ```
+			-- Charte commune (dossier 0. Style)
+			-- Sélection : bleu nuit foncé, lisible sur les palettes indigo, rouge/vert et gris
+			VAR _CouleurSelection = "#0B1B4D"
+			VAR _CouleurZone      = "rgba(0, 0, 0, 0.1)"
+			RETURN SWITCH([Carte Rôle], "Sélection", _CouleurSelection, "Contour", _CouleurSelection, _CouleurZone)
+			
+			```
+		displayFolder: 6. Portrait\Carte
+		lineageTag: 96f6af54-861d-4b53-bae1-6b338ac28b5b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Charte commune des visuels HTML : police.
+	measure 'Style Police' = "Segoe UI, sans-serif"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 60db0db5-cc39-49c9-b4a8-1e883efac808
+
+	/// Charte : texte principal (titres, valeurs).
+	measure 'Style Couleur texte' = "#101828"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 0368e6ca-9bcb-431f-8d02-b3301215a6cd
+
+	/// Charte : texte courant (légendes, étiquettes).
+	measure 'Style Couleur texte secondaire' = "#475467"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: b4e014f4-e4b1-4ca3-86ee-c6be6748a243
+
+	/// Charte : texte discret (sous-titres, axes).
+	measure 'Style Couleur texte discret' = "#8A94A6"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 795536f7-d808-4c9f-8e9d-bf9317993014
+
+	/// Charte : couleur d'accent (pastilles de rubrique).
+	measure 'Style Couleur accent' = "#4361EE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 886e8e73-c9a8-4243-a4b1-9ec4fd9cefe8
+
+	/// Charte : fond clair de l'accent (pastilles, bande de l'année choisie).
+	measure 'Style Couleur accent fond' = "#EEF1FE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 56290be7-51df-43dd-8a0c-c320dad4ba64
+
+	/// Charte : fond des cadres.
+	measure 'Style Couleur fond cadre' = "#FFFFFF"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 030f55f2-92cc-4b04-a9c0-426bff43ff8d
+
+	/// Charte : bordure des cadres.
+	measure 'Style Couleur bordure' = "#E4E7EC"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 9593a494-46c9-419a-8000-34856cebd076
+
+	/// Charte : lignes de grille des graphiques.
+	measure 'Style Couleur grille' = "#EAECF0"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 3934ad6b-cbf3-449d-8c42-fb239de42f2b
+
+	/// Charte : bleu nuit (panneau de gauche, contour de sélection de la carte).
+	measure 'Style Couleur marine' = "#0B1C4F"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 0cc1ebb0-6a98-4122-9255-6e348fce6100
+
+	/// Charte : série de la sélection (fédération ou regroupement choisi).
+	measure 'Style Couleur sélection' = "#4361EE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: cd33cabb-9c29-49b3-a4c2-4d5b1189ae06
+
+	/// Charte : version claire de la sélection (autres années en mode Volume).
+	measure 'Style Couleur sélection clair' = "#C7D0FB"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 4e6d41cd-7770-4265-837e-3570013e96b2
+
+	/// Charte : série du regroupement.
+	measure 'Style Couleur regroupement' = "#F2A93B"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 2260856f-c3d3-42d9-98e4-575f398e606e
+
+	/// Charte : série de l'ensemble des fédérations.
+	measure 'Style Couleur ensemble' = "#0B1C4F"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 58e31681-74f2-40fb-a04a-45680609ecc6
+
+	/// Charte : style du cadre blanc d'un bloc (fond, bordure, arrondi, marges). La hauteur est ajoutée par chaque visuel.
+	measure 'Style CSS cadre' =
+			-- Cadre blanc d'un bloc HTML (HTML Évolution, HTML Carte, HTML Qui).
+			-- height:100vh!important : le cadre prend TOUJOURS la hauteur réelle du visuel (redimensionnement libre,
+			-- jamais de barre de défilement). La valeur _HauteurCadre des mesures ne sert plus que de repère.
+			"box-sizing:border-box;width:100%;height:100vh!important;display:flex;flex-direction:column;overflow:hidden;font-family:" & [Style Police]
+			    & ";background:" & [Style Couleur fond cadre]
+			    & ";border:1px solid " & [Style Couleur bordure]
+			    & ";border-radius:14px;padding:16px 16px 12px 16px"
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 9e62fb3a-e68f-42ec-a346-e22f046b7d17
+
+	/// Charte : ligne qui porte la pastille de rubrique et le titre du bloc.
+	measure 'Style CSS ligne titre' = "display:flex;align-items:center;gap:10px;flex-wrap:wrap"
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 2adf02bc-40ae-4b27-addc-2fff3df43f61
+
+	/// Charte : pastille de rubrique (COMBIEN, OÙ, QUI…).
+	measure 'Style CSS rubrique' =
+			-- Pastille de thème d'un bloc (ÉVOLUTION, TERRITOIRES, PROFIL)
+			"font-size:13px;font-weight:700;letter-spacing:.08em;color:" & [Style Couleur accent]
+			    & ";background:" & [Style Couleur accent fond] & ";border-radius:6px;padding:4px 9px"
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 2d91bbbd-71df-49cb-a529-960fccd6e95c
+
+	/// Charte : titre d'un bloc.
+	measure 'Style CSS titre bloc' =
+			-- Titre d'un bloc
+			"font-size:" & [Style Taille titre] & "px;font-weight:600;letter-spacing:-.01em;color:" & [Style Couleur texte]
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 9009f3d2-9698-4496-b32c-64ef67ae15f1
+
+	/// Charte : sous-titre d'un bloc.
+	measure 'Style CSS sous-titre' =
+			-- Sous-titre d'un bloc (ce que montre le bloc, périmètre)
+			"font-size:" & [Style Taille petit] & "px;color:" & [Style Couleur texte discret] & ";margin-top:4px;line-height:1.35"
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 14e02863-d89d-469c-9c6c-ac4938ad6cba
+
+	/// Charte : texte des légendes.
+	measure 'Style CSS légende' =
+			-- Texte des légendes
+			"font-size:" & [Style Taille texte] & "px;line-height:1.3;color:" & [Style Couleur texte secondaire]
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: ca8961a5-ab1f-4844-be6b-d37a148cc620
+
+	/// Cadre du bloc TERRITOIRES (visuel HTML Content placé sous la carte Azure Maps) : titre, sous-titre, légende des couleurs (même rendu que la carte), case « sans donnée », territoire choisi, message hors carte. Charte : dossier 0. Style.
+	measure 'HTML Carte' =
+			-- =====================================================================
+			-- HTML Carte | bloc TERRITOIRES | page Portrait | visuel HTML Content ~745 x 500
+			-- Visuel placé SOUS la carte Azure Maps (marges intérieures 0, arrière-plan désactivé) :
+			-- la carte (fond transparent) se pose dans la zone vide entre le titre et la légende.
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _HauteurCadre   = 572      -- hauteur du visuel - 20 environ (barre de défilement sinon)
+			VAR _PlaceSegments  = 380      -- place libre en haut à droite (segments Indicateur et Niveau géo)
+			VAR _LargeurDegrade = 180      -- largeur de la barre de couleurs
+			VAR _OpaciteCarte   = ".85"    -- même opacité que le remplissage des zones dans Azure Maps (à caler sur la carte)
+			-- 2. Charte
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColSel  = [Style Couleur marine]          -- contour du territoire choisi sur la carte
+			VAR _ColVide = [Style Couleur sans donnée]
+			VAR _TxtPet  = [Style Taille petit]
+			-- 3. Données
+			VAR _Ind    = SELECTEDVALUE(T_CarteIndicateur[Ordre], 1)
+			VAR _Nom    = SELECTEDVALUE(T_CarteIndicateur[Indicateur], "Licences")
+			VAR _Diverg = _Ind IN {2, 3, 5}
+			VAR _Centre = IF(_Ind = 5, 1, 0)
+			VAR _Fmt    = SWITCH(_Ind, 1, "#,0", 4, "0.0 %", 5, "0.00", "+0.0 %;-0.0 %;0.0 %")
+			VAR _Lo     = [Carte Min]
+			VAR _Hi     = [Carte Max]
+			VAR _Amp    = MAX(ABS(_Hi - _Centre), ABS(_Lo - _Centre))
+			VAR _Pal    = [Carte Palette]
+			VAR _C1     = LEFT(_Pal, 7)
+			VAR _C2     = MID(_Pal, 9, 7)
+			VAR _C3     = RIGHT(_Pal, 7)
+			VAR _Niv    = [Carte Niveau]
+			VAR _Force  = ISFILTERED(P_TerrDep) && SELECTEDVALUE(T_NiveauGeo[Ordre], 1) = 1
+			VAR _Annee  = VALUE(MAX(T_Annee[Annee]))   -- T_Annee[Annee] est un texte
+			VAR _Terr   = [Libellé territoire]
+			VAR _SurCarte = NOT ISEMPTY(FILTER(ALL(T_CarteAffichage[Id carte]), [Carte Visible] = 1))
+			VAR _SousTitre =
+			    _Nom & IF(_Ind IN {1, 4, 5}, " " & _Annee, " (" & _Annee & ")")
+			    & " · " & [Sélection libellé]
+			    & " · " & IF(_Niv = 1, "par région", "par département" & IF(_Force, " (département choisi)"))
+			VAR _L1 = IF(_Diverg, FORMAT(_Centre - _Amp, _Fmt), FORMAT(_Lo, _Fmt))
+			VAR _L2 = IF(_Diverg, "<span>" & FORMAT(_Centre, _Fmt) & "</span>", "")
+			VAR _L3 = IF(_Diverg, FORMAT(_Centre + _Amp, _Fmt), FORMAT(_Hi, _Fmt))
+			-- 4. Note de lecture par indicateur (infobulle de la légende) et raison d'un calcul impossible
+			VAR _Lecture =
+			    SWITCH(_Ind,
+			        1, "Nombre de licences de la sélection dans chaque zone.",
+			        2, "Évolution des licences entre " & (_Annee - 1) & " et " & _Annee & " : vert = hausse, rouge = baisse.",
+			        3, "Évolution des licences depuis 2019 (avant Covid) : vert = hausse, rouge = baisse.",
+			        4, "Part des femmes parmi les licences de la zone.",
+			        5, "Indice de spécificité : poids de la sélection dans la zone rapporté à son poids national.<br>Au-dessus de 1 = plus représentée qu'en moyenne.",
+			        "")
+			VAR _Raison =
+			    SWITCH(_Ind,
+			        2, "aucune licence en " & (_Annee - 1) & " pour comparer",
+			        3, IF(_Annee <= 2019, "l'année choisie est antérieure ou égale à 2019", "aucune licence en 2019 pour comparer"),
+			        "aucune licence pour cette sélection")
+			-- 5. Titre
+			VAR _Titre =
+			    "<div style='padding-right:" & _PlaceSegments & "px'>"
+			    & "<div style='" & [Style CSS ligne titre] & "'>"
+			    & "<span style='" & [Style CSS rubrique] & "'>TERRITOIRES</span>"
+			    & "<span style='" & [Style CSS titre bloc] & "'>Répartition territoriale</span></div>"
+			    & "<div style='" & [Style CSS sous-titre] & "'>" & _SousTitre & "</div></div>"
+			-- 6. Zone de la carte (vide : la carte Azure Maps se pose dessus) ou message hors carte
+			VAR _Zone =
+			    IF(_SurCarte,
+			        "<div style='flex:1;min-height:0'></div>",
+			        "<div style='flex:1;margin:14px 0 4px 0;border:1.5px dashed " & [Style Couleur bordure forte] & ";border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:0 24px;" & [Style CSS légende] & "'>"
+			        & "<b style='color:" & _ColTxt & ";font-size:" & [Style Taille texte] & "px'>Territoire hors carte</b>"
+			        & "<span>La carte couvre la métropole. Les chiffres de la page portent sur : <b style='color:" & _ColTxt & "'>" & _Terr & "</b></span></div>")
+			-- 7. Légende : chiffres AU-DESSUS du dégradé ; le dégradé est aligné en bas avec les autres éléments
+			--    (case « sans donnée », territoire choisi) ; même opacité que la carte
+			VAR _Choix =
+			    IF(_Terr <> "Tous territoires",
+			        "<div style='display:flex;align-items:center;gap:8px'><i style='flex:none;display:inline-block;width:16px;height:11px;border:2.5px solid " & _ColSel & ";border-radius:2px'></i>"
+			        & "<span>Territoire choisi : <b style='color:" & _ColTxt & "'>" & _Terr & "</b></span></div>")
+			VAR _CaseVide =
+			    "<div class='tt' style='display:flex;align-items:center;gap:8px'><i style='flex:none;display:inline-block;width:16px;height:11px;border-radius:2px;background:" & _ColVide & ";opacity:" & _OpaciteCarte & "'></i><span>" & IF(_Ind = 1, "Aucune licence", "Non calculable") & "</span>"
+			    & "<span class='tip'>" & IF(_Ind = 1, "Zone sans licence pour cette sélection.", "Indicateur non calculable dans la zone :<br>" & _Raison & ".") & "</span></div>"
+			VAR _Degrade =
+			    "<div class='tt' style='width:" & _LargeurDegrade & "px'>"
+			    & IF(_Diverg, "<div style='display:flex;justify-content:space-between;font-size:13px;color:" & [Style Couleur texte discret] & "'><span>" & IF(_Ind = 5, "moins représentée", "baisse") & "</span><span>" & IF(_Ind = 5, "plus représentée", "hausse") & "</span></div>")
+			    & "<div style='display:flex;justify-content:space-between;font-size:" & _TxtPet & "px;margin-bottom:4px'><span class='nb'>" & _L1 & "</span>" & _L2 & "<span class='nb'>" & _L3 & "</span></div>"
+			    & "<div style='height:10px;margin-bottom:4px;border-radius:5px;opacity:" & _OpaciteCarte & ";background:linear-gradient(90deg," & _C1 & "," & _C2 & "," & _C3 & ")'></div>"
+			    & "<span class='tip'><b>Note de lecture</b><br>" & _Lecture & "</span></div>"
+			VAR _Alerte =
+			    "<div class='tt' style='display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:" & [Style Couleur filtre actif fond] & ";color:" & [Style Couleur filtre actif texte] & ";font-size:" & _TxtPet & "px'>"
+			    & "<svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'><circle cx='12' cy='12' r='9'/><path d='M12 8v5M12 16.5v.5'/></svg>"
+			    & "<span><b style='font-weight:600'>" & _Nom & " non calculable</b> : " & _Raison & "</span>"
+			    & "<span class='tip'>Les zones sont grisées. Choisissez un autre indicateur<br>ou élargissez la sélection.</span></div>"
+			VAR _Legende =
+			    IF(_SurCarte,
+			        "<div style='display:flex;align-items:flex-end;justify-content:space-between;gap:10px 22px;flex-wrap:wrap;margin-top:8px;" & [Style CSS légende] & "'>"
+			        & "<div style='display:flex;align-items:flex-end;gap:22px'>"
+			        & IF(ISBLANK(_Hi), _Alerte, _Degrade & _CaseVide) & "</div>"
+			        & _Choix
+			        & "</div>")
+			-- 8. Assemblage
+			RETURN
+			    [Style CSS commun]
+			    & "<div style='" & [Style CSS cadre] & ";height:" & _HauteurCadre & "px;color:" & _ColTxt & "'>"
+			    & _Titre & _Zone & _Legende & "</div>"
+		displayFolder: 6. Portrait\HTML
+		lineageTag: d1571e21-2e73-46f0-a9f0-356131150e8a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Charte : libellés (« Territoire », « Année »…).
+	measure 'Style Couleur texte libellé' = "#667085"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 186f9746-11b8-42f4-a803-ed03342fe6e9
+
+	/// Charte : texte appuyé (chiffres secondaires).
+	measure 'Style Couleur texte fort' = "#344054"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 4e884b72-2baa-4d41-897a-80636a5465cd
+
+	/// Charte : bordure appuyée (pointillés, séparateurs, tiret vide).
+	measure 'Style Couleur bordure forte' = "#D0D5DD"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: d38eef8b-397e-449c-a43d-885cb3078d6c
+
+	/// Charte : fond gris très clair (pistes de barres).
+	measure 'Style Couleur fond neutre' = "#F2F4F7"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 4414f4ed-78af-49a1-ba51-cdb37ded8644
+
+	/// Charte : gris neutre (éléments non sélectionnés, texte très discret).
+	measure 'Style Couleur neutre' = "#98A2B3"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 63c4a5cb-b028-4eaf-8e04-7ea8b46f2dfd
+
+	/// Charte : gris neutre clair.
+	measure 'Style Couleur neutre clair' = "#E4E7EC"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: e3a9bcd2-3777-49e1-b1e6-4b530cbe2e86
+
+	/// Charte : bleu de fin du dégradé de la carte Licences (chiffres clés).
+	measure 'Style Couleur marine 2' = "#1E3480"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: accb3978-415d-49af-a354-347a0fbd8b7e
+
+	/// Charte : trait des icônes (titre, en-tête).
+	measure 'Style Couleur icône' = "#2E46C9"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: b3787743-498f-4274-986d-828575da14ad
+
+	/// Charte : hausse (vert).
+	measure 'Style Couleur hausse' = "#067647"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 7303b8a9-43df-4deb-872d-f374816b5b9a
+
+	/// Charte : fond clair de la hausse.
+	measure 'Style Couleur hausse fond' = "#ECFDF3"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 3809dd88-929b-440f-965d-9200d6879c2d
+
+	/// Charte : baisse (rouge).
+	measure 'Style Couleur baisse' = "#B42318"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 2c8797dd-c2f1-4ddd-9952-6915fc71a8cc
+
+	/// Charte : fond clair de la baisse.
+	measure 'Style Couleur baisse fond' = "#FEF3F2"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 499c4857-0757-40f6-b244-2e3e448cd8d3
+
+	/// Charte : carte Poids de la fédération (violet).
+	measure 'Style Couleur poids' = "#4361EE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 43983389-09c2-4cf9-b537-d0e305463bb8
+
+	/// Charte : fond clair du poids.
+	measure 'Style Couleur poids fond' = "#EEF1FE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: b1473304-c702-4f16-9fb1-b4e3ce80bf47
+
+	/// Charte : femmes (bloc Qui).
+	measure 'Style Couleur femmes' = "#8B5CF6"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 4471e25b-baa6-4412-bc62-2077b3b8432f
+
+	/// Charte : hommes (bloc Qui).
+	measure 'Style Couleur hommes' = "#0EA5E9"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 0e02b361-fda7-41bf-80e5-20d49f847a54
+
+	/// Charte : pastille d'un filtre actif (genre, âge) – fond.
+	measure 'Style Couleur filtre actif fond' = "#EEF1FE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: d0e1cbc2-7f84-4623-821d-0c362b56ed21
+
+	/// Charte : pastille d'un filtre actif – bordure.
+	measure 'Style Couleur filtre actif bordure' = "#C7D0FB"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 396d85e0-9cd1-4889-a80a-e1a39c5d0167
+
+	/// Charte : pastille d'un filtre actif – texte (aussi titre d'alerte « hors carte »).
+	measure 'Style Couleur filtre actif texte' = "#2E46C9"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: ff43d2e6-4b88-42bb-a64a-b5460262d9a1
+
+	/// Charte : pastille d'un filtre actif – point.
+	measure 'Style Couleur filtre actif point' = "#4361EE"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 34467a2c-4ddb-42fb-8cbe-66bd3a1af092
+
+	/// Bloc PROFIL, section Âge : âge moyen (âge exact), parts par grande catégorie au-dessus de la barre, comparaison au regroupement et à l'ensemble, infobulles.
+	measure 'HTML Qui Âges' =
+			-- =====================================================================
+			-- HTML Qui Âges | section « Âge » du bloc PROFIL (assemblée par HTML Qui)
+			-- Hiérarchie : âge moyen > catégories (libellé, tranche, part) > barre > comparaison (valeurs)
+			-- Même structure que HTML Qui Profil : les deux colonnes restent alignées ligne à ligne.
+			-- Mise en page FIXE : les 2 lignes de comparaison sont toujours là (grisées si sans objet).
+			-- Regroupement entier sélectionné : il occupe la ligne « regroupement » (orange).
+			-- =====================================================================
+			-- 1. Charte
+			VAR _ColF    = [Style Couleur femmes]
+			VAR _ColH    = [Style Couleur hommes]
+			VAR _ColEns  = [Style Couleur ensemble]
+			VAR _ColReg  = [Style Couleur regroupement]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColFort = [Style Couleur texte fort]
+			VAR _ColNeut = [Style Couleur neutre]
+			VAR _ColPist = [Style Couleur fond neutre]
+			VAR _TxtTxt  = [Style Taille texte]
+			VAR _TxtVal  = [Style Taille valeur]
+			VAR _TxtChif = [Style Taille chiffre]
+			VAR _Gris    = "opacity:.4;"
+			-- 2. Contexte
+			VAR _Mode    = [Sélection mode]
+			VAR _ModeReg = _Mode = "Regroupement"
+			VAR _AvecSel = _Mode <> "Ensemble"
+			VAR _AvecReg = _Mode IN {"Fédération", "Plusieurs fédérations"} && NOT ISBLANK([Nom regroupement])
+			VAR _NomReg  = SWITCH(TRUE(), _ModeReg, [Sélection libellé], _AvecReg, [Niveau choisi] & " · " & [Nom regroupement], "Regroupement")
+			VAR _PourquoiPasReg = IF(_Mode = "Ensemble", "Choisissez une fédération ou un regroupement.", "Les fédérations choisies n'appartiennent pas au même regroupement.")
+			VAR _GSel    = IF(ISFILTERED(T_Sexe) && HASONEVALUE(T_Sexe[Sexe]), SELECTEDVALUE(T_Sexe[Sexe]))
+			VAR _CSel    = IF(ISFILTERED(T_TrancheAge) && HASONEVALUE(T_TrancheAge[Ordre]), SELECTEDVALUE(T_TrancheAge[Ordre]))
+			VAR _ColA    = SWITCH(_GSel, "F", _ColF, "H", _ColH, [Style Couleur poids])   -- couleur du genre filtré, sinon neutre
+			-- 3. Âge moyen (genre choisi, toutes catégories)
+			VAR _Moy    = CALCULATE([Âge moyen], REMOVEFILTERS(T_TrancheAge))
+			VAR _MoyReg = SWITCH(TRUE(), _ModeReg, _Moy, _AvecReg, CALCULATE([Âge moyen], REMOVEFILTERS(T_TrancheAge), Comparaison[Comparaison] = "Regroupement"))
+			VAR _MoyEns = IF(_AvecSel, CALCULATE([Âge moyen], REMOVEFILTERS(T_TrancheAge), Comparaison[Comparaison] = "Ensemble"))
+			-- 4. Grandes catégories : sélection (@v) et ensemble (@e)
+			VAR _TabA =
+			    ADDCOLUMNS(
+			        FILTER(ALL(T_TrancheAge[Ordre], T_TrancheAge[TrancheAge]), T_TrancheAge[Ordre] IN {"1", "2", "3", "4"}),
+			        "@v", VAR _o = T_TrancheAge[Ordre] RETURN CALCULATE([NB Licences], REMOVEFILTERS(T_TrancheAge), T_TrancheAge[Ordre] = _o) + 0,
+			        "@e", VAR _o = T_TrancheAge[Ordre] RETURN CALCULATE([NB Licences], REMOVEFILTERS(T_TrancheAge), T_TrancheAge[Ordre] = _o, Comparaison[Comparaison] = "Ensemble") + 0)
+			VAR _TotA = SUMX(_TabA, [@v])
+			VAR _TotE = SUMX(_TabA, [@e])
+			VAR _TabA2 =
+			    ADDCOLUMNS(_TabA,
+			        "@p",  DIVIDE([@v], _TotA),
+			        "@pe", DIVIDE([@e], _TotE),
+			        "@op", VAR _o = T_TrancheAge[Ordre] RETURN IF(ISBLANK(_CSel), SWITCH(_o, "1", "1", "2", ".72", "3", ".5", ".3"), IF(_CSel = _o, "1", ".18")),
+			        "@nm", VAR _L = T_TrancheAge[TrancheAge] RETURN TRIM(MID(_L, 5, SEARCH("(", _L, 1, LEN(_L) + 1) - 5)),
+			        "@tr", VAR _L = T_TrancheAge[TrancheAge] RETURN SUBSTITUTE(MID(_L, SEARCH("(", _L, 1, LEN(_L)) + 1, SEARCH(")", _L, 1, LEN(_L) + 1) - SEARCH("(", _L, 1, LEN(_L)) - 1), "-", "–") & " ans")
+			VAR _Tip =
+			    "<div class='tip'><b>NM</b> (TR) · PP des licences<br>NN licences" & IF(_AvecSel, "<br><span>Ensemble des fédérations : EE</span>") & "</div>"
+			-- 5. Valeurs au-dessus de la barre : libellé / tranche / part (3 lignes, comme le genre)
+			VAR _Valeurs =
+			    "<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px'>"
+			    & CONCATENATEX(_TabA2,
+			        VAR _o = T_TrancheAge[Ordre]
+			        VAR _Actif = ISBLANK(_CSel) || _CSel = _o
+			        RETURN
+			            "<div class='tt' style='min-width:0;" & IF(_Actif, "", _Gris) & "'>"
+			            & "<div style='font-size:13px;color:" & _ColNeut & ";white-space:nowrap'><i style='display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:" & _ColA & ";opacity:" & IF(ISBLANK(_CSel), [@op], "1") & "'></i>" & [@nm] & "</div>"
+			            & "<div class='nb' style='font-size:12px;color:" & _ColNeut & ";margin-top:1px'>" & [@tr] & "</div>"
+			            & "<b class='nb' style='display:block;font-size:" & _TxtVal & "px;font-weight:700;color:" & _ColTxt & ";margin-top:2px'>" & FORMAT([@p], "0.0 %") & "</b>"
+			            & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_Tip, "NM", [@nm]), "TR", [@tr]), "PP", FORMAT([@p], "0.0 %")), "NN", FORMAT([@v], "#,0")), "EE", FORMAT([@pe], "0.0 %")) & "</div>",
+			        "", T_TrancheAge[Ordre], ASC)
+			    & "</div>"
+			-- 6. Barre de répartition (une catégorie sans licence n'est pas dessinée)
+			VAR _Barre =
+			    "<div style='display:flex;gap:2px;height:14px;margin-top:8px'>"
+			    & CONCATENATEX(FILTER(_TabA2, [@v] > 0),
+			        "<div class='tt' style='width:" & FORMAT([@p] * 100, "0.0", "en-US") & "%;border-radius:4px;background:" & _ColA & ";opacity:" & [@op] & "'>"
+			        & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_Tip, "NM", [@nm]), "TR", [@tr]), "PP", FORMAT([@p], "0.0 %")), "NN", FORMAT([@v], "#,0")), "EE", FORMAT([@pe], "0.0 %")) & "</div>",
+			        "", T_TrancheAge[Ordre], ASC)
+			    & "</div>"
+			-- 7. Comparaison de l'âge moyen (toujours 2 lignes)
+			VAR _LigneComp = "<div class='tt' style='display:flex;align-items:center;gap:8px;font-size:" & [Style Taille petit] & "px;color:" & _ColLib & ";OPA'><i style='flex:none;width:8px;height:8px;border-radius:50%;background:COL'></i><span class='el' style='flex:1'>NOM</span><b class='nb' style='font-size:15px;font-weight:700;color:" & _ColFort & "'>VAL</b><div class='tip'>TIP</div></div>"
+			VAR _Comp =
+			    "<div style='margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:8px'>"
+			    & "<div style='font-size:13px;color:" & _ColNeut & ";padding-top:10px;border-top:1px dashed " & [Style Couleur grille] & "'>Comparaison · âge moyen</div>"
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneComp, "OPA", IF(ISBLANK(_MoyReg), _Gris, "")), "COL", _ColReg), "NOM", _NomReg), "VAL", IF(ISBLANK(_MoyReg), "–", FORMAT(_MoyReg, "0.0"))),
+			        "TIP", IF(ISBLANK(_MoyReg), _PourquoiPasReg, "<b>" & _NomReg & "</b>" & IF(_ModeReg, " (sélectionné)") & "<br>Âge moyen : " & FORMAT(_MoyReg, "0.0") & " ans" & IF(NOT _ModeReg && NOT ISBLANK(_Moy), "<br><span>Écart de la sélection : " & FORMAT(_Moy - _MoyReg, "+0.0;-0.0;0.0") & " an</span>")))
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneComp, "OPA", IF(ISBLANK(_MoyEns), _Gris, "")), "COL", _ColEns), "NOM", "Ensemble des fédérations"), "VAL", IF(ISBLANK(_MoyEns), "–", FORMAT(_MoyEns, "0.0"))),
+			        "TIP", IF(ISBLANK(_MoyEns), "La sélection est déjà l'ensemble des fédérations.", "<b>Ensemble des fédérations</b><br>Âge moyen : " & FORMAT(_MoyEns, "0.0") & " ans" & IF(NOT ISBLANK(_Moy), "<br><span>Écart de la sélection : " & FORMAT(_Moy - _MoyEns, "+0.0;-0.0;0.0") & " an</span>")))
+			    & "</div>"
+			-- 8. En-tête
+			VAR _Ico  = "<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='" & [Style Couleur accent] & "' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/></svg>"
+			VAR _Tete = "<div style='display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid " & _ColPist & "'><span style='display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:" & [Style Couleur accent fond] & "'>" & _Ico & "</span><span style='font-size:" & _TxtTxt & "px;font-weight:700;color:" & _ColTxt & "'>Âge</span></div>"
+			-- 9. Assemblage
+			RETURN
+			    "<div style='display:flex;flex-direction:column;min-width:0'>" & _Tete
+			    & "<div class='tt' style='display:flex;align-items:baseline;gap:8px;margin-top:16px;width:max-content'><span class='nb' style='font-size:" & _TxtChif & "px;font-weight:700;letter-spacing:-.02em;line-height:1;color:" & _ColTxt & "'>" & IF(ISBLANK(_Moy), "–", FORMAT(_Moy, "0.0")) & "</span><span style='font-size:" & _TxtTxt & "px;color:" & _ColLib & "'>âge moyen</span>"
+			    & "<div class='tip bas'><b>Note de lecture</b><br>" & IF(ISBLANK(_Moy), "Âge non renseigné pour cette sélection.", "Les licenciés ont en moyenne " & FORMAT(_Moy, "0.0") & " ans" & IF(NOT ISBLANK(_MoyEns), ",<br>soit " & FORMAT(_Moy - _MoyEns, "+0.0;-0.0;0.0") & " an(s) par rapport à l'ensemble des fédérations.", ".")) & "</div></div>"
+			    & "<div style='font-size:13px;color:" & _ColNeut & ";margin-top:6px;white-space:nowrap'>sur " & FORMAT(_TotA, "#,0") & " licences (âge connu)</div>"
+			    & _Valeurs & _Barre & _Comp & "</div>"
+		isHidden
+		displayFolder: 6. Portrait\Qui
+		lineageTag: 1a046e98-cc08-4cd0-a704-214b5ff2481b
+
+	/// Bloc PROFIL, section Genre : part de femmes (ou d'hommes si filtré), effectifs au-dessus de la barre, comparaison au regroupement et à l'ensemble, infobulles.
+	measure 'HTML Qui Profil' =
+			-- =====================================================================
+			-- HTML Qui Profil | section « Genre » du bloc PROFIL (assemblée par HTML Qui)
+			-- Hiérarchie : chiffre clé > valeurs F / H (libellé, effectif, part) > barre > comparaison (valeurs)
+			-- Même structure que HTML Qui Âges : les deux colonnes restent alignées ligne à ligne.
+			-- Mise en page FIXE : les 2 lignes de comparaison sont toujours là (grisées si sans objet).
+			-- Regroupement entier sélectionné : il occupe la ligne « regroupement » (orange).
+			-- =====================================================================
+			-- 1. Charte
+			VAR _ColF    = [Style Couleur femmes]
+			VAR _ColH    = [Style Couleur hommes]
+			VAR _ColInac = [Style Couleur neutre clair]
+			VAR _ColEns  = [Style Couleur ensemble]
+			VAR _ColReg  = [Style Couleur regroupement]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColFort = [Style Couleur texte fort]
+			VAR _ColNeut = [Style Couleur neutre]
+			VAR _ColPist = [Style Couleur fond neutre]
+			VAR _TxtTxt  = [Style Taille texte]
+			VAR _TxtVal  = [Style Taille valeur]
+			VAR _TxtChif = [Style Taille chiffre]
+			VAR _Gris    = "opacity:.4;"
+			-- 2. Contexte
+			VAR _Mode    = [Sélection mode]
+			VAR _ModeReg = _Mode = "Regroupement"
+			VAR _AvecSel = _Mode <> "Ensemble"
+			VAR _AvecReg = _Mode IN {"Fédération", "Plusieurs fédérations"} && NOT ISBLANK([Nom regroupement])
+			VAR _NomReg  = SWITCH(TRUE(), _ModeReg, [Sélection libellé], _AvecReg, [Niveau choisi] & " · " & [Nom regroupement], "Regroupement")
+			VAR _PourquoiPasReg = IF(_Mode = "Ensemble", "Choisissez une fédération ou un regroupement.", "Les fédérations choisies n'appartiennent pas au même regroupement.")
+			VAR _GSel    = IF(ISFILTERED(T_Sexe) && HASONEVALUE(T_Sexe[Sexe]), SELECTEDVALUE(T_Sexe[Sexe]))
+			VAR _OnF     = ISBLANK(_GSel) || _GSel = "F"
+			VAR _OnH     = ISBLANK(_GSel) || _GSel = "H"
+			-- 3. Données
+			VAR _F    = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "F") + 0
+			VAR _H    = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "H") + 0
+			VAR _PF   = DIVIDE(_F, _F + _H)
+			VAR _Cible = IF(_GSel = "H", "H", "F")
+			VAR _PartC = IF(_Cible = "H", 1 - _PF, _PF)
+			VAR _ColC  = IF(_Cible = "H", _ColH, _ColF)
+			VAR _LibC  = IF(_Cible = "H", "d'hommes", "de femmes")
+			VAR _RegF = IF(_AvecReg, CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "F", Comparaison[Comparaison] = "Regroupement"))
+			VAR _RegH = IF(_AvecReg, CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "H", Comparaison[Comparaison] = "Regroupement"))
+			VAR _EnsF = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "F", Comparaison[Comparaison] = "Ensemble")
+			VAR _EnsH = CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), T_Sexe[Sexe] = "H", Comparaison[Comparaison] = "Ensemble")
+			VAR _PRegF = IF(_ModeReg, _PF, DIVIDE(_RegF, _RegF + _RegH))          -- part de femmes du regroupement
+			VAR _PEnsF = IF(_AvecSel, DIVIDE(_EnsF, _EnsF + _EnsH))                -- part de femmes de l'ensemble
+			VAR _RegC  = IF(NOT ISBLANK(_PRegF), IF(_Cible = "H", 1 - _PRegF, _PRegF))
+			VAR _EnsC  = IF(NOT ISBLANK(_PEnsF), IF(_Cible = "H", 1 - _PEnsF, _PEnsF))
+			-- 4. Valeurs F / H au-dessus de la barre : libellé / effectif / part (3 lignes, comme les âges)
+			VAR _TipF = "<div class='tip'><b>Femmes</b> · " & FORMAT(_PF, "0.0 %") & " des licences<br>" & FORMAT(_F, "#,0") & " licences" & IF(_AvecSel, "<br><span>Ensemble des fédérations : " & FORMAT(_PEnsF, "0.0 %") & "</span>") & "</div>"
+			VAR _TipH = "<div class='tip'><b>Hommes</b> · " & FORMAT(1 - _PF, "0.0 %") & " des licences<br>" & FORMAT(_H, "#,0") & " licences" & IF(_AvecSel, "<br><span>Ensemble des fédérations : " & FORMAT(1 - _PEnsF, "0.0 %") & "</span>") & "</div>"
+			VAR _Item = "<div class='tt' style='min-width:0;ALI'><div style='font-size:13px;color:" & _ColNeut & ";white-space:nowrap'><i style='display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:COL'></i>NOM</div><div class='nb' style='font-size:12px;color:" & _ColNeut & ";margin-top:1px'>SUB</div><b class='nb' style='display:block;font-size:" & _TxtVal & "px;font-weight:700;color:" & _ColTxt & ";margin-top:2px'>PCT</b>TIP</div>"
+			VAR _Valeurs =
+			    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px'>"
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_Item, "ALI", IF(_OnF, "", _Gris)), "COL", _ColF), "NOM", "Femmes"), "SUB", FORMAT(_F, "#,0") & " licences"), "PCT", FORMAT(_PF, "0.0 %")), "TIP", _TipF)
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_Item, "ALI", "text-align:right;" & IF(_OnH, "", _Gris)), "COL", _ColH), "NOM", "Hommes"), "SUB", FORMAT(_H, "#,0") & " licences"), "PCT", FORMAT(1 - _PF, "0.0 %")), "TIP", _TipH)
+			    & "</div>"
+			-- 5. Barre de répartition (un genre sans licence n'est pas dessiné)
+			VAR _Barre =
+			    "<div style='display:flex;gap:2px;height:14px;margin-top:8px'>"
+			    & IF(_F > 0, "<div class='tt' style='width:" & FORMAT(_PF * 100, "0.0", "en-US") & "%;border-radius:4px;background:" & IF(_OnF, _ColF, _ColInac) & "'>" & _TipF & "</div>")
+			    & IF(_H > 0, "<div class='tt' style='flex:1;border-radius:4px;background:" & IF(_OnH, _ColH, _ColInac) & "'>" & _TipH & "</div>")
+			    & "</div>"
+			-- 6. Comparaison : part de la cible pour le regroupement et l'ensemble (toujours 2 lignes)
+			VAR _LigneComp = "<div class='tt' style='display:flex;align-items:center;gap:8px;font-size:" & [Style Taille petit] & "px;color:" & _ColLib & ";OPA'><i style='flex:none;width:8px;height:8px;border-radius:50%;background:COL'></i><span class='el' style='flex:1'>NOM</span><b class='nb' style='font-size:15px;font-weight:700;color:" & _ColFort & "'>VAL</b><div class='tip'>TIP</div></div>"
+			VAR _Comp =
+			    "<div style='margin-top:auto;padding-top:22px;display:flex;flex-direction:column;gap:8px'>"
+			    & "<div style='font-size:13px;color:" & _ColNeut & ";padding-top:10px;border-top:1px dashed " & [Style Couleur grille] & "'>Comparaison · part " & _LibC & "</div>"
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneComp, "OPA", IF(ISBLANK(_RegC), _Gris, "")), "COL", _ColReg), "NOM", _NomReg), "VAL", IF(ISBLANK(_RegC), "–", FORMAT(_RegC, "0.0 %"))),
+			        "TIP", SWITCH(TRUE(), _ModeReg, "<b>" & _NomReg & "</b><br>Regroupement sélectionné : " & FORMAT(_RegC, "0.0 %") & " " & _LibC, ISBLANK(_RegC), _PourquoiPasReg, "<b>" & _NomReg & "</b><br>" & FORMAT(_RegC, "0.0 %") & " " & _LibC & "<br><span>Écart de la sélection : " & FORMAT((_PartC - _RegC) * 100, "+0.0;-0.0;0.0") & " pt</span>"))
+			    & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(_LigneComp, "OPA", IF(ISBLANK(_EnsC), _Gris, "")), "COL", _ColEns), "NOM", "Ensemble des fédérations"), "VAL", IF(ISBLANK(_EnsC), "–", FORMAT(_EnsC, "0.0 %"))),
+			        "TIP", IF(ISBLANK(_EnsC), "La sélection est déjà l'ensemble des fédérations.", "<b>Ensemble des fédérations</b><br>" & FORMAT(_EnsC, "0.0 %") & " " & _LibC & "<br><span>Écart de la sélection : " & FORMAT((_PartC - _EnsC) * 100, "+0.0;-0.0;0.0") & " pt</span>"))
+			    & "</div>"
+			-- 7. En-tête
+			VAR _Ico  = "<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='" & [Style Couleur accent] & "' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='8' r='3.2'/><path d='M3 20c.7-3.4 3-5.2 6-5.2s5.3 1.8 6 5.2'/><circle cx='17' cy='9' r='2.4'/><path d='M16.5 14.6c2.3.2 4 1.8 4.5 4.4'/></svg>"
+			VAR _Tete = "<div style='display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid " & _ColPist & "'><span style='display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:" & [Style Couleur accent fond] & "'>" & _Ico & "</span><span style='font-size:" & _TxtTxt & "px;font-weight:700;color:" & _ColTxt & "'>Genre</span></div>"
+			-- 8. Assemblage
+			RETURN
+			    "<div style='display:flex;flex-direction:column;min-width:0'>" & _Tete
+			    & "<div class='tt' style='display:flex;align-items:baseline;gap:8px;margin-top:16px;width:max-content'><span class='nb' style='font-size:" & _TxtChif & "px;font-weight:700;letter-spacing:-.02em;line-height:1;color:" & _ColC & "'>" & IF(ISBLANK(_PartC), "–", FORMAT(_PartC, "0.0 %")) & "</span><span style='font-size:" & _TxtTxt & "px;color:" & _ColLib & "'>" & _LibC & "</span>"
+			    & "<div class='tip bas'><b>Note de lecture</b><br>" & FORMAT(_PartC, "0.0 %") & " des licences sont détenues par des " & IF(_Cible = "H", "hommes", "femmes") & IF(NOT ISBLANK(_EnsC), ",<br>contre " & FORMAT(_EnsC, "0.0 %") & " pour l'ensemble des fédérations.", ".") & "</div></div>"
+			    & "<div style='font-size:13px;color:" & _ColNeut & ";margin-top:6px;white-space:nowrap'>sur " & FORMAT(_F + _H, "#,0") & " licences (genre connu)</div>"
+			    & _Valeurs & _Barre & _Comp & "</div>"
+		isHidden
+		displayFolder: 6. Portrait\Qui
+		lineageTag: 03f3a563-3ab0-45cc-bb29-48c336364e1e
+
+	/// Bloc PROFIL, section Pyramide des âges : tranches calées sur les grandes catégories (âge exact), échelle en nombre de licences, courbe de comparaison (regroupement ou ensemble, à effectif égal), total au centre, infobulles. Styles SVG en classes pour rester sous la taille maximale d'un texte (32 000 caractères).
+	measure 'HTML Qui Pyramide' =
+			-- =====================================================================
+			-- HTML Qui Pyramide | section « Pyramide des âges » du bloc PROFIL (assemblée par HTML Qui)
+			-- Barres femmes / hommes par tranche d'âge exact, regroupées par grande catégorie.
+			-- Courbe de comparaison : répartition du regroupement (ou de l'ensemble) ramenée
+			-- au même nombre total de licences que la sélection (« à effectif égal »).
+			-- Styles SVG regroupés en classes (.py …) plutôt que répétés sur chaque ligne : texte plus court,
+			-- rendu plus rapide et réglages centralisés.
+			-- Mise en page FIXE : légende complète et alerte « effectif faible » dans l'en-tête (rien ne se décale).
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _Bandes =
+			DATATABLE("Lo", INTEGER, "Hi", INTEGER, "Cat", INTEGER, {   -- âge min, âge max, catégorie (1 Enfants … 4 Seniors)
+			{1, 5, 1}, {6, 9, 1}, {10, 13, 1},
+			{14, 17, 2}, {18, 20, 2},
+			{21, 25, 3}, {26, 30, 3}, {31, 35, 3}, {36, 40, 3}, {41, 45, 3}, {46, 50, 3}, {51, 55, 3},
+			{56, 60, 4}, {61, 65, 4}, {66, 70, 4}, {71, 75, 4}, {76, 80, 4}, {81, 99, 4}
+			})
+			VAR _SeuilFaible = 2000      -- en dessous : alerte « effectif faible »
+			VAR _Wp  = 678               -- largeur SVG
+			VAR _Gl  = 118               -- colonne des catégories à gauche
+			VAR _Lc  = 128               -- colonne centrale (âge + total)
+			VAR _Hr  = 22                -- hauteur d'une ligne (bloc de 984 px de haut)
+			VAR _Hb  = 13                -- épaisseur d'une barre
+			VAR _Gap = 8                 -- espace entre deux catégories
+			VAR _FondCat = "#F9FAFC"     -- fond très léger d'une catégorie
+			-- 2. Charte
+			VAR _ColF    = [Style Couleur femmes]
+			VAR _ColH    = [Style Couleur hommes]
+			VAR _ColInac = [Style Couleur neutre clair]
+			VAR _ColTxt  = [Style Couleur texte]
+			VAR _ColLib  = [Style Couleur texte libellé]
+			VAR _ColFort = [Style Couleur texte fort]
+			VAR _ColNeut = [Style Couleur neutre]
+			VAR _ColPist = [Style Couleur fond neutre]
+			VAR _ColGril = [Style Couleur grille]
+			VAR _TxtTxt  = [Style Taille texte]
+			VAR _TxtPet  = [Style Taille petit]
+			-- 3. Contexte
+			VAR _Mode    = [Sélection mode]
+			VAR _AvecSel = _Mode <> "Ensemble"
+			VAR _AvecReg = _Mode IN {"Fédération", "Plusieurs fédérations"} && NOT ISBLANK([Nom regroupement])
+			VAR _Comp    = IF(_AvecReg, "Regroupement", IF(_AvecSel, "Ensemble"))
+			VAR _NomComp = IF(_AvecReg, [Niveau choisi] & " · " & [Nom regroupement], "Ensemble des fédérations")
+			VAR _ColComp = IF(_AvecReg, [Style Couleur regroupement], [Style Couleur ensemble])
+			VAR _GSel    = IF(ISFILTERED(T_Sexe) && HASONEVALUE(T_Sexe[Sexe]), SELECTEDVALUE(T_Sexe[Sexe]))
+			VAR _CSel    = IF(ISFILTERED(T_TrancheAge) && HASONEVALUE(T_TrancheAge[Ordre]), VALUE(SELECTEDVALUE(T_TrancheAge[Ordre])))
+			VAR _ColA    = SWITCH(_GSel, "F", _ColF, "H", _ColH, [Style Couleur poids])
+			VAR _ClF     = IF(ISBLANK(_GSel) || _GSel = "F", "bf", "bi")   -- classe des barres femmes
+			VAR _ClH     = IF(ISBLANK(_GSel) || _GSel = "H", "bh", "bi")   -- classe des barres hommes
+			-- 4. Données (toutes catégories, deux genres : la sélection est mise en évidence)
+			VAR _TabP =
+			ADDCOLUMNS(_Bandes,
+			"@ft", VAR _a = [Lo] VAR _b = [Hi] RETURN CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), REMOVEFILTERS(T_TrancheAge), T_Sexe[Sexe] = "F", F_Licences[Age] >= _a, F_Licences[Age] <= _b) + 0,
+			"@ht", VAR _a = [Lo] VAR _b = [Hi] RETURN CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), REMOVEFILTERS(T_TrancheAge), T_Sexe[Sexe] = "H", F_Licences[Age] >= _a, F_Licences[Age] <= _b) + 0,
+			"@fc", VAR _a = [Lo] VAR _b = [Hi] RETURN IF(NOT ISBLANK(_Comp), CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), REMOVEFILTERS(T_TrancheAge), T_Sexe[Sexe] = "F", F_Licences[Age] >= _a, F_Licences[Age] <= _b, Comparaison[Comparaison] = _Comp) + 0),
+			"@hc", VAR _a = [Lo] VAR _b = [Hi] RETURN IF(NOT ISBLANK(_Comp), CALCULATE([NB Licences], REMOVEFILTERS(T_Sexe), REMOVEFILTERS(T_TrancheAge), T_Sexe[Sexe] = "H", F_Licences[Age] >= _a, F_Licences[Age] <= _b, Comparaison[Comparaison] = _Comp) + 0))
+			VAR _TotP   = SUMX(_TabP, [@ft] + [@ht])
+			VAR _TotC   = SUMX(_TabP, [@fc] + [@hc])
+			VAR _Ratio  = DIVIDE(_TotP, _TotC)          -- comparaison ramenée à l'effectif de la sélection
+			VAR _MaxCat = MAXX(_TabP, [Cat])
+			VAR _TabP2  = ADDCOLUMNS(_TabP, "@i", VAR _a = [Lo] RETURN COUNTROWS(FILTER(_Bandes, [Lo] > _a)))
+			VAR _TabP3  = ADDCOLUMNS(_TabP2, "@y", [@i] * _Hr + (_MaxCat - [Cat]) * _Gap + 2)
+			VAR _yAxe   = MAXX(_TabP3, [@y]) + _Hr + 6
+			VAR _Hp     = _yAxe + 22
+			-- 5. Échelle en nombre de licences (graduation ronde)
+			VAR _Sd      = (_Wp - _Gl - _Lc) / 2
+			VAR _Wmax    = _Sd - 6
+			VAR _Cx      = _Gl + _Sd + _Lc / 2
+			VAR _MaxV    = MAX(MAXX(_TabP, MAX(MAX([@ft], [@ht]), MAX([@fc], [@hc]) * _Ratio)), 1)
+			VAR _PasBrut = _MaxV * 1.04 / 3
+			VAR _Mag     = POWER(10, INT(LOG10(_PasBrut)))
+			VAR _Norm    = _PasBrut / _Mag
+			VAR _Pas     = SWITCH(TRUE(), _Norm <= 1, 1, _Norm <= 2, 2, _Norm <= 2.5, 2.5, _Norm <= 5, 5, 10) * _Mag
+			VAR _NbT     = MAX(CEILING(_MaxV / _Pas, 1), 1)
+			VAR _Echelle = _NbT * _Pas
+			-- 6. Styles SVG (classes)
+			VAR _Css =
+			"<style>.py .bf{fill:" & _ColF & "}.py .bh{fill:" & _ColH & "}.py .bi{fill:" & _ColInac & "}.py .dim{opacity:.25}"
+			& ".py .lb{font-size:" & _TxtPet & "px;font-weight:600;fill:" & _ColFort & "}.py .tv{font-size:13px;fill:" & _ColNeut & "}.py .ax{font-size:13px;fill:" & _ColNeut & "}"
+			& ".py .hz{fill:#000;fill-opacity:0}.py .hl{fill:" & _ColInac & ";fill-opacity:.55}.py .tb{fill:" & _ColTxt & "}"
+			& ".py .t1{font-size:" & _TxtPet & "px;font-weight:600;fill:#FFFFFF}.py .t2{font-size:13px;fill:#D0D5DD}.py .t3{font-size:13px;fill:#B7C0CF}</style>"
+			-- 7. Grandes catégories : fond très léger, filet, fond renforcé si catégorie choisie
+			VAR _Cats = DISTINCT(SELECTCOLUMNS(_Bandes, "@g", [Cat]))
+			VAR _Groupes =
+			CONCATENATEX(_Cats,
+			VAR _g  = [@g]
+			VAR _R  = FILTER(_TabP3, [Cat] = _g)
+			VAR _yt = MINX(_R, [@y])
+			VAR _yf = MAXX(_R, [@y]) + _Hr
+			VAR _nr = COUNTROWS(_R)
+			VAR _L  = MAXX(FILTER(ALL(T_TrancheAge[Ordre], T_TrancheAge[TrancheAge]), T_TrancheAge[Ordre] = FORMAT(_g, "0")), T_TrancheAge[TrancheAge])
+			VAR _Nm = TRIM(MID(_L, 5, SEARCH("(", _L, 1, LEN(_L) + 1) - 5))
+			VAR _Tr = SUBSTITUTE(MID(_L, SEARCH("(", _L, 1, LEN(_L)) + 1, SEARCH(")", _L, 1, LEN(_L) + 1) - SEARCH("(", _L, 1, LEN(_L)) - 1), "-", "–") & " ans"
+			VAR _Sel = NOT ISBLANK(_CSel) && _g = _CSel
+			VAR _Dim = NOT ISBLANK(_CSel) && NOT _Sel
+			VAR _ym  = (_yt + _yf) / 2
+			VAR _Part = DIVIDE(SUMX(_R, [@ft] + [@ht]), _TotP)
+			RETURN
+			"<rect x='0' y='" & (_yt - 2) & "' width='" & _Wp & "' height='" & (_yf - _yt + 4) & "' rx='6' fill='" & IF(_Sel, [Style Couleur accent fond], _FondCat) & "'/>"
+			& IF(_g < _MaxCat, "<line x1='0' x2='" & _Wp & "' y1='" & FORMAT(_yt - 2 - _Gap / 2, "0.0", "en-US") & "' y2='" & FORMAT(_yt - 2 - _Gap / 2, "0.0", "en-US") & "' stroke='" & _ColGril & "'/>")
+			& "<rect x='0' y='" & (_yt - 2) & "' width='3' height='" & (_yf - _yt + 4) & "' rx='1.5' fill='" & IF(_Sel, _ColA, [Style Couleur bordure forte]) & "'/>"
+			& "<text x='12' y='" & FORMAT(IF(_nr >= 2, _ym - 3, _ym + 5), "0.0", "en-US") & "' font-size='" & _TxtTxt & "' font-weight='600' fill='" & IF(_Sel, _ColA, IF(_Dim, _ColNeut, _ColFort)) & "'>" & _Nm & "</text>"
+			& IF(_nr >= 2, "<text x='12' y='" & FORMAT(_ym + 15, "0.0", "en-US") & "' class='ax'>" & _Tr & " · " & FORMAT(_Part, "0 %") & "</text>"),
+			"")
+			-- 8. Axe en nombre de licences (M sans virgule finale : 3 M, 2,5 M)
+			VAR _Grille =
+			CONCATENATEX(GENERATESERIES(0, _NbT, 1),
+			VAR _k  = [Value]
+			VAR _dx = _k / _NbT * _Wmax
+			VAR _xl = FORMAT(_Gl + _Sd - _dx, "0.0", "en-US")
+			VAR _xr = FORMAT(_Gl + _Sd + _Lc + _dx, "0.0", "en-US")
+			VAR _t  = _k * _Pas
+			VAR _Lb = SWITCH(TRUE(), _t >= 1000000, FORMAT(_t / 1000000, IF(MOD(_t, 1000000) = 0, "0", "0.0")) & " M", _t >= 10000, FORMAT(_t / 1000, "#,0") & " k", FORMAT(_t, "#,0"))
+			VAR _Tr = "' y1='0' y2='" & _yAxe & "' stroke='" & IF(_k = 0, [Style Couleur bordure forte], _ColGril) & "'" & IF(_k = 0, "", " stroke-dasharray='3 3'") & "/>"
+			RETURN
+			"<line x1='" & _xl & "' x2='" & _xl & _Tr & "<line x1='" & _xr & "' x2='" & _xr & _Tr
+			& "<text x='" & _xl & "' y='" & (_yAxe + 16) & "' text-anchor='middle' class='ax'>" & _Lb & "</text>"
+			& "<text x='" & _xr & "' y='" & (_yAxe + 16) & "' text-anchor='middle' class='ax'>" & _Lb & "</text>",
+			"")
+			-- 9. Courbe de comparaison (contour en escalier, des deux côtés)
+			VAR _CourbeF =
+			IF(NOT ISBLANK(_Comp) && _TotC > 0,
+			"M" & CONCATENATEX(_TabP3,
+			VAR _x = FORMAT(_Gl + _Sd - DIVIDE([@fc] * _Ratio, _Echelle) * _Wmax, "0", "en-US")
+			RETURN _x & "," & [@y] & "V" & ([@y] + _Hr), "L", [Lo], DESC))
+			VAR _CourbeH =
+			IF(NOT ISBLANK(_Comp) && _TotC > 0,
+			"M" & CONCATENATEX(_TabP3,
+			VAR _x = FORMAT(_Gl + _Sd + _Lc + DIVIDE([@hc] * _Ratio, _Echelle) * _Wmax, "0", "en-US")
+			RETURN _x & "," & [@y] & "V" & ([@y] + _Hr), "L", [Lo], DESC))
+			VAR _Courbes =
+			IF(NOT ISBLANK(_CourbeF),
+			"<g pointer-events='none' fill='none' stroke='" & _ColComp & "' stroke-width='1.6' stroke-dasharray='4 3' stroke-linejoin='round' opacity='.75'><path d='" & _CourbeF & "'/><path d='" & _CourbeH & "'/></g>")
+			-- 10. Barres, libellés et infobulles
+			VAR _LargeurBulle = 360
+			VAR _XBulle = FORMAT(_Cx - _LargeurBulle / 2, "0", "en-US")
+			VAR _XTxt   = FORMAT(_Cx - _LargeurBulle / 2 + 12, "0", "en-US")
+			VAR _HBulle = IF(ISBLANK(_Comp), 48, 68)
+			VAR _NomC   = IF(_AvecReg, "Regroupement", "Ensemble")
+			VAR _Barres =
+			CONCATENATEX(_TabP3,
+			VAR _Lab  = IF([Hi] >= 99, [Lo] & " ans et +", [Lo] & "–" & [Hi])
+			VAR _y    = [@y]
+			VAR _yb   = _y + (_Hr - _Hb) / 2
+			VAR _wf   = MAX(DIVIDE([@ft], _Echelle) * _Wmax, 3)
+			VAR _wh   = MAX(DIVIDE([@ht], _Echelle) * _Wmax, 3)
+			VAR _On   = ISBLANK(_CSel) || [Cat] = _CSel
+			VAR _Dim  = IF(_On, "", " dim")
+			VAR _yt   = IF([@i] > 2, _y - _HBulle - 4, _y + _Hr + 4)
+			VAR _Tot  = [@ft] + [@ht]
+			RETURN
+			"<g class='pt'><rect class='hl' x='" & _Gl & "' y='" & _y & "' width='" & (_Wp - _Gl) & "' height='" & _Hr & "' rx='5'/>"
+			& IF([@ft] > 0, "<rect class='" & _ClF & _Dim & "' x='" & FORMAT(_Gl + _Sd - _wf, "0.0", "en-US") & "' y='" & FORMAT(_yb, "0.0", "en-US") & "' width='" & FORMAT(_wf, "0.0", "en-US") & "' height='" & _Hb & "' rx='6'/>")
+			& IF([@ht] > 0, "<rect class='" & _ClH & _Dim & "' x='" & (_Gl + _Sd + _Lc) & "' y='" & FORMAT(_yb, "0.0", "en-US") & "' width='" & FORMAT(_wh, "0.0", "en-US") & "' height='" & _Hb & "' rx='6'/>")
+			& "<text x='" & _Cx & "' y='" & FORMAT(_y + _Hr / 2 + 5, "0.0", "en-US") & "' text-anchor='middle'" & IF(_On, "", " opacity='.45'") & "><tspan class='lb'>" & IF([Hi] >= 99, [Lo] & "+", _Lab) & "</tspan><tspan dx='7' class='tv'>" & FORMAT(_Tot, "#,0") & "</tspan></text>"
+			& "<g class='ptip'><rect class='tb' x='" & _XBulle & "' y='" & _yt & "' width='" & _LargeurBulle & "' height='" & _HBulle & "' rx='8'/>"
+			& "<text class='t1' x='" & _XTxt & "' y='" & (_yt + 19) & "'>" & _Lab & IF([Hi] >= 99, "", " ans") & " · " & FORMAT(_Tot, "#,0") & " licences · " & FORMAT(DIVIDE(_Tot, _TotP), "0.0 %") & "</text>"
+			& "<text class='t2' x='" & _XTxt & "' y='" & (_yt + 38) & "'>Femmes " & FORMAT([@ft], "#,0") & " (" & FORMAT(DIVIDE([@ft], _TotP), "0.0 %") & ") · Hommes " & FORMAT([@ht], "#,0") & " (" & FORMAT(DIVIDE([@ht], _TotP), "0.0 %") & ")</text>"
+			& IF(NOT ISBLANK(_Comp), "<text class='t3' x='" & _XTxt & "' y='" & (_yt + 57) & "'>" & _NomC & " : " & FORMAT(DIVIDE([@fc] + [@hc], _TotC), "0.0 %") & " des licences (F " & FORMAT(DIVIDE([@fc], _TotC), "0.0 %") & " · H " & FORMAT(DIVIDE([@hc], _TotC), "0.0 %") & ")</text>")
+			& "</g><rect class='hz' x='0' y='" & _y & "' width='" & _Wp & "' height='" & _Hr & "'/></g>",
+			"", [Lo], DESC)
+			-- 11. En-tête, légende (toujours complète), alerte effectif faible
+			VAR _Ico = "<svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='" & [Style Couleur accent] & "' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6h7M4 10h10M4 14h12M4 18h8'/><path d='M20 4v16'/></svg>"
+			VAR _Pt  = "<i style='display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:"
+			VAR _Avertissement =
+			IF(_TotP > 0 && _TotP < _SeuilFaible,
+			"<span class='tt' style='flex:none;display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;background:" & [Style Couleur filtre actif fond] & ";font-size:13px;font-weight:600;color:" & [Style Couleur filtre actif texte] & "'>"
+			& "<svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round'><circle cx='12' cy='12' r='9'/><path d='M12 8v5M12 16.5v.5'/></svg>effectif faible"
+			& "<span class='tip bas'><b>" & FORMAT(_TotP, "#,0") & " licences avec un âge</b> : à lire avec prudence.<br>Avec moins de " & FORMAT(_SeuilFaible, "#,0") & " licences, quelques licenciés suffisent<br>à faire varier fortement une tranche d'âge.</span></span>")
+			VAR _Tete =
+			"<div style='display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid " & _ColPist & "'><span style='flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:" & [Style Couleur accent fond] & "'>" & _Ico & "</span><span style='flex:none;font-size:" & _TxtTxt & "px;font-weight:700;color:" & _ColTxt & "'>Pyramide des âges</span>" & _Avertissement
+			& "<span style='margin-left:auto;display:flex;align-items:center;gap:14px;font-size:" & _TxtPet & "px;color:" & _ColLib & ";min-width:0'><span style='flex:none'>" & _Pt & _ColF & "'></i>Femmes</span><span style='flex:none'>" & _Pt & _ColH & "'></i>Hommes</span>"
+			& IF(NOT ISBLANK(_Comp), "<span class='tt' style='display:flex;align-items:center;min-width:0'><i style='flex:none;display:inline-block;width:16px;border-top:2px dashed " & _ColComp & ";margin-right:6px'></i><span class='el'>" & _NomComp & "</span><span class='tip bas'><b>Courbe en pointillé</b> : répartition par âge de " & _NomComp & ",<br>ramenée au même nombre de licences que la sélection.</span></span>",
+			"<span class='tt' style='display:flex;align-items:center;min-width:0;opacity:.4'><i style='flex:none;display:inline-block;width:16px;border-top:2px dashed " & _ColNeut & ";margin-right:6px'></i><span class='el'>Comparaison</span><span class='tip bas'>La sélection est déjà l'ensemble des fédérations :<br>pas de courbe de comparaison.</span></span>")
+			& "</span></div>"
+			VAR _SansAge =
+			"<div style='margin-top:12px;padding:24px;border:1.5px dashed " & [Style Couleur bordure forte] & ";border-radius:10px;text-align:center;font-size:" & _TxtTxt & "px;color:" & _ColLib & "'><b style='color:" & _ColTxt & "'>Pyramide non disponible</b><br><span style='font-size:" & _TxtPet & "px'>Aucune licence avec un âge renseigné pour cette sélection.</span></div>"
+			-- 12. Assemblage
+			RETURN
+			_Tete
+			& IF(_TotP = 0,
+			_SansAge,
+			_Css
+			& "<svg class='py' viewBox='0 0 " & _Wp & " " & _Hp & "' width='100%' font-family='" & [Style Police] & "' style='display:block;margin-top:12px;overflow:visible'>" & _Groupes & _Grille & _Courbes & _Barres & "</svg>")
+		isHidden
+		displayFolder: 6. Portrait\Qui
+		lineageTag: 17eeaaea-700b-470c-bdcf-46e78ae05bc1
+
+	/// Styles du tableau des fédérations, construits sur la charte commune (dossier 0. Style).
+	measure 'HTML Tableau Federations CSS' =
+			VAR _Marine = [Style Couleur marine]
+			VAR _Accent = [Style Couleur accent]
+			VAR _Sel = [Style Couleur sélection]
+			VAR _SelClair = [Style Couleur sélection clair]
+			VAR _Reg = [Style Couleur regroupement]
+			VAR _Grille = [Style Couleur grille]
+			VAR _FondAcc = [Style Couleur accent fond]
+			RETURN
+			".tb { height:100%; max-height:100vh; overflow:auto; background:#FFFFFF; font-family:" & [Style Police] & "; font-size:12px; color:" & [Style Couleur texte] & "; font-variant-numeric:tabular-nums; }"
+			& ".lg { display:grid; align-items:center; border-bottom:1px solid " & _Grille & "; }"
+			& ".lg > div { padding:7px 10px; text-align:right; white-space:nowrap; }"
+			& ".lg > div.nom { text-align:left; white-space:normal; line-height:1.3; position:sticky; left:0; z-index:2; background:inherit; display:flex; align-items:center; gap:10px; box-shadow:1px 0 0 " & _Grille & "; }"
+			& ".ent { position:sticky; top:0; z-index:5; background:" & _Marine & "; color:#FFFFFF; font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; border-bottom:3px solid " & _Accent & "; }"
+			& ".ent > div { padding:10px; }"
+			& ".tot { position:sticky; bottom:0; z-index:5; background:" & _Marine & "; color:#FFFFFF; font-weight:700; border-top:3px solid " & _Accent & "; }"
+			& ".cat { background:" & _FondAcc & "; color:" & _Marine & "; font-weight:700; cursor:pointer; }"
+			& ".cat > div.nom { border-left:4px solid " & _Marine & "; }"
+			& ".csel { background:" & _Sel & "; color:#FFFFFF; font-weight:700; cursor:pointer; }"
+			& ".csel > div.nom { border-left:4px solid " & _Reg & "; }"
+			& ".fed { background:#FFFFFF; }"
+			& ".fed:hover, .fsel:hover { background:" & [Style Couleur fond neutre] & "; }"
+			& ".fed > div.nom, .fsel > div.nom { padding-left:30px; font-weight:500; }"
+			& ".fsel { background:" & _SelClair & "; font-weight:700; }"
+			& ".fsel > div.nom { border-left:4px solid " & _Sel & "; padding-left:26px; font-weight:700; }"
+			& "summary { list-style:none; } summary::-webkit-details-marker { display:none; }"
+			& ".pm { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:rgba(11,28,79,.10); font-weight:700; font-size:13px; line-height:1; flex-shrink:0; }"
+			& ".csel .pm { background:rgba(255,255,255,.25); }"
+			& "details .pm::before { content:'+'; } details[open] .pm::before { content:'−'; }"
+			& ".nb { font-weight:400; opacity:.7; font-size:11px; }"
+			& ".logo { width:22px; height:22px; object-fit:contain; flex-shrink:0; border-radius:4px; background:#FFFFFF; }"
+			& ".up, .dn, .eq { display:inline-block; min-width:64px; padding:2px 8px; border-radius:12px; font-weight:600; font-size:11px; text-align:center; }"
+			& ".up { background:" & [Style Couleur hausse fond] & "; color:" & [Style Couleur hausse] & "; }"
+			& ".dn { background:" & [Style Couleur baisse fond] & "; color:" & [Style Couleur baisse] & "; }"
+			& ".eq { background:" & [Style Couleur fond neutre] & "; color:" & [Style Couleur texte libellé] & "; }"
+			& ".csel .up, .csel .dn, .csel .eq { background:rgba(255,255,255,.92); }"
+			& ".trk { height:3px; border-radius:2px; background:" & _Grille & "; margin-top:4px; margin-left:auto; }"
+			& ".barre { height:3px; border-radius:2px; background:" & _Sel & "; margin-left:auto; }"
+			& ".csel .trk { background:rgba(255,255,255,.35); } .csel .barre { background:#FFFFFF; }"
+			& ".cat .barre { background:" & _Marine & "; }"
+			& ".fsel .barre { background:" & _Marine & "; }"
+		isHidden
+		displayFolder: 2. Affichage
+		lineageTag: 090c5c3a-73cb-407c-b72d-ef5cecb02fcd
+
+	/// Âge moyen des licenciés (âge exact de la table, pondéré par le nombre de licences), année la plus récente de la sélection. Licences sans âge exclues.
+	measure 'Âge moyen' =
+			VAR _AnneeRef = MAX(T_Annee[Annee])
+			RETURN
+			    CALCULATE(
+			        DIVIDE(SUMX(F_Licences, F_Licences[Age] * F_Licences[NbLicences]), SUM(F_Licences[NbLicences])),
+			        T_Annee[Annee] = _AnneeRef,
+			        NOT ISBLANK(F_Licences[Age])
+			    )
+		formatString: 0.0
+		displayFolder: 6. Portrait\Qui
+		lineageTag: 266d90a8-0a7a-42d7-8ced-a1fae02e1e7a
+
+	/// Charte : taille du titre d'un bloc (px, nombre en texte). Page de 1920 x 1400 : tailles pensées pour rester lisibles une fois la page réduite à l'écran.
+	measure 'Style Taille titre' = "22"
+		displayFolder: 0. Style\Tailles
+		lineageTag: ed48362f-96e5-4923-96be-ad50509af5b9
+
+	/// Charte : taille du texte courant (libellés, légendes, valeurs secondaires), en px.
+	measure 'Style Taille texte' = "15"
+		displayFolder: 0. Style\Tailles
+		lineageTag: 188fc36d-0e18-412e-87a9-30db73d4a7ab
+
+	/// Charte : taille des notes, axes et sous-titres, en px.
+	measure 'Style Taille petit' = "14"
+		displayFolder: 0. Style\Tailles
+		lineageTag: 93659b6b-8696-448a-9cfd-aa8190d99db2
+
+	/// Charte : taille du chiffre principal d'une carte ou d'une section, en px.
+	measure 'Style Taille chiffre' = "32"
+		displayFolder: 0. Style\Tailles
+		lineageTag: 2ae0e485-6a3d-4f4b-9397-c52e6973d8c2
+
+	/// Charte : taille d'une valeur mise en avant dans une liste ou une légende, en px.
+	measure 'Style Taille valeur' = "17"
+		displayFolder: 0. Style\Tailles
+		lineageTag: da2eb3c5-9803-4ee2-bb47-d2f82039fcd2
+
+	/// Charte : couleur des zones sans donnée ou non calculables (carte, graphiques).
+	measure 'Style Couleur sans donnée' = "#D9DDE5"
+		displayFolder: 0. Style\Couleurs et police
+		lineageTag: 912e9df6-7a8d-4e36-a0b2-bde135001c1f
+
+	/// Nature de la sélection fédération : Ensemble (rien de choisi ou Ensemble), Regroupement (famille, sous-famille ou groupe sans fédération), Fédération (une seule), Plusieurs fédérations. Référence commune de tous les blocs HTML.
+	measure 'Sélection mode' =
+			-- =====================================================================
+			-- Sélection mode : nature de la sélection fédération (texte)
+			--   Segment Regroupement = P_Niveaux[Famille | Sous-famille | Groupe] (paramètre Param_Niveau)
+			--                          → clé P_Niveaux[Cle] (« Ensemble » = pas de regroupement)
+			--   Segment Fédération   = colonnes de P_Federation (paramètre Param_Federation)
+			-- Résultat : Ensemble | Regroupement | Fédération | Plusieurs fédérations
+			-- =====================================================================
+			VAR _FedFiltree = ISFILTERED(P_Federation)
+			VAR _NbFed      = COUNTROWS(VALUES(T_Federation[CodeReference]))
+			VAR _CleNiv     = IF(ISFILTERED(P_Niveaux) && HASONEVALUE(P_Niveaux[Cle]), VALUES(P_Niveaux[Cle]))
+			VAR _ClePar     = IF(ISFILTERED(Param_Federation) && HASONEVALUE(Param_Federation[Cle]), VALUES(Param_Federation[Cle]))
+			VAR _CleReg     = COALESCE(_CleNiv, _ClePar)
+			RETURN
+			    SWITCH(TRUE(),
+			        _FedFiltree && _NbFed = 1, "Fédération",
+			        _FedFiltree && _NbFed > 1, "Plusieurs fédérations",
+			        NOT ISBLANK(_CleReg) && _CleReg <> "Ensemble", "Regroupement",
+			        "Ensemble")
+		displayFolder: 4. Indicateurs\Sélection
+		lineageTag: 73b70a43-3ef8-4a3e-8820-5a44cc07a653
+
+	/// Libellé de la sélection pour les titres et légendes : nom court de la fédération, nom du regroupement, « Plusieurs fédérations » ou « Ensemble des fédérations ».
+	measure 'Sélection libellé' =
+			-- =====================================================================
+			-- Sélection libellé : texte affiché pour la sélection fédération
+			-- Le regroupement se lit dans la clé « F · Nom », « SF · Nom » ou « G · Nom »
+			-- (P_Niveaux[Cle] pour le segment Regroupement, Param_Federation[Cle] en secours).
+			-- =====================================================================
+			VAR _Mode   = [Sélection mode]
+			VAR _CleReg = COALESCE(
+			                  IF(HASONEVALUE(P_Niveaux[Cle]), VALUES(P_Niveaux[Cle])),
+			                  SELECTEDVALUE(Param_Federation[Cle]))
+			VAR _NomReg = TRIM(MID(_CleReg, SEARCH(" · ", _CleReg, 1, 0) + 3, 200))
+			RETURN
+			    SWITCH(_Mode,
+			        "Fédération",            SELECTEDVALUE(T_Federation[Nom court]),
+			        "Plusieurs fédérations", "Plusieurs fédérations",
+			        "Regroupement",           COALESCE(_NomReg, [Nom regroupement], "Regroupement"),
+			        "Ensemble des fédérations")
+		displayFolder: 4. Indicateurs\Sélection
+		lineageTag: 958bfa61-3a5f-4c7d-95fd-307f0d285e94
+
+	/// Liste des fédérations sélectionnées (noms courts, par licences décroissantes), limitée à _NbMax noms puis « et n autres ». Sert aux infobulles quand plusieurs fédérations sont choisies.
+	measure 'Sélection liste' =
+			-- =====================================================================
+			-- Sélection liste : noms des fédérations choisies (infobulles)
+			-- =====================================================================
+			-- 1. Réglages
+			VAR _NbMax = 6
+			VAR _Sep   = ", "
+			-- 2. Données
+			VAR _Feds  = ADDCOLUMNS(VALUES(T_Federation[Nom court]), "@Lic", [NB Licences])
+			VAR _Nb    = COUNTROWS(_Feds)
+			VAR _Top   = TOPN(_NbMax, _Feds, [@Lic], DESC, T_Federation[Nom court], ASC)
+			-- 3. Résultat
+			RETURN
+			    CONCATENATEX(_Top, T_Federation[Nom court], _Sep, [@Lic], DESC)
+			        & IF(_Nb > _NbMax, " et " & (_Nb - _NbMax) & " autre" & IF(_Nb - _NbMax > 1, "s", ""))
+		displayFolder: 4. Indicateurs\Sélection
+		lineageTag: c6ef508f-0ecf-40a1-a397-0f8e09abdd05
+
+	/// Charte : balise <style> commune à tous les blocs HTML (infobulles .tt/.tip, survol SVG .pt, texte tronqué .el, chiffres insécables .nb). À placer une fois au début de chaque mesure HTML.
+	measure 'Style CSS commun' =
+			-- =====================================================================
+			-- Style CSS commun : classes partagées par tous les blocs HTML
+			--   .tt  : élément qui porte une infobulle (.tip à l'intérieur)
+			--   .tip : infobulle sombre, affichée au survol de .tt
+			--          (alignée à gauche pour le 1er élément d'une ligne, à droite pour le dernier)
+			--   .bas : infobulle affichée sous l'élément (pour le haut des blocs)
+			--   .pt  : groupe SVG survolable ; .hl (surbrillance) et .ptip (infobulle SVG) visibles au survol
+			--   .el  : texte tronqué avec « … » (le texte complet est dans l'infobulle)
+			--   .nb  : valeur chiffrée, jamais coupée
+			-- =====================================================================
+			VAR _Fond  = [Style Couleur texte]
+			VAR _Petit = [Style Taille petit]
+			RETURN
+			    "<style>html,body{margin:0;padding:0;overflow:hidden}*{box-sizing:border-box}"
+			    & ".tt{position:relative}"
+			    & ".tt .tip{opacity:0;visibility:hidden;pointer-events:none;position:absolute;z-index:20;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);"
+			    & "background:" & _Fond & ";color:#FFFFFF;font-size:" & _Petit & "px;font-weight:400;line-height:1.45;text-align:left;letter-spacing:0;"
+			    & "padding:8px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 8px 20px rgba(16,24,40,.22);transition:opacity .12s}"
+			    & ".tt:first-child .tip{left:0;transform:none}.tt:last-child .tip{left:auto;right:0;transform:none}"
+			    & ".tt .tip.bas{bottom:auto;top:calc(100% + 8px)}"
+			    & ".tt:hover .tip{opacity:1;visibility:visible}.tip b{font-weight:600}.tip span{color:#B7C0CF}"
+			    & ".pt .ptip,.pt .hl{opacity:0;transition:opacity .12s}.pt:hover .ptip,.pt:hover .hl{opacity:1}"
+			    & ".el{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+			    & ".nb{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums}</style>"
+		displayFolder: 0. Style\Blocs CSS
+		lineageTag: 0ad459eb-aec1-43df-86b2-3ea5a5dca245
+
+	/// Nombre de fédérations dans la sélection (toutes si rien n'est choisi).
+	measure 'Sélection nb fédérations' = COUNTROWS(VALUES(T_Federation[CodeReference]))
+		formatString: 0
+		displayFolder: 4. Indicateurs\Sélection
+		lineageTag: 6699d438-c65b-41f7-bdc4-6e46b2b3cf80
+
+	/// 1 quand un département est choisi : la carte est forcée au niveau département, le segment Niveau géo n'a plus d'effet et doit disparaître. Lu par les mesures Segment Niveau géo …
+	measure 'Segment Niveau géo masqué' =
+			-- 1 = un département est choisi (segment Département, champ de Param_Departement → P_TerrDep)
+			IF(ISFILTERED(P_TerrDep), 1, 0)
+		formatString: 0
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: 51b1bd34-9d72-4909-9973-bad34f4b8d56
+
+	/// Couleur du texte des boutons du segment Niveau géo (fx) : couleur du fond du bloc quand un département est choisi (segment invisible), sinon couleur normale. À mettre sur les états Par défaut et Sélectionné.
+	measure 'Segment Niveau géo couleur texte' =
+			-- Texte invisible (couleur du fond du bloc) quand un département est choisi
+			IF([Segment Niveau géo masqué] = 1, [Style Couleur fond cadre], [Style Couleur texte])
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: 6311606a-075a-49ff-b19e-f86db71eb95d
+
+	/// Couleur du texte du bouton sélectionné du segment Niveau géo (fx) : blanc sur indigo, ou couleur du fond du bloc quand un département est choisi.
+	measure 'Segment Niveau géo couleur texte sélection' = IF([Segment Niveau géo masqué] = 1, [Style Couleur fond cadre], "#FFFFFF")
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: efabde5d-60e7-4f7e-a2f0-caecfa9680a0
+
+	/// Remplissage des boutons non sélectionnés du segment Niveau géo (fx) : couleur du fond du bloc (blanc).
+	measure 'Segment Niveau géo couleur fond' = [Style Couleur fond cadre]
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: d9046684-3ae4-485e-a9cc-e8d0fabb770f
+
+	/// Remplissage du bouton sélectionné du segment Niveau géo (fx) : marine, ou couleur du fond du bloc quand un département est choisi (segment invisible).
+	measure 'Segment Niveau géo couleur fond sélection' = IF([Segment Niveau géo masqué] = 1, [Style Couleur fond cadre], [Style Couleur marine])
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: a550a6b9-a840-4adb-b3d0-c3c844376c00
+
+	/// Bordure des boutons du segment Niveau géo (fx) : bordure normale, ou couleur du fond du bloc quand un département est choisi.
+	measure 'Segment Niveau géo couleur bordure' = IF([Segment Niveau géo masqué] = 1, [Style Couleur fond cadre], [Style Couleur bordure forte])
+		displayFolder: 3. Filtres de segments\Masquage
+		lineageTag: 3bfe76f4-81bd-47dc-a113-846f89c54d48
+
+	column _
+		isHidden
+		lineageTag: d2cf5779-78ce-4624-8c0d-6ed2b896cdd8
+		isNameInferred
+		sourceColumn: [_]
+
+	partition _Mesures = calculated
+		mode: import
+		source = ROW("_", BLANK())
+

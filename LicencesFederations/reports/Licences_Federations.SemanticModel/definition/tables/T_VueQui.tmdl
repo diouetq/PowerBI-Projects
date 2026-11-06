@@ -1,0 +1,24 @@
+/// Bascule du bloc Qui (segment en tuiles) : Répartition ou Pyramide des âges.
+table T_VueQui
+	lineageTag: 9baa5391-41c9-428b-986a-4aa8dbc26c11
+
+	column Ordre
+		dataType: int64
+		formatString: 0
+		lineageTag: a3efb61c-ca33-42e2-ad20-169c4cecd7cc
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	column Vue
+		dataType: string
+		lineageTag: cef92658-be1a-4947-88b7-da52e99c92b7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Vue]
+		sortByColumn: Ordre
+
+	partition T_VueQui = calculated
+		mode: import
+		source = DATATABLE("Ordre", INTEGER, "Vue", STRING, {{1, "Répartition"}, {2, "Pyramide des âges"}})
+

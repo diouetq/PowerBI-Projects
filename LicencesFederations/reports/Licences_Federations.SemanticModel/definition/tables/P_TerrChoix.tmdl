@@ -1,0 +1,53 @@
+/// Liste du segment Territoire (équivalent de P_Niveaux pour les fédérations). Clé stable : Id territoire (TOT, MDR, MET, R + code région INSEE, DROM, COM, AUT). Libellés des régions lus dans T_Territoire. Reliée à Param_Departement (1-1) et à P_TerrAppartenance.
+table P_TerrChoix
+	lineageTag: f3aeb1f5-a462-49d7-ae35-ba10d0de0481
+
+	column 'Id territoire'
+		lineageTag: 5d0b31b9-1e70-4a33-8481-56f13ca20092
+		isNameInferred
+		sourceColumn: [Id territoire]
+
+	column Libellé
+		lineageTag: 4eff5326-d32d-4cba-80b2-7f7bed137d6e
+		isNameInferred
+		sourceColumn: [Libellé]
+		sortByColumn: Ordre
+
+	column Type
+		lineageTag: b089b227-e8eb-4829-bae9-e552016e2036
+		isNameInferred
+		sourceColumn: [Type]
+
+	column Ordre
+		lineageTag: 92be1b24-498e-41a3-8c42-370c8ca1c792
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	column Territoire
+		lineageTag: 5516c8ec-a597-4660-9ad9-70b7d3d4b674
+		isNameInferred
+		sourceColumn: [Territoire]
+		sortByColumn: Ordre
+
+	partition P_TerrChoix = calculated
+		mode: import
+		source =
+				-- Régions de métropole (GD_Zone_Slicer_Ordre = 1), clé = R + code région
+				VAR Reg =
+				    SELECTCOLUMNS(
+				        FILTER(ALLNOBLANKROW(T_Territoire[Code_GDEREG], T_Territoire[Zone_Slicer], T_Territoire[GD_Zone_Slicer_Ordre]), T_Territoire[GD_Zone_Slicer_Ordre] = "1"),
+				        "Id territoire", "R" & T_Territoire[Code_GDEREG],
+				        "Libellé", T_Territoire[Zone_Slicer],
+				        "Type", "Région"
+				    )
+				VAR RegO = ADDCOLUMNS(Reg, "Ordre", VAR l = [Libellé] RETURN 10 + COUNTROWS(FILTER(Reg, [Libellé] <= l)))
+				-- Totaux et zones (clés fixes)
+				VAR Fixes =
+				    DATATABLE("Id territoire", STRING, "Libellé", STRING, "Type", STRING, "Ordre", INTEGER, {
+				        {"TOT", "Total", "Total", 1}, {"MDR", "Total Métropole + DROM", "Total", 2}, {"MET", "Métropole", "Total", 3},
+				        {"DROM", "Total DROM", "Total", 50}, {"COM", "Total COM", "Total", 51}, {"AUT", "Autres", "Total", 52}
+				    })
+				RETURN
+				    ADDCOLUMNS(UNION(Fixes, RegO),
+				        "Territoire", IF([Type] = "Région", REPT(UNICHAR(8195), 2) & [Libellé], [Libellé]))
+

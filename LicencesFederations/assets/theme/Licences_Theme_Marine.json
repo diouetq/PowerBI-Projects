@@ -1,0 +1,202 @@
+{
+  "name": "Licences sportives - Marine",
+  "dataColors": [
+    "#4361EE",
+    "#F2A93B",
+    "#0B1C4F",
+    "#8B5CF6",
+    "#0EA5E9",
+    "#E8638C",
+    "#7C93F4",
+    "#94A3B8"
+  ],
+  "foreground": "#101828",
+  "foregroundNeutralSecondary": "#475467",
+  "foregroundNeutralTertiary": "#8A94A6",
+  "background": "#FFFFFF",
+  "backgroundLight": "#F4F6FA",
+  "backgroundNeutral": "#D0D5DD",
+  "tableAccent": "#4361EE",
+  "hyperlink": "#2E46C9",
+  "visitedHyperlink": "#1E3480",
+  "good": "#067647",
+  "neutral": "#98A2B3",
+  "bad": "#B42318",
+  "maximum": "#0B1C4F",
+  "center": "#4361EE",
+  "minimum": "#E8ECFD",
+  "null": "#E4E7EC",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 24,
+      "color": "#101828"
+    },
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 11,
+      "color": "#101828"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 11,
+      "color": "#101828"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 9,
+      "color": "#475467"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ],
+        "title": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#101828"
+              }
+            },
+            "fontSize": 11,
+            "fontFamily": "Segoe UI Semibold"
+          }
+        ],
+        "subTitle": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#8A94A6"
+              }
+            },
+            "fontSize": 9
+          }
+        ],
+        "categoryAxis": [
+          {
+            "labelColor": {
+              "solid": {
+                "color": "#667085"
+              }
+            },
+            "gridlineColor": {
+              "solid": {
+                "color": "#EAECF0"
+              }
+            }
+          }
+        ],
+        "valueAxis": [
+          {
+            "labelColor": {
+              "solid": {
+                "color": "#667085"
+              }
+            },
+            "gridlineColor": {
+              "solid": {
+                "color": "#EAECF0"
+              }
+            },
+            "gridlineStyle": "dotted"
+          }
+        ],
+        "legend": [
+          {
+            "labelColor": {
+              "solid": {
+                "color": "#475467"
+              }
+            },
+            "fontSize": 9
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F6FA"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "lineChart": {
+      "*": {
+        "lineStyles": [
+          {
+            "strokeWidth": 2
+          }
+        ]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "grid": [
+          {
+            "gridVertical": false,
+            "gridHorizontalColor": {
+              "solid": {
+                "color": "#EAECF0"
+              }
+            },
+            "rowPadding": 6
+          }
+        ],
+        "columnHeaders": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": "#0B1C4F"
+              }
+            }
+          }
+        ],
+        "values": [
+          {
+            "fontColorPrimary": {
+              "solid": {
+                "color": "#101828"
+              }
+            },
+            "backColorSecondary": {
+              "solid": {
+                "color": "#F7F8FE"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

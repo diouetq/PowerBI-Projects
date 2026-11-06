@@ -1,0 +1,50 @@
+/// Paramètre de champ du segment Niveau : Famille, Sous-famille ou Groupe (colonnes de P_Niveaux). Changer de niveau vide la sélection du segment Regroupement. Ne change jamais.
+table Param_Niveau
+	lineageTag: 127a517b-5bdb-45cb-a351-eaf1f8355fee
+
+	column Paramètre
+		lineageTag: 14346dd9-1c10-43d4-808d-56dc138e3fe6
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Paramètre Commande'
+
+		relatedColumnDetails
+			groupByColumn: 'Paramètre Champs'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Paramètre Champs'
+		isHidden
+		lineageTag: a94c75b0-0787-457a-be95-1ec8553cbb88
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Paramètre Commande'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Paramètre Commande'
+		isHidden
+		formatString: 0
+		lineageTag: 8b459137-9ea0-4cbe-995c-1a5a537c3733
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Param_Niveau = calculated
+		mode: import
+		source =
+				{
+				    ("Famille",      NAMEOF('P_Niveaux'[Famille]),      0),
+				    ("Sous-famille", NAMEOF('P_Niveaux'[Sous-famille]), 1),
+				    ("Groupe",       NAMEOF('P_Niveaux'[Groupe]),       2)
+				}
+
+	annotation PBI_Id = a704410e3c4a4248adac226ec439b94a
+

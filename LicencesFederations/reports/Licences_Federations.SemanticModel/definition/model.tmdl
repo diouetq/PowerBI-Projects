@@ -1,0 +1,57 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: fr-FR
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup 'Tables de dimensions'
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup Paramètres
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 'Tables de faits'
+
+	annotation PBI_QueryGroupOrder = 2
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["Dossier","T_Federation","T_Territoire","T_Sexe","T_TrancheAge","T_Annee","F_Licences","P_Federation","P_Niveaux","P_Appartenance","Code_Param_Federation"]
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+ref table F_Licences
+ref table T_Federation
+ref table T_Territoire
+ref table T_Sexe
+ref table T_TrancheAge
+ref table T_Annee
+ref table Param_Federation
+ref table P_Federation
+ref table P_Niveaux
+ref table Param_Niveau
+ref table P_Appartenance
+ref table _Mesures
+ref table Comparaison
+ref table T_FedNuage
+ref table T_AnneeAxe
+ref table T_CarteIndicateur
+ref table T_VueQui
+ref table T_VueEvol
+ref table P_TerrChoix
+ref table P_TerrAppartenance
+ref table P_TerrDep
+ref table Param_Departement
+ref table T_NiveauGeo
+ref table T_CarteZone
+ref table T_CarteZoneDep
+ref table T_CarteAffichage
+
+ref cultureInfo fr-FR
+

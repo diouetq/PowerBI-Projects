@@ -1,0 +1,41 @@
+table P_Appartenance
+	lineageTag: 90af582b-dba5-4667-a041-e42d02c4ad15
+
+	column Cle
+		dataType: string
+		lineageTag: f75f6c67-cbd0-421b-b012-b6c344c9d5ca
+		summarizeBy: none
+		sourceColumn: Cle
+
+		annotation SummarizationSetBy = Automatic
+
+	column CodeReference
+		dataType: string
+		lineageTag: ea018e0a-d752-4545-8dc3-b07bbe1f75c2
+		summarizeBy: none
+		sourceColumn: CodeReference
+
+		annotation SummarizationSetBy = Automatic
+
+	partition P_Appartenance = m
+		mode: import
+		source =
+				let
+				    Source   = T_Federation,
+				    Colonnes = Table.SelectColumns(Source, {"CodeReference", "Famille de fédérations", "Sous-famille de fédérations", "Groupe de fédérations"}),
+				    Deplie   = Table.UnpivotOtherColumns(Colonnes, {"CodeReference"}, "Niveau", "Valeur"),
+				    SansVide = Table.SelectRows(Deplie, each [Valeur] <> null and [Valeur] <> ""),
+				    Cle      = Table.AddColumn(SansVide, "Cle", each
+				                   (if [Niveau] = "Famille de fédérations" then "F · "
+				                    else if [Niveau] = "Sous-famille de fédérations" then "SF · " else "G · ") & [Valeur], type text),
+				    Liens    = Table.SelectColumns(Cle, {"Cle", "CodeReference"}),
+				    // "Ensemble" = toutes les fédérations
+				    Ensemble = Table.AddColumn(Table.SelectColumns(Source, {"CodeReference"}), "Cle", each "Ensemble", type text),
+				    Resultat = Table.Combine({Liens, Table.SelectColumns(Ensemble, {"Cle", "CodeReference"})})
+				in
+				    Resultat
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

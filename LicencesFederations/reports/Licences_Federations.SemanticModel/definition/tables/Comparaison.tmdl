@@ -1,0 +1,52 @@
+table Comparaison
+	lineageTag: 05bb9c36-f832-4ada-9516-d0975c765e43
+
+	/// Groupe de calcul : affiche une mesure pour la Sélection, son Regroupement (niveau choisi dans le segment Niveau) ou l'Ensemble des fédérations.
+	calculationGroup
+		precedence: 10
+
+		calculationItem Sélection = SELECTEDMEASURE()
+
+		calculationItem Regroupement =
+				VAR Niv = SELECTEDVALUE(Param_Niveau[Paramètre Commande], 1)
+				VAR Cat =
+				    IF(
+				        ISCROSSFILTERED(T_Federation),
+				        SWITCH(Niv,
+				            0, SELECTEDVALUE(T_Federation[Famille de fédérations]),
+				            1, SELECTEDVALUE(T_Federation[Sous-famille de fédérations]),
+				            SELECTEDVALUE(T_Federation[Groupe de fédérations]))
+				    )
+				RETURN
+				    IF(
+				        NOT ISBLANK(Cat),
+				        SWITCH(Niv,
+				            0, CALCULATE(SELECTEDMEASURE(), REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation), T_Federation[Famille de fédérations] = Cat),
+				            1, CALCULATE(SELECTEDMEASURE(), REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation), T_Federation[Sous-famille de fédérations] = Cat),
+				            CALCULATE(SELECTEDMEASURE(), REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation), T_Federation[Groupe de fédérations] = Cat)
+				        )
+				    )
+
+		calculationItem Ensemble = CALCULATE(SELECTEDMEASURE(), REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation))
+
+	column Comparaison
+		dataType: string
+		lineageTag: 212582dd-d2b2-4867-aee1-6aad3bf47382
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 67d9f478-dc78-4de5-b6e4-b03bfc159976
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Partition_Comparaison = calculationGroup
+

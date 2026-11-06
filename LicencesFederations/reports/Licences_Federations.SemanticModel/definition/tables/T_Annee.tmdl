@@ -1,0 +1,46 @@
+table T_Annee
+	lineageTag: 6cfc866a-1e8b-455c-be0b-d1fb0f7ea76f
+
+	column Annee
+		dataType: string
+		lineageTag: 487a9279-51b7-4ae5-b683-d61b473f504c
+		summarizeBy: none
+		sourceColumn: Annee
+
+		annotation SummarizationSetBy = Automatic
+
+	column Statut
+		dataType: string
+		lineageTag: ca7da847-e1fc-4c38-85da-8f492e1e219c
+		summarizeBy: none
+		sourceColumn: Statut
+
+		annotation SummarizationSetBy = Automatic
+
+	column EnBase
+		dataType: string
+		lineageTag: 48eef400-5645-40c3-b789-60b9a3e6ece1
+		summarizeBy: none
+		sourceColumn: EnBase
+
+		annotation SummarizationSetBy = Automatic
+
+	partition T_Annee = m
+		mode: import
+		queryGroup: 'Tables de dimensions'
+		source =
+				let
+				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
+				    Navigation = #"Filtered Rows"{[Item = "T_Annee", Kind = "Sheet"]}[Data],
+				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
+				    Colonnes   = Table.ColumnNames(Entetes),
+				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
+				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				in
+				    SansNA
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
