@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "c572d4160c303558c1bc",
+  "position": {
+    "x": 0.22068317877665322,
+    "y": 0,
+    "z": 2000,
+    "height": 1530.6585279962437,
+    "width": 1959.7793168212233,
+    "tabOrder": 37002
+  },
+  "visualGroup": {
+    "displayName": "Assistant IA",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

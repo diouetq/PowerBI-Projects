@@ -1,6 +1,8 @@
+/// Dimension Année (référentiel Excel, onglet T_Annee) : 2016-2025 et statut de la donnée (def = définitif, semidef = semi-définitif). Segment Année.
 table T_Annee
 	lineageTag: 6cfc866a-1e8b-455c-be0b-d1fb0f7ea76f
 
+	/// Année du recensement (clé).
 	column Annee
 		dataType: string
 		lineageTag: 487a9279-51b7-4ae5-b683-d61b473f504c
@@ -9,19 +11,13 @@ table T_Annee
 
 		annotation SummarizationSetBy = Automatic
 
+	/// def = définitif, semidef = semi-définitif.
 	column Statut
 		dataType: string
+		isHidden
 		lineageTag: ca7da847-e1fc-4c38-85da-8f492e1e219c
 		summarizeBy: none
 		sourceColumn: Statut
-
-		annotation SummarizationSetBy = Automatic
-
-	column EnBase
-		dataType: string
-		lineageTag: 48eef400-5645-40c3-b789-60b9a3e6ece1
-		summarizeBy: none
-		sourceColumn: EnBase
 
 		annotation SummarizationSetBy = Automatic
 
@@ -29,16 +25,12 @@ table T_Annee
 		mode: import
 		queryGroup: 'Tables de dimensions'
 		source =
+				// Onglet T_Annee du référentiel : Annee (clé) et Statut (def / semidef).
+				// EnBase (marqueur de la synchronisation SQL du classeur) n'est pas utilisé par le rapport.
 				let
-				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
-				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
-				    Navigation = #"Filtered Rows"{[Item = "T_Annee", Kind = "Sheet"]}[Data],
-				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
-				    Colonnes   = Table.ColumnNames(Entetes),
-				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
-				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				    Source = fnLireReferentiel("T_Annee", {"EnBase"})
 				in
-				    SansNA
+				    Source
 
 	annotation PBI_NavigationStepName = Navigation
 

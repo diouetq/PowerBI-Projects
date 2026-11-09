@@ -1,6 +1,8 @@
+/// Table pont fédération -> regroupements : une ligne par couple (Cle de regroupement, CodeReference), plus une ligne « Ensemble » par fédération. Construite en Power Query à partir de T_Federation (dépivotage des 3 niveaux). Relie P_Niveaux à T_Federation (filtre bidirectionnel).
 table P_Appartenance
 	lineageTag: 90af582b-dba5-4667-a041-e42d02c4ad15
 
+	/// Clé du regroupement (« F · … », « SF · … », « G · … » ou « Ensemble »). Relation vers P_Niveaux.
 	column Cle
 		dataType: string
 		lineageTag: f75f6c67-cbd0-421b-b012-b6c344c9d5ca
@@ -9,6 +11,7 @@ table P_Appartenance
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Code fédération. Relation vers T_Federation.
 	column CodeReference
 		dataType: string
 		lineageTag: ea018e0a-d752-4545-8dc3-b07bbe1f75c2
@@ -19,6 +22,7 @@ table P_Appartenance
 
 	partition P_Appartenance = m
 		mode: import
+		queryGroup: 'Tables de paramètres'
 		source =
 				let
 				    Source   = T_Federation,

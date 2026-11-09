@@ -1,3 +1,4 @@
+/// Liste des regroupements pour le segment Regroupement : une ligne par famille, sous-famille ou groupe (clé Cle) + une ligne « Ensemble ». Construite en Power Query à partir de T_Federation. Param_Niveau choisit la colonne affichée (Famille, Sous-famille ou Groupe).
 table P_Niveaux
 	lineageTag: 2def1141-610f-418a-8606-5d0be3332da6
 
@@ -67,6 +68,7 @@ table P_Niveaux
 
 	partition P_Niveaux = m
 		mode: import
+		queryGroup: 'Tables de paramètres'
 		source =
 				let
 				    Source   = T_Federation,

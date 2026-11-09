@@ -10,3 +10,15 @@ Logo_ff/
 # Données volumineuses (non versionnées)
 data/2025/
 data/*.7z
+
+# Copie de travail du fichier INJEP (la version rangée est dans data/reference/)
+docs/*.xlsx
+
+# Vidéos : trop lourdes pour Git, publiées sur LinkedIn / YouTube
+media/video/*.mp4
+media/video/*.mov
+media/video/*.mkv
+
+# Outils
+node_modules/
+__pycache__/

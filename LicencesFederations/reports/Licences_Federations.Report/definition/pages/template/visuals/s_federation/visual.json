@@ -4,10 +4,10 @@
   "position": {
     "x": 36.249391565998494,
     "y": 292,
-    "z": 19000,
+    "z": 18000,
     "height": 38,
     "width": 264.620558431789,
-    "tabOrder": 19000
+    "tabOrder": 21000
   },
   "visual": {
     "visualType": "slicer",
@@ -180,44 +180,6 @@
                 "Literal": {
                   "Value": "true"
                 }
-              }
-            },
-            "selfFilter": {
-              "filter": {
-                "Version": 2,
-                "From": [
-                  {
-                    "Name": "p",
-                    "Entity": "P_Federation",
-                    "Type": 0
-                  }
-                ],
-                "Where": [
-                  {
-                    "Condition": {
-                      "Contains": {
-                        "Left": {
-                          "Column": {
-                            "Expression": {
-                              "SourceRef": {
-                                "Source": "p"
-                              }
-                            },
-                            "Property": "Ensemble"
-                          }
-                        },
-                        "Right": {
-                          "Literal": {
-                            "Value": "'gol'"
-                          }
-                        }
-                      }
-                    },
-                    "Annotations": {
-                      "PowerBI.MParameterBehavior": 1
-                    }
-                  }
-                ]
               }
             }
           }

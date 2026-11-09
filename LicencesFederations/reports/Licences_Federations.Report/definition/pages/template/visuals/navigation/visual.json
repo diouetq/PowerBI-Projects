@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "navigation",
   "position": {
-    "x": 361.05646202605942,
-    "y": 24.3408850804085,
-    "z": 16000,
-    "height": 47.329498767460969,
-    "width": 747.80608052588332,
-    "tabOrder": 16000
+    "x": 361.22280069416632,
+    "y": 23.922039781070616,
+    "z": 15000,
+    "height": 47.844079562141232,
+    "width": 877.93885996529161,
+    "tabOrder": 18000
   },
   "visual": {
     "visualType": "pageNavigator",
@@ -134,7 +134,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "11D"
+                  "Value": "14D"
                 }
               }
             },
@@ -173,7 +173,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "11D"
+                  "Value": "14D"
                 }
               }
             },
@@ -246,7 +246,7 @@
             "showHiddenPages": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },

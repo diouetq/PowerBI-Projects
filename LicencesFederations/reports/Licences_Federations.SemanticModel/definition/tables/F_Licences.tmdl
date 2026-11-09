@@ -1,9 +1,13 @@
+/// Table de faits : licences annuelles INJEP-MEDES 2016-2025 (millésime 2025). Grain : fédération x année x sexe x âge x département (environ 8,2 M lignes).
+/// Source : SQL Server diouet / BDD, table dbo.Licences_Federation, alimentée par les CSV data/2025/Lics_<année>_<def|semidef>.csv (scripts sql/ du dépôt).
+/// Colonnes masquées : utiliser les mesures de _Mesures.
 table F_Licences
 	lineageTag: 1db0f6f0-3179-4161-b134-3cd2add6be4d
 
 	/// Année du recensement (saison N ou N-1/N selon les fédérations). Clé vers T_Annee.
 	column Annee
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: dbacf4eb-eaf6-428c-bbd7-ee1dd55eea94
 		summarizeBy: none
@@ -11,17 +15,20 @@ table F_Licences
 
 		annotation SummarizationSetBy = Automatic
 
-	/// def = résultats définitifs (après géocodage), semidef = semi-définitifs. Déduit du nom du fichier CSV.
+	/// Traçabilité : def = résultats définitifs (après géocodage), semidef = semi-définitifs. Déduit du nom du fichier CSV.
 	column Statut
 		dataType: string
+		isHidden
 		lineageTag: b0089ba0-a609-4e28-9459-e8cf03fdab4c
 		summarizeBy: none
 		sourceColumn: Statut
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Traçabilité : millésime de la nomenclature des codes fédération (2025).
 	column MillesimeReference
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: 8f01d108-dec6-48dd-be8d-d27a9872119f
 		summarizeBy: sum
@@ -29,42 +36,20 @@ table F_Licences
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Code fédération dans la nomenclature du millésime de référence (colonne « Code 2025 » des CSV). Clé vers T_Federation.
+	/// Code fédération dans la nomenclature 2025 (colonne « Code 2025 » des CSV). Clé vers T_Federation.
 	column CodeReference
 		dataType: string
+		isHidden
 		lineageTag: fcdaa4fa-f2c2-4a05-9798-9c7ff0ff5d7b
 		summarizeBy: none
 		sourceColumn: CodeReference
 
 		annotation SummarizationSetBy = Automatic
 
-	column CodeAnneeN
-		dataType: string
-		lineageTag: 306be811-41c1-4b3f-92df-fda7e811465d
-		summarizeBy: none
-		sourceColumn: CodeAnneeN
-
-		annotation SummarizationSetBy = Automatic
-
-	column CodesHistorique
-		dataType: string
-		lineageTag: c7cb7fbb-b8ea-4926-89ea-eb7df7ab7e67
-		summarizeBy: none
-		sourceColumn: CodesHistorique
-
-		annotation SummarizationSetBy = Automatic
-
-	column Federation
-		dataType: string
-		lineageTag: b71d33ac-e139-4eb9-9e3f-de9431118e20
-		summarizeBy: none
-		sourceColumn: Federation
-
-		annotation SummarizationSetBy = Automatic
-
 	/// Sexe du licencié (F, H, NR - Non réparti). Clé vers T_Sexe.
 	column Sexe
 		dataType: string
+		isHidden
 		lineageTag: 06dcbfff-09cd-4eac-bddc-dc47331cfe68
 		summarizeBy: none
 		sourceColumn: Sexe
@@ -74,6 +59,7 @@ table F_Licences
 	/// Âge au 1er janvier de l'année N. Vide = non réparti (« NR - Non réparti » dans la source).
 	column Age
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: 6d57c5f1-86b9-436e-addb-312d0780c6b3
 		summarizeBy: sum
@@ -81,43 +67,20 @@ table F_Licences
 
 		annotation SummarizationSetBy = Automatic
 
-	column TrancheAge
-		dataType: string
-		lineageTag: d12e6998-6e86-49cb-b95a-0154ef8ccb87
-		summarizeBy: none
-		sourceColumn: TrancheAge
-
-		annotation SummarizationSetBy = Automatic
-
 	/// Grande tranche d'âge au 1er janvier (1 - Enfants (1-13) … NR - Non réparti). Clé vers T_TrancheAge.
 	column GrandeTrancheAge
 		dataType: string
+		isHidden
 		lineageTag: ab54fad0-42bc-4e7e-abdd-c9d134d5be53
 		summarizeBy: none
 		sourceColumn: GrandeTrancheAge
 
 		annotation SummarizationSetBy = Automatic
 
-	column Region
-		dataType: string
-		lineageTag: 155a1585-a59c-4a80-bf00-0f51b586f1d2
-		summarizeBy: none
-		sourceColumn: Region
-
-		annotation SummarizationSetBy = Automatic
-
-	/// Département de résidence du licencié, libellé source (ex. « 01 - Ain », « NR - Non réparti »). Clé vers T_Territoire.
-	column Departement
-		dataType: string
-		lineageTag: 9b03a6c4-c9c4-4bc0-81d8-81dd6a11f2cb
-		summarizeBy: none
-		sourceColumn: Departement
-
-		annotation SummarizationSetBy = Automatic
-
 	/// Nombre de licences annuelles de la ligne (colonne « Licences annuelles » des CSV). Utiliser la mesure _Mesures[NB Licences] plutôt que la colonne.
 	column NbLicences
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: fc472025-4b26-420f-8462-d54ecaa56320
 		summarizeBy: sum
@@ -125,15 +88,17 @@ table F_Licences
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Traçabilité : fichier CSV d'origine (Lics_<année>_<statut>.csv).
 	column Fichier
 		dataType: string
+		isHidden
 		lineageTag: b20d5a05-829e-4522-b2d4-2a1b67d71732
 		summarizeBy: none
 		sourceColumn: Fichier
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Code département (clé vers T_Territoire[Code_DEP]), extrait du libellé source.
+	/// Code département (« 31 », « 2A », « 971 », « NR »), extrait du libellé source en Power Query. Clé vers T_Territoire.
 	column Code_DEP
 		dataType: string
 		isHidden
@@ -145,13 +110,21 @@ table F_Licences
 		mode: import
 		queryGroup: 'Tables de faits'
 		source =
+				// Table de faits : licences annuelles INJEP 2016-2025.
+				// Source : SQL Server « diouet », base « BDD », table dbo.Licences_Federation,
+				// alimentée depuis les CSV INJEP par les scripts du dossier sql/ (procédure dbo.usp_Charger_Millesime_Licences).
 				let
-				  Source = Sql.Database("diouet", "BDD"),
-				  #"Navigation 1" = Source{[Schema = "dbo", Item = "Licences_Federation"]}[Data],
-				  // Clé territoire stable : code département (ex. « 31 », « 2A », « 971 », « NR »), indépendant du libellé
-				  CodeDep = Table.AddColumn(#"Navigation 1", "Code_DEP", each Text.Trim(Text.BeforeDelimiter(Text.From([Departement]), " - ")), type text)
+				    Source      = Sql.Database("diouet", "BDD"),
+				    Licences    = Source{[Schema = "dbo", Item = "Licences_Federation"]}[Data],
+				    // Colonnes utiles au modèle uniquement (repli de requête : le SELECT est limité côté SQL)
+				    Colonnes    = Table.SelectColumns(Licences, {"Annee", "Statut", "MillesimeReference", "CodeReference", "Sexe", "Age",
+				                      "GrandeTrancheAge", "Departement", "NbLicences", "Fichier"}),
+				    // Clé territoire stable : code département (« 31 », « 2A », « 971 », « NR »), indépendante du libellé
+				    CodeDep     = Table.AddColumn(Colonnes, "Code_DEP", each Text.Trim(Text.BeforeDelimiter(Text.From([Departement]), " - ")), type text),
+				    // Le libellé n'est plus utile : les noms de territoires viennent de T_Territoire
+				    SansLibelle = Table.RemoveColumns(CodeDep, {"Departement"})
 				in
-				  CodeDep
+				    SansLibelle
 
 	annotation PBI_NavigationStepName = Navigation
 

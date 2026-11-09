@@ -2,9 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "77ba8493302c4083abf4",
   "position": {
-    "x": 911.4,
-    "y": 499.8,
-    "z": 5000,
+    "x": 552.67244981805379,
+    "y": 26.505012325390339,
+    "z": 1000,
     "height": 39.199999999999996,
     "width": 225.4,
     "tabOrder": 2000
@@ -367,7 +367,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Segment Genre'"
+                  "Value": "'Segment Indicateur Graph Evolution'"
                 }
               }
             },
@@ -549,6 +549,7 @@
       ]
     }
   },
+  "parentGroupName": "b12b8c8010050b11b600",
   "filterConfig": {
     "filters": [
       {

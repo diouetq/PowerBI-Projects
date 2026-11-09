@@ -2,6 +2,7 @@
 table Param_Departement
 	lineageTag: cfbdb841-85f9-464f-a17f-83b67d674efb
 
+	/// Territoire affiché par le segment.
 	column Paramètre
 		lineageTag: 896172a6-f57a-4ca4-a4e3-6f610f60c575
 		sourceColumn: [Value1]
@@ -10,6 +11,7 @@ table Param_Departement
 		relatedColumnDetails
 			groupByColumn: 'Paramètre Champs'
 
+	/// Colonne de P_TerrDep pointée (NAMEOF).
 	column 'Paramètre Champs'
 		isHidden
 		lineageTag: 74589ccd-222a-4ab4-9a76-be4929d1ad8c
@@ -22,6 +24,7 @@ table Param_Departement
 				  "kind": 2
 				}
 
+	/// Ordre d'affichage.
 	column 'Paramètre Commande'
 		isHidden
 		formatString: 0
@@ -29,6 +32,7 @@ table Param_Departement
 		summarizeBy: none
 		sourceColumn: [Value3]
 
+	/// Clé du territoire, relation 1-1 avec P_TerrChoix.
 	column 'Id territoire'
 		lineageTag: 2e6cd5f4-1dee-4992-8d00-2247f7935281
 		sourceColumn: [Value4]
@@ -38,7 +42,7 @@ table Param_Departement
 		source =
 				{
 				    ("Total", NAMEOF('P_TerrDep'[TOT]), 1, "TOT"),
-				    ("Total Métropole + DROM", NAMEOF('P_TerrDep'[MDR]), 2, "MDR"),
+				    ("Métropole + DROM", NAMEOF('P_TerrDep'[MDR]), 2, "MDR"),
 				    ("Métropole", NAMEOF('P_TerrDep'[MET]), 3, "MET"),
 				    ("  Île-de-France", NAMEOF('P_TerrDep'[R11]), 11, "R11"),
 				    ("  Centre-Val de Loire", NAMEOF('P_TerrDep'[R24]), 12, "R24"),
@@ -53,8 +57,8 @@ table Param_Departement
 				    ("  Auvergne-Rhône-Alpes", NAMEOF('P_TerrDep'[R84]), 21, "R84"),
 				    ("  Provence-Alpes-Côte d'Azur", NAMEOF('P_TerrDep'[R93]), 22, "R93"),
 				    ("  Corse", NAMEOF('P_TerrDep'[R94]), 23, "R94"),
-				    ("Total DROM", NAMEOF('P_TerrDep'[DROM]), 50, "DROM"),
-				    ("Total COM", NAMEOF('P_TerrDep'[COM]), 51, "COM"),
+				    ("DROM", NAMEOF('P_TerrDep'[DROM]), 50, "DROM"),
+				    ("COM", NAMEOF('P_TerrDep'[COM]), 51, "COM"),
 				    ("Autres", NAMEOF('P_TerrDep'[AUT]), 52, "AUT")
 				}
 

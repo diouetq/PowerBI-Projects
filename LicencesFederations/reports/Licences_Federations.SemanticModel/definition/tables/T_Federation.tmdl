@@ -1,4 +1,4 @@
-/// Dimension Fédération (référentiel Excel Referentiel_Excel.xlsx, onglet T_Federation, synchronisé avec SQL). Clé : CodeReference. Contient les regroupements (famille, sous-famille, groupe), le logo et les colonnes perso ajoutées dans l'Excel. Erreurs et NA remplacés par vide.
+/// Dimension Fédération (référentiel Excel data/Referentiel_Excel.xlsx, onglet T_Federation). Le classeur est synchronisé avec les vues SQL (fonction Power Query fnSynchro du classeur) puis enrichi à la main : famille, sous-famille, groupe, logo. Clé : CodeReference. Nom court calculé en Power Query.
 table T_Federation
 	lineageTag: a3d3281d-5d4e-4e95-94fc-4859f9e49411
 
@@ -11,6 +11,7 @@ table T_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Libellé officiel de la fédération (source INJEP).
 	column Federation
 		dataType: string
 		lineageTag: ad3b2b3b-0694-4bec-a16e-c7579856d9d1
@@ -19,14 +20,7 @@ table T_Federation
 
 		annotation SummarizationSetBy = Automatic
 
-	column CodesHistorique
-		dataType: string
-		lineageTag: 2ae6ca89-ebf1-48df-9a95-55343af4a805
-		summarizeBy: none
-		sourceColumn: CodesHistorique
-
-		annotation SummarizationSetBy = Automatic
-
+	/// Famille (saisie dans le référentiel Excel).
 	column 'Famille de fédérations'
 		dataType: string
 		lineageTag: 821a28d4-dc48-44fc-a14b-a36dec7b48ce
@@ -35,6 +29,7 @@ table T_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Sous-famille (saisie dans le référentiel Excel).
 	column 'Sous-famille de fédérations'
 		dataType: string
 		lineageTag: cdf02e0b-b12d-438c-8ae4-85d601f4a0de
@@ -43,6 +38,7 @@ table T_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Groupe : Olympique, Délégataire non-olympique, Affinitaire, Para-sport, Scolaire.
 	column 'Groupe de fédérations'
 		dataType: string
 		lineageTag: 1b523098-1b71-4542-8f3f-7946c3e67385
@@ -51,31 +47,13 @@ table T_Federation
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Champ constant '
-		dataType: string
-		lineageTag: 448090be-3fbc-4995-88f6-9538e7a5f444
-		summarizeBy: none
-		sourceColumn: "Champ constant "
-
-		annotation SummarizationSetBy = Automatic
-
-	/// Lien vers le logo de la fédération (saisi dans le référentiel Excel). Mettre la catégorie de données « URL d'image » pour l'afficher.
-	column Logo
+	/// Nom du fichier logo (assets/logos), saisi dans le référentiel Excel.
+	column 'Fichier logo'
 		dataType: string
 		lineageTag: db83333e-028d-43b5-8548-d6743797ab0d
 		dataCategory: ImageUrl
 		summarizeBy: none
 		sourceColumn: Logo
-
-		annotation SummarizationSetBy = Automatic
-
-	/// Oui = fédération présente dans SQL ; Non = conservée dans l'Excel mais absente des données (colonne technique de la synchro Excel).
-	column EnBase
-		dataType: string
-		isHidden
-		lineageTag: ce76e8d3-aff4-4966-bd17-bbd839f2d4d5
-		summarizeBy: none
-		sourceColumn: EnBase
 
 		annotation SummarizationSetBy = Automatic
 
@@ -86,22 +64,38 @@ table T_Federation
 		summarizeBy: none
 		sourceColumn: Nom court
 
+	/// Adresse complète du logo = [Logo URL base] + Fichier logo (ou Fichier logo s'il contient déjà une adresse http).
+	column 'Logo URL' = IF(ISBLANK(T_Federation[Fichier logo]) || T_Federation[Fichier logo] = "", BLANK(), IF(LEFT(T_Federation[Fichier logo], 4) = "http", T_Federation[Fichier logo], [Logo URL base] & T_Federation[Fichier logo]))
+		dataType: string
+		isHidden
+		lineageTag: 5478a86c-50d8-49e0-aaec-4b178b536103
+
+	/// Oui si la fédération a des licences chaque année de la période (champ constant de l'INJEP : 109 fédérations sur 2016-2025). Non pour les fédérations entrées en cours de période (licences annuelles depuis 2022 ou 2023) ou sorties. Les évolutions des regroupements, des territoires et du total se calculent sur les seules fédérations Oui ; les volumes portent sur toutes les fédérations. Calcul automatique, mis à jour avec les nouvelles années.
+	column 'Champ constant' =
+			-- Oui = la fédération a des licences chaque année de la période (méthode INJEP, champ constant).
+			-- Les évolutions des regroupements, des territoires et du total ne comptent que ces fédérations.
+			VAR _NbAns  = COUNTROWS(ALL(T_Annee[Annee]))
+			VAR _NbAvec = CALCULATE(DISTINCTCOUNT(F_Licences[Annee]))
+			RETURN IF(_NbAvec = _NbAns, "Oui", "Non")
+		dataType: string
+		lineageTag: cc1e44da-7647-4fe6-8460-af08709748f0
+		summarizeBy: none
+
 	partition T_Federation = m
 		mode: import
 		queryGroup: 'Tables de dimensions'
 		source =
+				// Onglet T_Federation du référentiel : une fédération par ligne (clé CodeReference),
+				// avec ses regroupements (famille, sous-famille, groupe) et son logo saisis dans Excel.
+				// Colonnes retirées : CodesHistorique et « Champ constant » (non utilisés), EnBase (technique).
 				let
-				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
-				    Feuilles   = Table.SelectRows(Source, each ([Kind] = "Sheet")),
-				    Navigation = Feuilles{[Item = "T_Federation", Kind = "Sheet"]}[Data],
-				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
-				    Colonnes   = Table.ColumnNames(Entetes),
-				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
-				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes),
+				    Source     = fnLireReferentiel("T_Federation", {"CodesHistorique", "Champ constant ", "EnBase"}),
 				    // Nom court : nom sans le préfixe « Fédération Française de … » (segments, titres, légendes).
-				    // La liste est testée dans l'ordre : préfixes les plus longs d'abord.
-				    Prefixes   = {"Fédération Française de la ", "Fédération Française des ", "Fédération Française de ", "Fédération Française du ", "Fédération Française d'", "Fédération Française d’", "Fédération Française Sportive de ", "Fédération Française ", "Fédération Nationale des ", "Fédération Nationale du ", "Fédération des ", "Fédération de ", "Fédération "},
-				    NomCourt   = Table.AddColumn(SansNA, "Nom court", each
+				    // Les préfixes sont testés dans l'ordre : les plus longs d'abord.
+				    Prefixes   = {"Fédération Française de la ", "Fédération Française des ", "Fédération Française de ", "Fédération Française du ",
+				                  "Fédération Française d'", "Fédération Française d’", "Fédération Française Sportive de ", "Fédération Française ",
+				                  "Fédération Nationale des ", "Fédération Nationale du ", "Fédération des ", "Fédération de ", "Fédération "},
+				    NomCourt   = Table.AddColumn(Source, "Nom court", each
 				                     if [Federation] = null then null else
 				                     let
 				                         _Nom     = Text.From([Federation]),

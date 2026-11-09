@@ -2,9 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "9b41de1bd21e26726002",
   "position": {
-    "x": 356.72418515475215,
-    "y": 885.06162695152022,
-    "z": 1000,
+    "x": 0,
+    "y": 0,
+    "z": 0,
     "height": 615.10818953711316,
     "width": 780.93672966310612,
     "tabOrder": 7000
@@ -58,11 +58,19 @@
                   "Value": "false"
                 }
               }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'HTML Bloc Carte'"
+                }
+              }
             }
           }
         }
       ]
     },
     "drillFilterOtherVisuals": true
-  }
+  },
+  "parentGroupName": "fa5eb240a866ad409ad3"
 }

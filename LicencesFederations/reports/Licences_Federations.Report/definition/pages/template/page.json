@@ -1,9 +1,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
   "name": "template",
-  "displayName": "Template",
+  "displayName": "🔎 Portrait",
   "displayOption": "FitToPage",
-  "height": 1500,
+  "height": 1530,
   "width": 1960,
   "objects": {
     "background": [

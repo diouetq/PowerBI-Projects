@@ -2,101 +2,121 @@
 table P_TerrDep
 	lineageTag: 39985f14-c17d-49ed-8ca6-467f51be3f86
 
+	/// Code département (clé, relation 1-1 avec T_Territoire).
 	column Code_DEP
 		lineageTag: d14c1f20-a09a-48c7-bc96-304f37dbf411
 		isNameInferred
 		sourceColumn: [Code_DEP]
 
+	/// Libellé des départements du territoire TOT (vide sinon). Pointée par Param_Departement.
 	column TOT
 		lineageTag: 62dfbb8e-a991-4d62-b4d5-1138db606375
 		isNameInferred
 		sourceColumn: [TOT]
 
+	/// Libellé des départements du territoire MDR (vide sinon). Pointée par Param_Departement.
 	column MDR
 		lineageTag: 13579240-a8af-4c99-b5d2-2e8ade3a059a
 		isNameInferred
 		sourceColumn: [MDR]
 
+	/// Libellé des départements du territoire MET (vide sinon). Pointée par Param_Departement.
 	column MET
 		lineageTag: 74711e02-8f39-4a1a-920d-79720e90dc4a
 		isNameInferred
 		sourceColumn: [MET]
 
+	/// Libellé des départements du territoire R11 (vide sinon). Pointée par Param_Departement.
 	column R11
 		lineageTag: 0c2e5164-739f-4aa7-9447-26b0b33c756b
 		isNameInferred
 		sourceColumn: [R11]
 
+	/// Libellé des départements du territoire R24 (vide sinon). Pointée par Param_Departement.
 	column R24
 		lineageTag: 8d27f859-12ba-4f9b-b7f7-b1f6524c0526
 		isNameInferred
 		sourceColumn: [R24]
 
+	/// Libellé des départements du territoire R27 (vide sinon). Pointée par Param_Departement.
 	column R27
 		lineageTag: 826bf97b-3ac6-4607-b29e-68de45e10a78
 		isNameInferred
 		sourceColumn: [R27]
 
+	/// Libellé des départements du territoire R28 (vide sinon). Pointée par Param_Departement.
 	column R28
 		lineageTag: e0b6458c-6425-4c09-9d14-ac99d4d186f9
 		isNameInferred
 		sourceColumn: [R28]
 
+	/// Libellé des départements du territoire R32 (vide sinon). Pointée par Param_Departement.
 	column R32
 		lineageTag: 7d63a9fc-5202-4be6-b2c0-2ccb37d7b20f
 		isNameInferred
 		sourceColumn: [R32]
 
+	/// Libellé des départements du territoire R44 (vide sinon). Pointée par Param_Departement.
 	column R44
 		lineageTag: 03bcaaa9-b6c1-4401-9b27-2dbf449f811b
 		isNameInferred
 		sourceColumn: [R44]
 
+	/// Libellé des départements du territoire R52 (vide sinon). Pointée par Param_Departement.
 	column R52
 		lineageTag: a8a1d25e-61b9-4334-9243-a47c3f739534
 		isNameInferred
 		sourceColumn: [R52]
 
+	/// Libellé des départements du territoire R53 (vide sinon). Pointée par Param_Departement.
 	column R53
 		lineageTag: a156bb5d-e030-4b10-a35a-124070ea5b6d
 		isNameInferred
 		sourceColumn: [R53]
 
+	/// Libellé des départements du territoire R75 (vide sinon). Pointée par Param_Departement.
 	column R75
 		lineageTag: 43a13e91-e4ab-414e-9324-4a90ca0635ac
 		isNameInferred
 		sourceColumn: [R75]
 
+	/// Libellé des départements du territoire R76 (vide sinon). Pointée par Param_Departement.
 	column R76
 		lineageTag: ff6c8751-e398-4194-b9c3-dd398d442be6
 		isNameInferred
 		sourceColumn: [R76]
 
+	/// Libellé des départements du territoire R84 (vide sinon). Pointée par Param_Departement.
 	column R84
 		lineageTag: ead900e5-c206-486e-8391-2172bbd2bf9b
 		isNameInferred
 		sourceColumn: [R84]
 
+	/// Libellé des départements du territoire R93 (vide sinon). Pointée par Param_Departement.
 	column R93
 		lineageTag: 4cae7f42-246a-4888-b50a-9dc62bdbdd99
 		isNameInferred
 		sourceColumn: [R93]
 
+	/// Libellé des départements du territoire R94 (vide sinon). Pointée par Param_Departement.
 	column R94
 		lineageTag: 9fc8e084-2b36-4ca4-befa-bf241d15f5d3
 		isNameInferred
 		sourceColumn: [R94]
 
+	/// Libellé des départements du territoire DROM (vide sinon). Pointée par Param_Departement.
 	column DROM
 		lineageTag: 2521e7dd-88e9-4490-aecd-de197b07c5da
 		isNameInferred
 		sourceColumn: [DROM]
 
+	/// Libellé des départements du territoire COM (vide sinon). Pointée par Param_Departement.
 	column COM
 		lineageTag: d38ba16f-9167-4ea6-8bb6-5906d0c9085f
 		isNameInferred
 		sourceColumn: [COM]
 
+	/// Libellé des départements du territoire AUT (vide sinon). Pointée par Param_Departement.
 	column AUT
 		lineageTag: 6b0009b6-548a-4ea5-932b-19b78c0c39f2
 		isNameInferred

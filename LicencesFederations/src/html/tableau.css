@@ -1,0 +1,333 @@
+/* Styles communs des tableaux HTML de comparaison (fédérations et territoires).
+   Source LISIBLE de la mesure DAX [HTML Comparaison CSS] (dans le modèle, la version est minifiée).
+   Modifier ici, minifier (clean-css), puis coller dans la mesure : une seule modification pour les 2 tableaux. */
+#hd,#sf {
+  position:fixed;
+  left:0;
+  right:0;
+  font-family:'Segoe UI',sans-serif;
+  color:#101828;
+  box-sizing:border-box}
+#hd {
+  top:0;
+  height:124px;
+  padding:2px 2px 0;
+  overflow:hidden;
+  background:#fff}
+#sf {
+  top:128px;
+  bottom:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  font-size:14.5px;
+  background:#fff}
+#hd .r1 {
+  display:flex;
+  align-items:center;
+  gap:16px}
+#hd .ico {
+  width:58px;
+  height:58px;
+  flex:none;
+  border-radius:16px;
+  border:1px solid #e4e7ec;
+  box-shadow:0 1px 2px rgba(16,24,40,.05);
+  display:flex;
+  align-items:center;
+  justify-content:center}
+#hd .ti {
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  line-height:1.2}
+#hd .pls {
+  display:flex;
+  gap:8px;
+  margin-top:7px;
+  overflow:hidden}
+#hd .pl {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:26px;
+  padding:0 11px;
+  border-radius:13px;
+  border:1px solid #e4e7ec;
+  font-size:13px;
+  color:#667085;
+  white-space:nowrap}
+#hd b {
+  color:#101828;
+  font-weight:600}
+#hd .dg {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#f2a93b}
+#hd .tg {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:none}
+#hd .hint {
+  font-size:12.5px;
+  color:#667085;
+  margin-right:6px}
+#hd button {
+  border:1px solid #d0d5dd;
+  background:#fff;
+  color:#344054;
+  padding:5px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font:600 12.5px 'Segoe UI',sans-serif}
+#hd button:hover {
+  background:#f2f4f7}
+#hd .r2 {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
+  padding:0 14px;
+  height:42px;
+  border-radius:10px;
+  border:1px solid #e4e7ec;
+  white-space:nowrap;
+  overflow:hidden}
+#hd .vs {
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#8a94a6}
+#hd .e2 {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:14px;
+  color:#667085}
+#hd .sp {
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#d0d5dd;
+  flex:none}
+#hd .ac {
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  height:26px;
+  padding:0 11px;
+  border-radius:13px;
+  background:#eef1fe;
+  border:1px solid #c7d0fb;
+  font-size:13px;
+  color:#2e46c9;
+  font-weight:600}
+#hd .ac i {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#4361ee}
+#hd .lg {
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12.5px;
+  color:#475467}
+#hd .lg i {
+  display:inline-block;
+  width:11px;
+  height:11px;
+  border-radius:3px;
+  margin-right:5px;
+  vertical-align:-1px}
+#hd .lg .of {
+  opacity:.35}
+#hd .lg b {
+  margin-left:6px}
+.ca {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#4361ee;
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  line-height:1;
+  margin-right:9px;
+  vertical-align:-3px}
+#sf table {
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+  min-width:0}
+#sf th {
+  position:sticky;
+  top:0;
+  background:#0b1c4f;
+  color:#fff;
+  font-weight:600;
+  text-align:right;
+  padding:11px 8px;
+  cursor:pointer;
+  white-space:nowrap;
+  z-index:2;
+  user-select:none}
+#sf th.so {
+  background:#2e46c9}
+#sf td.tl,#sf td:first-child,#sf th:first-child,#sf th[data-c=g] {
+  text-align:left}
+#sf td {
+  padding:7px 8px;
+  border-bottom:1px solid #eaecf0;
+  text-align:right;
+  white-space:nowrap}
+#sf td:nth-child(3),#sf td:nth-child(4),#sf td:nth-child(5),#sf td:nth-child(9),#sf td:nth-child(10),#sf th:nth-child(3),#sf th:nth-child(4),#sf th:nth-child(5),#sf th:nth-child(9),#sf th:nth-child(10) {
+  text-align:center}
+#sf td.tf {
+  text-align:left}
+#sf td.tf .nm {
+  max-width:170px}
+#sf td.in {
+  padding-left:38px}
+#sf tr.f:hover td {
+  background:#f8f9fc}
+#sf tr.g td {
+  background:#f2f4f7;
+  font-weight:600;
+  cursor:pointer;
+  border-top:1px solid #d0d5dd}
+#sf tr.g:hover td {
+  background:#e4e7ec}
+#sf tr.op .ca {
+  background:#0b1c4f}
+#sf tr.gs td {
+  background:#dce3fd}
+#sf tr.fs td {
+  background:#eef1fe;
+  font-weight:700}
+#sf tr.fs td:first-child {
+  box-shadow:inset 4px 0 #4361ee}
+#sf tr.t td {
+  background:#0b1c4f;
+  color:#fff;
+  font-weight:700;
+  position:sticky;
+  bottom:0;
+  z-index:1}
+#sf .lo {
+  width:24px;
+  height:24px;
+  object-fit:contain;
+  vertical-align:middle;
+  margin-right:8px;
+  display:inline-block}
+#sf .nm {
+  display:inline-block;
+  max-width:330px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  vertical-align:middle}
+#sf td.tl {
+  color:#475467;
+  max-width:230px;
+  overflow:hidden;
+  text-overflow:ellipsis}
+#sf .nb {
+  color:#667085;
+  font-weight:400;
+  margin-left:4px}
+#sf tr.t .nb {
+  color:#c7d0fb}
+#sf .lb {
+  display:block;
+  height:3px;
+  background:#eaecf0;
+  border-radius:2px;
+  margin-top:3px}
+#sf .lb i {
+  display:block;
+  height:3px;
+  background:#4361ee;
+  border-radius:2px;
+  margin-left:auto}
+#sf tr.g .lb i {
+  background:#0b1c4f}
+#sf .up {
+  color:#067647}
+#sf .dn {
+  color:#b42318}
+#sf .eq {
+  color:#667085}
+#sf .ap {
+  color:#b54708}
+#sf tr.t .ap,#sf tr.t .dn,#sf tr.t .eq,#sf tr.t .up {
+  color:#fff}
+#sf .sb {
+  display:flex;
+  width:118px;
+  height:19px;
+  border-radius:4px;
+  overflow:hidden;
+  margin-left:auto;
+  background:#f2f4f7}
+#sf .sb i {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-style:normal;
+  font-size:11.5px}
+#sf .hi {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  font-size:11px;
+  font-weight:700;
+  margin-left:6px;
+  background:rgba(255,255,255,.22);
+  cursor:help}
+#sf .hw {
+  background:#fedf89;
+  color:#b54708}
+#sftip {
+  position:fixed;
+  display:none;
+  z-index:9;
+  background:#101828;
+  color:#fff;
+  padding:8px 11px;
+  border-radius:8px;
+  font:14px 'Segoe UI',sans-serif;
+  max-width:340px;
+  pointer-events:none;
+  box-shadow:0 8px 20px rgba(16,24,40,.22);
+  line-height:1.45}
+#sftip table {
+  border-collapse:collapse;
+  margin-top:4px}
+#sftip td {
+  padding:1px 8px 1px 0;
+  text-align:right}
+#sftip td:first-child {
+  text-align:left}
+#sftip tr.ts td {
+  color:#B7C0CF;
+  font-weight:700}
+#sftip .dt {
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:2px;
+  margin-right:6px}
+#sftip em {
+  color:#B7C0CF}
+#sf .nd {
+  color:#98A2B3}

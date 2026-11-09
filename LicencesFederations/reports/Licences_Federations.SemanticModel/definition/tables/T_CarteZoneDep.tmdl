@@ -3,11 +3,13 @@ table T_CarteZoneDep
 	isHidden
 	lineageTag: 14a066f5-1c60-4b46-af2f-df0c49bca465
 
+	/// Zone de la carte.
 	column 'Id carte'
 		lineageTag: e09bf34b-b915-4a2a-acc7-f4878e98d280
 		isNameInferred
 		sourceColumn: [Id carte]
 
+	/// Département couvert par la zone.
 	column Code_DEP
 		lineageTag: c4190dd2-2205-4956-9bd9-7f05dd5d0d26
 		isNameInferred
@@ -16,11 +18,15 @@ table T_CarteZoneDep
 	partition T_CarteZoneDep = calculated
 		mode: import
 		source =
-				VAR Ref = SELECTCOLUMNS(FILTER(ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Code_GDEREG], T_Territoire[GD_Zone_Slicer_Ordre]), T_Territoire[GD_Zone_Slicer_Ordre] = "1"), "@dep", T_Territoire[Code_DEP], "@reg", T_Territoire[Code_GDEREG])
+				-- Toutes les zones de la carte (métropole, DROM, COM, Autres) → leurs codes département ; R-AUT regroupe Monaco, Étranger et Non réparti
+				VAR Ref = SELECTCOLUMNS(ALLNOBLANKROW(T_Territoire[Code_DEP], T_Territoire[Code_GDEREG]), "@dep", T_Territoire[Code_DEP], "@reg", T_Territoire[Code_GDEREG])
 				VAR Zones = SELECTCOLUMNS(T_CarteZone, "Id carte", T_CarteZone[Id carte], "@niv", T_CarteZone[Ordre niveau], "@code", COALESCE(T_CarteZone[Code_DEP], T_CarteZone[Code_GDEREG]))
 				RETURN
 				    SELECTCOLUMNS(
-				        FILTER(CROSSJOIN(Zones, Ref), IF([@niv] = 1, [@reg] = [@code], [@dep] = [@code])),
+				        FILTER(CROSSJOIN(Zones, Ref),
+				            IF([@niv] = 1,
+				                IF([@code] = "AUT", [@reg] IN {"980", "ETR", "NR"}, [@reg] = [@code]),
+				                [@dep] = [@code])),
 				        "Id carte", [Id carte],
 				        "Code_DEP", [@dep])
 

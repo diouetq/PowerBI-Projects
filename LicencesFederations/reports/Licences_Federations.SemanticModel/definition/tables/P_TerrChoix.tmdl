@@ -2,27 +2,34 @@
 table P_TerrChoix
 	lineageTag: f3aeb1f5-a462-49d7-ae35-ba10d0de0481
 
+	/// Clé stable du territoire : TOT, MDR, MET, R + code région INSEE, DROM, COM, AUT.
 	column 'Id territoire'
 		lineageTag: 5d0b31b9-1e70-4a33-8481-56f13ca20092
 		isNameInferred
 		sourceColumn: [Id territoire]
 
+	/// Libellé du territoire.
 	column Libellé
 		lineageTag: 4eff5326-d32d-4cba-80b2-7f7bed137d6e
 		isNameInferred
 		sourceColumn: [Libellé]
 		sortByColumn: Ordre
 
+	/// Total ou Région.
 	column Type
+		isHidden
 		lineageTag: b089b227-e8eb-4829-bae9-e552016e2036
 		isNameInferred
 		sourceColumn: [Type]
 
+	/// Ordre d'affichage dans le segment.
 	column Ordre
+		isHidden
 		lineageTag: 92be1b24-498e-41a3-8c42-370c8ca1c792
 		isNameInferred
 		sourceColumn: [Ordre]
 
+	/// Libellé affiché dans le segment (régions indentées).
 	column Territoire
 		lineageTag: 5516c8ec-a597-4660-9ad9-70b7d3d4b674
 		isNameInferred
@@ -44,8 +51,8 @@ table P_TerrChoix
 				-- Totaux et zones (clés fixes)
 				VAR Fixes =
 				    DATATABLE("Id territoire", STRING, "Libellé", STRING, "Type", STRING, "Ordre", INTEGER, {
-				        {"TOT", "Total", "Total", 1}, {"MDR", "Total Métropole + DROM", "Total", 2}, {"MET", "Métropole", "Total", 3},
-				        {"DROM", "Total DROM", "Total", 50}, {"COM", "Total COM", "Total", 51}, {"AUT", "Autres", "Total", 52}
+				        {"TOT", "Total", "Total", 1}, {"MDR", "Métropole + DROM", "Total", 2}, {"MET", "Métropole", "Total", 3},
+				        {"DROM", "DROM", "Total", 50}, {"COM", "COM", "Total", 51}, {"AUT", "Autres", "Total", 52}
 				    })
 				RETURN
 				    ADDCOLUMNS(UNION(Fixes, RegO),

@@ -4,10 +4,10 @@
   "position": {
     "x": 36.249391565998494,
     "y": 482,
-    "z": 21000,
+    "z": 20000,
     "height": 38,
     "width": 264.620558431789,
-    "tabOrder": 21000
+    "tabOrder": 23000
   },
   "visual": {
     "visualType": "slicer",
@@ -23,13 +23,13 @@
                       "Entity": "P_TerrDep"
                     }
                   },
-                  "Property": "TOT"
+                  "Property": "MDR"
                 }
               },
-              "queryRef": "P_TerrDep.TOT",
-              "nativeQueryRef": "Total",
+              "queryRef": "P_TerrDep.MDR",
+              "nativeQueryRef": "Métropole + DROM",
               "active": true,
-              "displayName": "Total"
+              "displayName": "Métropole + DROM"
             }
           ],
           "fieldParameters": [

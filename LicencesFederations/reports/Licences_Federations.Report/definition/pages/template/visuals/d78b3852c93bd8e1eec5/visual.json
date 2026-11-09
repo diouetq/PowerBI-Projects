@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "d78b3852c93bd8e1eec5",
   "position": {
-    "x": 372.4,
-    "y": 997.64,
-    "z": 6000,
-    "height": 407.68,
-    "width": 744.8,
+    "x": 17.028602731149931,
+    "y": 129.14191806550059,
+    "z": 1000,
+    "height": 398.16879915483037,
+    "width": 745.62742105880966,
     "tabOrder": 5000
   },
   "visual": {
@@ -42,11 +42,27 @@
                       "Entity": "_Mesures"
                     }
                   },
+                  "Property": "Carte Nom"
+                }
+              },
+              "queryRef": "_Mesures.Carte Nom",
+              "nativeQueryRef": "Territoire :",
+              "displayName": "Territoire :"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
                   "Property": "Carte Valeur"
                 }
               },
               "queryRef": "_Mesures.Carte Valeur",
-              "nativeQueryRef": "Carte Valeur"
+              "nativeQueryRef": "Indicateur :",
+              "displayName": "Indicateur :"
             }
           ]
         }
@@ -59,7 +75,7 @@
             "zoom": {
               "expr": {
                 "Literal": {
-                  "Value": "3.99D"
+                  "Value": "3.94D"
                 }
               }
             },
@@ -73,7 +89,7 @@
             "centerLongitude": {
               "expr": {
                 "Literal": {
-                  "Value": "2.228049999999996D"
+                  "Value": "0.6283549999999991D"
                 }
               }
             },
@@ -200,7 +216,7 @@
                     "ResourcePackageItem": {
                       "PackageName": "RegisteredResources",
                       "PackageType": 1,
-                      "ItemName": "Contours_France_regions_depart37695605924164155.geojson"
+                      "ItemName": "Contours_France_regions_depart971237843531456.geojson"
                     }
                   }
                 }
@@ -326,6 +342,13 @@
                   "Value": "false"
                 }
               }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Carte AzurMaps'"
+                }
+              }
             }
           }
         }
@@ -333,6 +356,7 @@
     },
     "drillFilterOtherVisuals": true
   },
+  "parentGroupName": "fa5eb240a866ad409ad3",
   "filterConfig": {
     "filters": [
       {

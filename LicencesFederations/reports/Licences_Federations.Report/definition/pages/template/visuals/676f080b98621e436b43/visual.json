@@ -2,9 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "676f080b98621e436b43",
   "position": {
-    "x": 611.25171185976455,
-    "y": 944.83703095042461,
-    "z": 7000,
+    "x": 254.52752670501241,
+    "y": 59.77540399890438,
+    "z": 2000,
     "height": 48.2059709668584,
     "width": 239.10161599561766,
     "tabOrder": 6000
@@ -347,7 +347,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Segment Genre'"
+                  "Value": "'Segment Indicateur Carte'"
                 }
               }
             },
@@ -508,6 +508,7 @@
       ]
     }
   },
+  "parentGroupName": "fa5eb240a866ad409ad3",
   "filterConfig": {
     "filters": [
       {

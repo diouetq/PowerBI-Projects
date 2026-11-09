@@ -4,10 +4,10 @@
   "position": {
     "x": 21.749634939599098,
     "y": 410,
-    "z": 20000,
+    "z": 19000,
     "height": 38,
     "width": 279.1203150581884,
-    "tabOrder": 20000
+    "tabOrder": 22000
   },
   "visual": {
     "visualType": "slicer",
@@ -188,7 +188,7 @@
                           [
                             {
                               "Literal": {
-                                "Value": "'''P_TerrDep''[TOT]'"
+                                "Value": "'''P_TerrDep''[MDR]'"
                               }
                             }
                           ]
@@ -216,7 +216,7 @@
                                 "0": [
                                   {
                                     "Literal": {
-                                      "Value": "'''P_TerrDep''[TOT]'"
+                                      "Value": "'''P_TerrDep''[MDR]'"
                                     }
                                   }
                                 ]
@@ -240,7 +240,7 @@
                         },
                         "valueMap": [
                           {
-                            "0": "Total"
+                            "0": "Métropole + DROM"
                           }
                         ]
                       }

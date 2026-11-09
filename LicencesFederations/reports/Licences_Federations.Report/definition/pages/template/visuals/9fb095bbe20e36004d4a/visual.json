@@ -4,10 +4,10 @@
   "position": {
     "x": 1160.6996126305905,
     "y": 473.29498767460967,
-    "z": 9000,
+    "z": 5000,
     "height": 1027.3506280079821,
     "width": 758.774504049771,
-    "tabOrder": 9000
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
@@ -56,6 +56,13 @@
               "expr": {
                 "Literal": {
                   "Value": "false"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'HTML Profil des licenciés'"
                 }
               }
             }

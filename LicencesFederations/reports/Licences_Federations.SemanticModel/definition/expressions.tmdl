@@ -1,3 +1,4 @@
+/// Chemin du dossier data/ du projet (sources Excel : référentiel et population INSEE). À adapter après clonage du dépôt.
 expression Dossier = "C:\Users\dioue\OneDrive\Bureau\PowerBI-Projects\LicencesFederations\data\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
 	lineageTag: 400b6a8a-319a-4422-af3b-5b43eeecb5c6
 	queryGroup: Paramètres
@@ -6,6 +7,7 @@ expression Dossier = "C:\Users\dioue\OneDrive\Bureau\PowerBI-Projects\LicencesFe
 
 	annotation PBI_ResultType = Text
 
+/// Outil de développement (non chargé) : génère le code DAX de la table Param_Federation à partir des regroupements de T_Federation. Copier le résultat dans la table calculée Param_Federation après un changement de regroupements.
 expression Code_Param_Federation =
 		let
 		    Source  = T_Federation,
@@ -30,8 +32,40 @@ expression Code_Param_Federation =
 		in
 		    Code
 	lineageTag: f562dd99-3076-4580-8560-197b27f3223a
+	queryGroup: 'Tables de paramètres'
 
 	annotation PBI_NavigationStepName = Navigation
 
 	annotation PBI_ResultType = Text
+
+/// Fonction de lecture d'un onglet du référentiel Excel (nettoyage commun aux 5 tables de dimension).
+expression fnLireReferentiel =
+		// =====================================================================
+		// fnLireReferentiel : lit un onglet du référentiel Excel et le nettoie.
+		//   Feuille          : nom de l'onglet (T_Federation, T_Territoire, T_Sexe, T_TrancheAge, T_Annee)
+		//   ColonnesInutiles : colonnes à retirer (ex. EnBase, posée par la synchronisation SQL du classeur)
+		// Les 5 tables de dimension appellent cette fonction : une seule logique de lecture à maintenir.
+		// =====================================================================
+		(Feuille as text, optional ColonnesInutiles as nullable list) as table =>
+		let
+		    // 1. Classeur (chemin = paramètre Dossier)
+		    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
+		    // 2. Onglet demandé (feuille de calcul, pas tableau nommé)
+		    Onglet     = Source{[Item = Feuille, Kind = "Sheet"]}[Data],
+		    // 3. Première ligne = en-têtes
+		    Entetes    = Table.PromoteHeaders(Onglet, [PromoteAllScalars = true]),
+		    Colonnes   = Table.ColumnNames(Entetes),
+		    // 4. Erreurs Excel (#N/A, #REF!...) remplacées par null
+		    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
+		    // 5. Valeurs « manquantes » saisies à la main remplacées par null
+		    SansNA     = Table.ReplaceValue(SansErreur, each _, each _,
+		                     (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes),
+		    // 6. Retrait des colonnes techniques (sans erreur si elles n'existent pas)
+		    Resultat   = Table.RemoveColumns(SansNA, if ColonnesInutiles = null then {} else ColonnesInutiles, MissingField.Ignore)
+		in
+		    Resultat
+	lineageTag: 2aab30d1-c9bb-46a5-96d4-f06493357059
+	queryGroup: Fonctions
+
+	annotation PBI_ResultType = Function
 

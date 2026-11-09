@@ -1,7 +1,8 @@
-/// Dimension Territoire (référentiel Excel, onglet T_Territoire). Clé : Departement (libellé source, ex. « 01 - Ain »). Région et codes géographiques associés.
+/// Dimension Territoire (référentiel Excel, onglet T_Territoire) : un département par ligne, avec sa région, ses codes (Code_DEP, Code_GDEREG) et ses zones de segment. Clé des relations : Code_DEP.
 table T_Territoire
 	lineageTag: 4afd6d65-bc67-4ef0-9fa8-01975e3cd7d9
 
+	/// Libellé source du département (« 01 - Ain »).
 	column Departement
 		dataType: string
 		lineageTag: 1cdc130b-3f8a-470f-b5e1-c647c05aa73f
@@ -10,6 +11,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Libellé source de la région (« 84 - Auvergne-Rhône-Alpes »).
 	column Region
 		dataType: string
 		lineageTag: d4713f17-f360-4ccc-9e6b-2d431cc79ef6
@@ -18,6 +20,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Code département (clé des relations).
 	column Code_DEP
 		dataType: string
 		lineageTag: 59edb71b-3c47-4b9f-86a6-579e789b32a0
@@ -26,6 +29,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Code région INSEE, ou groupe hors métropole (01-06 DROM, COM, 980, ETR, NR).
 	column Code_GDEREG
 		dataType: string
 		lineageTag: 4b72e3ac-f1eb-404a-bf5d-c75256c8188f
@@ -34,14 +38,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
-	column EnBase
-		dataType: string
-		lineageTag: 2c41fb8a-15da-4488-bc40-32e53b68e7ff
-		summarizeBy: none
-		sourceColumn: EnBase
-
-		annotation SummarizationSetBy = Automatic
-
+	/// Libellé de la zone pour les segments.
 	column Zone_Slicer
 		dataType: string
 		lineageTag: 3a3cd99e-a0fd-4937-8e95-ad78102350c7
@@ -50,6 +47,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Grande zone : Métropole, DROM, COM, Autres.
 	column GD_Zone_Slicer
 		dataType: string
 		lineageTag: 569614e0-7606-42e3-869e-a74a099fa9f4
@@ -58,6 +56,7 @@ table T_Territoire
 
 		annotation SummarizationSetBy = Automatic
 
+	/// 1 = Métropole, 2 = DROM, 3 = COM, 4-5 = Autres (Monaco, Étranger, Non réparti).
 	column GD_Zone_Slicer_Ordre
 		dataType: string
 		lineageTag: 355dcc88-e05e-42aa-868f-ca36cc6bc37c
@@ -70,16 +69,12 @@ table T_Territoire
 		mode: import
 		queryGroup: 'Tables de dimensions'
 		source =
+				// Onglet T_Territoire du référentiel : un département par ligne (clé = libellé source « 01 - Ain »),
+				// avec ses codes (Code_DEP, Code_GDEREG) et ses zones de segment (calculés dans Excel).
 				let
-				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
-				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
-				    Navigation = #"Filtered Rows"{[Item = "T_Territoire", Kind = "Sheet"]}[Data],
-				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
-				    Colonnes   = Table.ColumnNames(Entetes),
-				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
-				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				    Source = fnLireReferentiel("T_Territoire", {"EnBase"})
 				in
-				    SansNA
+				    Source
 
 	annotation PBI_NavigationStepName = Navigation
 

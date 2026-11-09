@@ -2,6 +2,7 @@
 table T_AnneeAxe
 	lineageTag: 1c576d3f-79e6-44fc-bc09-3c80cea00527
 
+	/// Année de l'axe du graphique d'évolution (table déconnectée).
 	column Annee
 		dataType: string
 		lineageTag: 3739dd66-e5e1-430b-a01d-2fdf9990d37b

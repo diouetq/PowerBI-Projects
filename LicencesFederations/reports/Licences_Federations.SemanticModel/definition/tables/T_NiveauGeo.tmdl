@@ -2,13 +2,16 @@
 table T_NiveauGeo
 	lineageTag: 2e9644cc-0c8d-43e7-b330-0df5d3a0dfe8
 
+	/// Région ou Département.
 	column 'Niveau géo'
 		lineageTag: 680bf3ab-acd2-4599-8064-42363078a20f
 		isNameInferred
 		sourceColumn: [Niveau géo]
 		sortByColumn: Ordre
 
+	/// 1 = Région, 2 = Département.
 	column Ordre
+		isHidden
 		lineageTag: c7f34c74-7bdb-4daf-9ddb-f6c75d83d6de
 		isNameInferred
 		sourceColumn: [Ordre]

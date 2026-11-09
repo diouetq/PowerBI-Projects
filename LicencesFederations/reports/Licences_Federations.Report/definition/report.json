@@ -40,7 +40,7 @@
           "expanded": {
             "expr": {
               "Literal": {
-                "Value": "true"
+                "Value": "false"
               }
             }
           }
@@ -69,24 +69,14 @@
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "bg-comparer.png",
-          "path": "bg-comparer.png",
-          "type": "Image"
-        },
-        {
-          "name": "bg-portrait.png",
-          "path": "bg-portrait.png",
-          "type": "Image"
-        },
-        {
-          "name": "bg-territoires.png",
-          "path": "bg-territoires.png",
-          "type": "Image"
-        },
-        {
-          "name": "Contours_France_regions_depart37695605924164155.geojson",
-          "path": "Contours_France_regions_depart37695605924164155.geojson",
+          "name": "Contours_France_regions_depart971237843531456.geojson",
+          "path": "Contours_France_regions_depart971237843531456.geojson",
           "type": "ShapeMap"
+        },
+        {
+          "name": "croix9565904000464465.png",
+          "path": "croix9565904000464465.png",
+          "type": "Image"
         },
         {
           "name": "federation5163511546147603.png",

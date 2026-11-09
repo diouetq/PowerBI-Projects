@@ -1,0 +1,69 @@
+/// Population INSEE au 1er janvier (estimations, fichier data/estim-pop-dep-sexe-aq-1975-2026.xlsx, feuilles 2016-2025), par département, sexe et tranche d'âge quinquennale (AgeDebut = premier âge de la tranche ; 95 = 95 ans et plus). Sert uniquement au taux de licences pour 1 000 habitants.
+table F_Population
+	lineageTag: ce57c501-a193-46a2-a0a2-9c33a3f2a58d
+
+	/// Année de l'estimation (population au 1er janvier). Clé vers T_Annee.
+	column Annee
+		dataType: int64
+		isHidden
+		lineageTag: 54aaf0c0-ad55-46d1-b998-c4319c2040e6
+		summarizeBy: none
+		sourceColumn: Annee
+
+	/// Code département INSEE. Clé vers T_Territoire.
+	column Code_DEP
+		dataType: string
+		isHidden
+		lineageTag: b8b76186-54c7-4bbe-86d2-a15c944dc1a5
+		summarizeBy: none
+		sourceColumn: Code_DEP
+
+	/// F ou H. Clé vers T_Sexe.
+	column Sexe
+		dataType: string
+		isHidden
+		lineageTag: 7aeae59d-94e0-468e-b779-7132113ab6b1
+		summarizeBy: none
+		sourceColumn: Sexe
+
+	/// Premier âge de la tranche quinquennale (0, 5, ... 95 = 95 ans et plus).
+	column AgeDebut
+		dataType: int64
+		isHidden
+		lineageTag: 1123edeb-8c33-4f13-9838-b85e5c343d80
+		summarizeBy: none
+		sourceColumn: AgeDebut
+
+	/// Population estimée au 1er janvier.
+	column Population
+		dataType: int64
+		isHidden
+		lineageTag: 48ff983d-0b58-407c-a6ff-7694447c64fe
+		summarizeBy: sum
+		sourceColumn: Population
+
+	partition F_Population = m
+		mode: import
+		queryGroup: 'Tables de faits'
+		source =
+				let
+				    Source  = Excel.Workbook(File.Contents(Dossier & "estim-pop-dep-sexe-aq-1975-2026.xlsx"), null, true),
+				    Annees  = {2016..2025},
+				    Lire = (an as number) =>
+				        let
+				            Feuille = Source{[Item = Text.From(an), Kind = "Sheet"]}[Data],
+				            Lignes  = Table.SelectRows(Feuille, each [Column1] <> null and [Column2] <> null and [Column1] <> "Départements"),
+				            Gen     = List.Combine(List.Transform(Table.ToRows(Lignes), (r) =>
+				                        List.Combine({
+				                            List.Transform({0..19}, (i) => {an, Text.Trim(Text.From(r{0})), "H", i * 5, r{23 + i}}),
+				                            List.Transform({0..19}, (i) => {an, Text.Trim(Text.From(r{0})), "F", i * 5, r{44 + i}})
+				                        })))
+				        in
+				            Gen,
+				    Toutes  = List.Combine(List.Transform(Annees, Lire)),
+				    Table   = Table.FromRows(Toutes, type table [Annee = Int64.Type, Code_DEP = text, Sexe = text, AgeDebut = Int64.Type, Population = Int64.Type])
+				in
+				    Table
+
+	annotation PBI_ResultType = Table
+

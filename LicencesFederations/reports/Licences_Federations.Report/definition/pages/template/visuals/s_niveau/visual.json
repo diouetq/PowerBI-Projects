@@ -4,10 +4,10 @@
   "position": {
     "x": 21.035332785538209,
     "y": 147.24732949876747,
-    "z": 17000,
+    "z": 16000,
     "height": 42,
     "width": 280.47110380717612,
-    "tabOrder": 17000
+    "tabOrder": 19000
   },
   "visual": {
     "visualType": "advancedSlicerVisual",
@@ -99,7 +99,7 @@
                           [
                             {
                               "Literal": {
-                                "Value": "'''P_Niveaux''[Famille]'"
+                                "Value": "'''P_Niveaux''[Groupe]'"
                               }
                             }
                           ]
@@ -127,7 +127,7 @@
                                 "0": [
                                   {
                                     "Literal": {
-                                      "Value": "'''P_Niveaux''[Famille]'"
+                                      "Value": "'''P_Niveaux''[Groupe]'"
                                     }
                                   }
                                 ]
@@ -151,7 +151,7 @@
                         },
                         "valueMap": [
                           {
-                            "0": "Famille"
+                            "0": "Groupe"
                           }
                         ]
                       }

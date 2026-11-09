@@ -1,0 +1,17 @@
+/// Date de dernière actualisation du modèle (NOW() recalculé à chaque actualisation). Utilisée par la mesure Date MAJ.
+table T_MAJ
+	isHidden
+	lineageTag: 968d576e-b48f-4e2e-bdb5-ab3071789418
+
+	/// Date et heure de la dernière actualisation (NOW()).
+	column 'Actualisé le'
+		lineageTag: 34421f26-f1f1-44c7-aed4-69473aae8edb
+		isNameInferred
+		sourceColumn: [Actualisé le]
+
+	partition T_MAJ = calculated
+		mode: import
+		source =
+				-- Date et heure de la dernière actualisation du modèle (recalculée à chaque actualisation)
+				ROW("Actualisé le", NOW())
+

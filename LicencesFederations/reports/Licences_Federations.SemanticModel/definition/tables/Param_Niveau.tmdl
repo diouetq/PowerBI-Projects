@@ -2,6 +2,7 @@
 table Param_Niveau
 	lineageTag: 127a517b-5bdb-45cb-a351-eaf1f8355fee
 
+	/// Niveau de regroupement choisi (Famille, Sous-famille, Groupe).
 	column Paramètre
 		lineageTag: 14346dd9-1c10-43d4-808d-56dc138e3fe6
 		summarizeBy: none
@@ -13,6 +14,7 @@ table Param_Niveau
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Colonne de P_Niveaux pointée (NAMEOF).
 	column 'Paramètre Champs'
 		isHidden
 		lineageTag: a94c75b0-0787-457a-be95-1ec8553cbb88
@@ -28,6 +30,7 @@ table Param_Niveau
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Ordre d'affichage (Groupe = 0).
 	column 'Paramètre Commande'
 		isHidden
 		formatString: 0
@@ -41,9 +44,9 @@ table Param_Niveau
 		mode: import
 		source =
 				{
-				    ("Famille",      NAMEOF('P_Niveaux'[Famille]),      0),
-				    ("Sous-famille", NAMEOF('P_Niveaux'[Sous-famille]), 1),
-				    ("Groupe",       NAMEOF('P_Niveaux'[Groupe]),       2)
+				    ("Famille",      NAMEOF('P_Niveaux'[Famille]),      1),
+				    ("Sous-famille", NAMEOF('P_Niveaux'[Sous-famille]), 2),
+				    ("Groupe",       NAMEOF('P_Niveaux'[Groupe]),       0)
 				}
 
 	annotation PBI_Id = a704410e3c4a4248adac226ec439b94a

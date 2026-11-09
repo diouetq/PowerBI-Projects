@@ -1,6 +1,8 @@
+/// Dimension Sexe (référentiel Excel, onglet T_Sexe) : F, H, NR - Non réparti. La colonne Genre (Femmes, Hommes, Non réparti) alimente le segment Public.
 table T_Sexe
 	lineageTag: bfc28e33-c921-4ed0-a02b-d35f1fea4cc7
 
+	/// Code source : F, H, NR - Non réparti (clé).
 	column Sexe
 		dataType: string
 		lineageTag: 95fe1f7d-7d4e-48c4-b249-1f458e127e2e
@@ -9,22 +11,17 @@ table T_Sexe
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Ordre d'affichage.
 	column Ordre
 		dataType: string
+		isHidden
 		lineageTag: 4a35de6a-3033-4247-907f-a3e9bd6faba8
 		summarizeBy: none
 		sourceColumn: Ordre
 
 		annotation SummarizationSetBy = Automatic
 
-	column EnBase
-		dataType: string
-		lineageTag: 3d43e3bc-5b89-4500-a3a8-1b234057fc8d
-		summarizeBy: none
-		sourceColumn: EnBase
-
-		annotation SummarizationSetBy = Automatic
-
+	/// Libellé affiché : Femmes, Hommes, Non réparti.
 	column Genre = SWITCH(T_Sexe[Sexe], "F", "Femmes", "H", "Hommes", "Non réparti")
 		dataType: string
 		lineageTag: 390e641a-e81a-48e4-a51d-5603e7148916
@@ -37,16 +34,11 @@ table T_Sexe
 		mode: import
 		queryGroup: 'Tables de dimensions'
 		source =
+				// Onglet T_Sexe du référentiel : Sexe (F, H, NR - Non réparti) et Ordre d'affichage.
 				let
-				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
-				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
-				    Navigation = #"Filtered Rows"{[Item = "T_Sexe", Kind = "Sheet"]}[Data],
-				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
-				    Colonnes   = Table.ColumnNames(Entetes),
-				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
-				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				    Source = fnLireReferentiel("T_Sexe", {"EnBase"})
 				in
-				    SansNA
+				    Source
 
 	annotation PBI_NavigationStepName = Navigation
 

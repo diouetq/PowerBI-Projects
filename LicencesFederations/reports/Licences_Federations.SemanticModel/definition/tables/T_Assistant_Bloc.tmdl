@@ -1,0 +1,142 @@
+/// Assistant : une ligne par bloc HTML du visuel (HTML Content, colonne Ordre dans Content + mesure HTML Assistant). Chaque bloc reste sous 32 767 caractères (limite d'une valeur texte dans un visuel). Les blocs de données (Texte) sont précalculés à l'actualisation et ignorent les segments ; les blocs ui/txt/js sont fournis par les mesures du dossier 10. Assistant. Blocs v2 : séries fédération x région (serr), séries féminines (serf, sertf), pyramides des âges (pyr, pyrt). Formats : voir src/html/assistant/LISEZMOI.md.
+table T_Assistant_Bloc
+	lineageTag: 63df7f72-6cd8-46e4-aada-2421eb1d97f9
+
+	column Ordre
+		lineageTag: 6257c19d-447a-4727-af48-00ffddc75b33
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	column Type
+		lineageTag: 11cf9814-a271-41ac-a4d4-0932d3f5cc78
+		isNameInferred
+		sourceColumn: [Type]
+
+	column Texte
+		lineageTag: 55650210-8e06-4508-ab95-d35af88263c0
+		isNameInferred
+		sourceColumn: [Texte]
+
+	partition T_Assistant_Bloc = calculated
+		mode: import
+		source =
+				VAR _N = CALCULATE ( MAX ( F_Licences[Annee] ), REMOVEFILTERS () )
+				VAR _AnRef = 2019
+				// ---------- Cube fédération x département : licences N, N-1, 2019 et femmes N ----------
+				VAR _V = CALCULATETABLE (
+				    ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP], F_Licences[CodeReference] ),
+				        "n", CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _N ),
+				        "p", CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _N - 1 ),
+				        "r", CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _AnRef ),
+				        "f", CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _N, F_Licences[Sexe] = "F" ) ),
+				    REMOVEFILTERS (), F_Licences[Annee] IN { _N, _N - 1, _AnRef } )
+				VAR _V2 = SELECTCOLUMNS ( _V, "d", F_Licences[Code_DEP], "c", F_Licences[CodeReference], "x", F_Licences[CodeReference] & "," & [n] & "," & [p] & "," & [r] & "," & [f] )
+				VAR _D = ADDCOLUMNS ( DISTINCT ( SELECTCOLUMNS ( _V2, "d", [d] ) ), "s", VAR _d = [d] RETURN _d & "|" & CONCATENATEX ( FILTER ( _V2, [d] = _d ), [x], ";", [c] ) )
+				VAR _D2 = ADDCOLUMNS ( _D, "L", LEN ( [s] ) + 1 )
+				VAR _D3 = ADDCOLUMNS ( _D2, "m", VAR _d = [d] RETURN INT ( ( SUMX ( FILTER ( _D2, [d] < _d ), [L] ) + 0 ) / 25000 ) )
+				VAR _Cube = SELECTCOLUMNS (
+				    ADDCOLUMNS ( DISTINCT ( SELECTCOLUMNS ( _D3, "m", [m] ) ), "T", VAR _m = [m] RETURN CONCATENATEX ( FILTER ( _D3, [m] = _m ), [s], "~", [d] ) ),
+				    "Ordre", 20 + [m], "Type", "cube", "Texte", [T] )
+				// ---------- Fédérations : code|nom court|famille|sous-famille|groupe|libellé officiel ----------
+				VAR _Fed = CONCATENATEX ( T_Federation, T_Federation[CodeReference] & "|" & T_Federation[Nom court] & "|" & T_Federation[Famille de fédérations] & "|" & T_Federation[Sous-famille de fédérations] & "|" & T_Federation[Groupe de fédérations] & "|" & T_Federation[Federation], "~", T_Federation[CodeReference] )
+				// ---------- Territoires : code|nom|code région|région|zone|pop N|pop N-1|pop 2019 ----------
+				VAR _Pop = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Population, F_Population[Code_DEP], F_Population[Annee] ), "v", CALCULATE ( SUM ( F_Population[Population] ) ) ), REMOVEFILTERS (), F_Population[Annee] IN { _N, _N - 1, _AnRef } )
+				VAR _Ter = CONCATENATEX ( T_Territoire,
+				    VAR _c = T_Territoire[Code_DEP]
+				    VAR _nom = T_Territoire[Departement]
+				    VAR _pos = SEARCH ( " - ", _nom, 1, 0 )
+				    RETURN _c & "|" & IF ( _pos > 0, MID ( _nom, _pos + 3, 200 ), _nom ) & "|" & T_Territoire[Code_GDEREG] & "|" & T_Territoire[Zone_Slicer] & "|" & T_Territoire[GD_Zone_Slicer]
+				        & "|" & SUMX ( FILTER ( _Pop, F_Population[Code_DEP] = _c && F_Population[Annee] = _N ), [v] )
+				        & "|" & SUMX ( FILTER ( _Pop, F_Population[Code_DEP] = _c && F_Population[Annee] = _N - 1 ), [v] )
+				        & "|" & SUMX ( FILTER ( _Pop, F_Population[Code_DEP] = _c && F_Population[Annee] = _AnRef ), [v] ),
+				    "~", T_Territoire[Code_DEP] )
+				// ---------- Séries 2016-N : par fédération (France) et par territoire (toutes fédérations) ----------
+				VAR _Annees = SELECTCOLUMNS ( CALCULATETABLE ( VALUES ( T_Annee[Annee] ), REMOVEFILTERS () ), "a", VALUE ( T_Annee[Annee] ) )
+				VAR _SF = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference], F_Licences[Annee] ), "v", CALCULATE ( SUM ( F_Licences[NbLicences] ) ) ), REMOVEFILTERS () )
+				VAR _Ser = CONCATENATEX ( T_Federation, VAR _c = T_Federation[CodeReference] RETURN _c & "|" & CONCATENATEX ( _Annees, VAR _a = [a] RETURN SUMX ( FILTER ( _SF, F_Licences[CodeReference] = _c && F_Licences[Annee] = _a ), [v] ), ",", [a], ASC ), "~", T_Federation[CodeReference] )
+				VAR _ST = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP], F_Licences[Annee] ), "v", CALCULATE ( SUM ( F_Licences[NbLicences] ) ) ), REMOVEFILTERS () )
+				VAR _SerT = CONCATENATEX ( T_Territoire, VAR _c = T_Territoire[Code_DEP] RETURN _c & "|" & CONCATENATEX ( _Annees, VAR _a = [a] RETURN SUMX ( FILTER ( _ST, F_Licences[Code_DEP] = _c && F_Licences[Annee] = _a ), [v] ), ",", [a], ASC ), "~", T_Territoire[Code_DEP] )
+				// ---------- Profils N : code|âge moyen|enfants,jeunes,adultes,seniors,non répartis ----------
+				VAR _AF = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference] ),
+				        "sa", CALCULATE ( SUMX ( F_Licences, F_Licences[Age] * F_Licences[NbLicences] ) ),
+				        "la", CALCULATE ( SUM ( F_Licences[NbLicences] ), NOT ISBLANK ( F_Licences[Age] ) ) ), REMOVEFILTERS (), F_Licences[Annee] = _N )
+				VAR _TF = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference], F_Licences[GrandeTrancheAge] ), "v", CALCULATE ( SUM ( F_Licences[NbLicences] ) ) ), REMOVEFILTERS (), F_Licences[Annee] = _N )
+				VAR _Pro = CONCATENATEX ( T_Federation,
+				    VAR _c = T_Federation[CodeReference]
+				    VAR _sa = SUMX ( FILTER ( _AF, F_Licences[CodeReference] = _c ), [sa] )
+				    VAR _la = SUMX ( FILTER ( _AF, F_Licences[CodeReference] = _c ), [la] )
+				    RETURN _c & "|" & FORMAT ( DIVIDE ( _sa, _la ), "0.0", "en-US" ) & "|"
+				        & SUMX ( FILTER ( _TF, F_Licences[CodeReference] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "1" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TF, F_Licences[CodeReference] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "2" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TF, F_Licences[CodeReference] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "3" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TF, F_Licences[CodeReference] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "4" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TF, F_Licences[CodeReference] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "N" ), [v] ),
+				    "~", T_Federation[CodeReference] )
+				VAR _AT = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP] ),
+				        "sa", CALCULATE ( SUMX ( F_Licences, F_Licences[Age] * F_Licences[NbLicences] ) ),
+				        "la", CALCULATE ( SUM ( F_Licences[NbLicences] ), NOT ISBLANK ( F_Licences[Age] ) ) ), REMOVEFILTERS (), F_Licences[Annee] = _N )
+				VAR _TT = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP], F_Licences[GrandeTrancheAge] ), "v", CALCULATE ( SUM ( F_Licences[NbLicences] ) ) ), REMOVEFILTERS (), F_Licences[Annee] = _N )
+				VAR _ProT = CONCATENATEX ( T_Territoire,
+				    VAR _c = T_Territoire[Code_DEP]
+				    VAR _sa = SUMX ( FILTER ( _AT, F_Licences[Code_DEP] = _c ), [sa] )
+				    VAR _la = SUMX ( FILTER ( _AT, F_Licences[Code_DEP] = _c ), [la] )
+				    RETURN _c & "|" & FORMAT ( DIVIDE ( _sa, _la ), "0.0", "en-US" ) & "|"
+				        & SUMX ( FILTER ( _TT, F_Licences[Code_DEP] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "1" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TT, F_Licences[Code_DEP] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "2" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TT, F_Licences[Code_DEP] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "3" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TT, F_Licences[Code_DEP] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "4" ), [v] ) & ","
+				        & SUMX ( FILTER ( _TT, F_Licences[Code_DEP] = _c && LEFT ( F_Licences[GrandeTrancheAge], 1 ) = "N" ), [v] ),
+				    "~", T_Territoire[Code_DEP] )
+				// ---------- (v2) Séries 2016-N par fédération x région (métropole et DROM) : code|reg:v,v,…;reg:… (vide = 0) ----------
+				VAR _SRp = CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference], T_Territoire[Code_GDEREG] ),
+				    "s", CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ) ),
+				    REMOVEFILTERS (), NOT ( T_Territoire[Code_GDEREG] IN { "COM", "980", "ETR", "NR" } ) )
+				VAR _SRf = ADDCOLUMNS ( DISTINCT ( SELECTCOLUMNS ( _SRp, "c", F_Licences[CodeReference] ) ),
+				    "t", VAR _c = [c] RETURN _c & "|" & CONCATENATEX ( FILTER ( _SRp, F_Licences[CodeReference] = _c ), T_Territoire[Code_GDEREG] & ":" & [s], ";", T_Territoire[Code_GDEREG] ) )
+				VAR _SRl = ADDCOLUMNS ( _SRf, "L", LEN ( [t] ) + 1 )
+				VAR _SRm = ADDCOLUMNS ( _SRl, "m", VAR _c = [c] RETURN INT ( ( SUMX ( FILTER ( _SRl, [c] < _c ), [L] ) + 0 ) / 25000 ) )
+				VAR _SerR = SELECTCOLUMNS (
+				    ADDCOLUMNS ( DISTINCT ( SELECTCOLUMNS ( _SRm, "m", [m] ) ), "T", VAR _m = [m] RETURN CONCATENATEX ( FILTER ( _SRm, [m] = _m ), [t], "~", [c] ) ),
+				    "Ordre", 40 + [m], "Type", "serr", "Texte", [T] )
+				// ---------- (v2) Séries 2016-N des licences féminines : par fédération (France) et par territoire (toutes fédérations) ----------
+				VAR _SerF = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference] ),
+				    "s", CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ) ), REMOVEFILTERS (), F_Licences[Sexe] = "F" ),
+				    F_Licences[CodeReference] & "|" & [s], "~", F_Licences[CodeReference] )
+				VAR _SerTF = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP] ),
+				    "s", CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ) ), REMOVEFILTERS (), F_Licences[Sexe] = "F" ),
+				    F_Licences[Code_DEP] & "|" & [s], "~", F_Licences[Code_DEP] )
+				// ---------- (v2) Pyramides N : 17 tranches de 5 ans (0-4 … 80+), femmes puis hommes ----------
+				VAR _Bins = SELECTCOLUMNS ( GENERATESERIES ( 0, 16 ), "b", [Value] )
+				VAR _PyrF = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference] ),
+				    "s", CONCATENATEX ( _Bins, VAR _b = [b] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Sexe] = "F", F_Licences[Age] >= _b * 5, OR ( _b = 16, F_Licences[Age] < _b * 5 + 5 ) ) RETURN IF ( _v > 0, _v ), ",", [b], ASC )
+				      & "," & CONCATENATEX ( _Bins, VAR _b = [b] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Sexe] = "H", F_Licences[Age] >= _b * 5, OR ( _b = 16, F_Licences[Age] < _b * 5 + 5 ) ) RETURN IF ( _v > 0, _v ), ",", [b], ASC ) ),
+				    REMOVEFILTERS (), F_Licences[Annee] = _N ), F_Licences[CodeReference] & "|" & [s], "~", F_Licences[CodeReference] )
+				VAR _PyrT = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP] ),
+				    "s", CONCATENATEX ( _Bins, VAR _b = [b] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Sexe] = "F", F_Licences[Age] >= _b * 5, OR ( _b = 16, F_Licences[Age] < _b * 5 + 5 ) ) RETURN IF ( _v > 0, _v ), ",", [b], ASC )
+				      & "," & CONCATENATEX ( _Bins, VAR _b = [b] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Sexe] = "H", F_Licences[Age] >= _b * 5, OR ( _b = 16, F_Licences[Age] < _b * 5 + 5 ) ) RETURN IF ( _v > 0, _v ), ",", [b], ASC ) ),
+				    REMOVEFILTERS (), F_Licences[Annee] = _N ), F_Licences[Code_DEP] & "|" & [s], "~", F_Licences[Code_DEP] )
+				// ---------- (v3) Séries 2016-N par grande tranche d'âge (1 enfants, 2 jeunes, 3 adultes, 4 seniors) : code|t1;t2;t3;t4 (années séparées par des virgules) ----------
+				VAR _Tr = { "1", "2", "3", "4" }
+				VAR _SerTr = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[CodeReference] ),
+				    "s", CONCATENATEX ( _Tr, VAR _g = [Value] RETURN CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a, LEFT ( F_Licences[GrandeTrancheAge], 1 ) = _g ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ), ";", [Value], ASC ) ),
+				    REMOVEFILTERS () ), F_Licences[CodeReference] & "|" & [s], "~", F_Licences[CodeReference] )
+				VAR _SerTTr = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP] ),
+				    "s", CONCATENATEX ( _Tr, VAR _g = [Value] RETURN CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a, LEFT ( F_Licences[GrandeTrancheAge], 1 ) = _g ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ), ";", [Value], ASC ) ),
+				    REMOVEFILTERS () ), F_Licences[Code_DEP] & "|" & [s], "~", F_Licences[Code_DEP] )
+				// ---------- (v5) Champ constant : licences des fédérations hors champ constant (présentes certaines années seulement) par département ----------
+				// code|licences|licences féminines|t1;t2;t3;t4 (séries 2016-N) ; l'assistant les retire des séries des territoires pour calculer les évolutions (méthode INJEP)
+				VAR _HC = CONCATENATEX ( CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZE ( F_Licences, F_Licences[Code_DEP] ),
+				    "s", CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ),
+				    "sf", CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a, F_Licences[Sexe] = "F" ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ),
+				    "st", CONCATENATEX ( _Tr, VAR _g = [Value] RETURN CONCATENATEX ( _Annees, VAR _a = [a] VAR _v = CALCULATE ( SUM ( F_Licences[NbLicences] ), F_Licences[Annee] = _a, LEFT ( F_Licences[GrandeTrancheAge], 1 ) = _g ) RETURN IF ( _v > 0, _v ), ",", [a], ASC ), ";", [Value], ASC ) ),
+				    REMOVEFILTERS (), T_Federation[Champ constant] = "Non" ), F_Licences[Code_DEP] & "|" & [s] & "|" & [sf] & "|" & [st], "~", F_Licences[Code_DEP] )
+				// ---------- Infos générales : année N|année de référence|première année|date de mise à jour ----------
+				VAR _Meta = _N & "|" & _AnRef & "|" & MINX ( _Annees, [a] ) & "|" & [Date MAJ]
+				VAR _Fixe = {
+				    ( 0, "meta", _Meta ), ( 1, "fed", _Fed ), ( 2, "ter", _Ter ), ( 3, "ser", _Ser ), ( 4, "sert", _SerT ), ( 5, "pro", _Pro ), ( 6, "prot", _ProT ),
+				    ( 7, "serf", _SerF ), ( 8, "sertf", _SerTF ), ( 9, "pyr", _PyrF ), ( 10, "pyrt", _PyrT ),
+				    ( 11, "sertr", _SerTr ), ( 12, "serttr", _SerTTr ), ( 13, "serhc", _HC ),
+				    ( 90, "ui", BLANK () ), ( 91, "txt", BLANK () ), ( 92, "txt", BLANK () ), ( 95, "js", BLANK () ), ( 96, "js", BLANK () ), ( 97, "js", BLANK () ), ( 98, "js", BLANK () )
+				}
+				RETURN UNION ( SELECTCOLUMNS ( _Fixe, "Ordre", [Value1], "Type", [Value2], "Texte", [Value3] ), _Cube, _SerR )
+

@@ -2,9 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "e2336ff7e0174da68570",
   "position": {
-    "x": 856.13804437140516,
-    "y": 944.83703095042461,
-    "z": 8000,
+    "x": 499.413859216653,
+    "y": 59.77540399890438,
+    "z": 3000,
     "height": 38.56477677348672,
     "width": 282.224048205971,
     "tabOrder": 8000
@@ -367,7 +367,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Segment Genre'"
+                  "Value": "'Segment Niveau Geo Carte'"
                 }
               }
             },
@@ -547,8 +547,14 @@
           }
         }
       ]
+    },
+    "syncGroup": {
+      "groupName": "Niveau géo",
+      "fieldChanges": true,
+      "filterChanges": true
     }
   },
+  "parentGroupName": "fa5eb240a866ad409ad3",
   "filterConfig": {
     "filters": [
       {
@@ -609,20 +615,6 @@
         },
         "howCreated": "User",
         "isHiddenInViewMode": true
-      },
-      {
-        "name": "abd17a295c63838440d6",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "T_NiveauGeo"
-              }
-            },
-            "Property": "Niveau géo"
-          }
-        },
-        "type": "Categorical"
       }
     ]
   }

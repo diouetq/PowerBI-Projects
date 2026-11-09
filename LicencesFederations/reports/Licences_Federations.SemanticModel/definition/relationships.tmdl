@@ -64,3 +64,15 @@ relationship F_Licences_T_Territoire_Code_DEP
 	fromColumn: F_Licences.Code_DEP
 	toColumn: T_Territoire.Code_DEP
 
+relationship F_Population_T_Territoire
+	fromColumn: F_Population.Code_DEP
+	toColumn: T_Territoire.Code_DEP
+
+relationship F_Population_T_Annee
+	fromColumn: F_Population.Annee
+	toColumn: T_Annee.Annee
+
+relationship F_Population_T_Sexe
+	fromColumn: F_Population.Sexe
+	toColumn: T_Sexe.Sexe
+

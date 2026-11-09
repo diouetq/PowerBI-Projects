@@ -4,10 +4,10 @@
   "position": {
     "x": 36.249391565998494,
     "y": 220,
-    "z": 18000,
+    "z": 17000,
     "height": 38,
     "width": 264.620558431789,
-    "tabOrder": 18000
+    "tabOrder": 20000
   },
   "visual": {
     "visualType": "slicer",
@@ -23,13 +23,13 @@
                       "Entity": "P_Niveaux"
                     }
                   },
-                  "Property": "Famille"
+                  "Property": "Groupe"
                 }
               },
-              "queryRef": "P_Niveaux.Famille",
-              "nativeQueryRef": "Famille",
+              "queryRef": "P_Niveaux.Groupe",
+              "nativeQueryRef": "Groupe",
               "active": true,
-              "displayName": "Famille"
+              "displayName": "Groupe"
             }
           ],
           "fieldParameters": [
@@ -197,7 +197,7 @@
                                   "Source": "p"
                                 }
                               },
-                              "Property": "Famille"
+                              "Property": "Groupe"
                             }
                           }
                         ],

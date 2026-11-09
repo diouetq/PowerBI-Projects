@@ -1,0 +1,16 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "fa5eb240a866ad409ad3",
+  "position": {
+    "x": 356.72418515475215,
+    "y": 885.06162695152022,
+    "z": 4000,
+    "height": 615.10818953711316,
+    "width": 781.637907422624,
+    "tabOrder": 5000
+  },
+  "visualGroup": {
+    "displayName": "Bloc Carte",
+    "groupMode": "ScaleMode"
+  }
+}

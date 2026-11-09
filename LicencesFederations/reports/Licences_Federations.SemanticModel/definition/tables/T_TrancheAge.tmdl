@@ -1,6 +1,8 @@
+/// Dimension Grande tranche d'âge (référentiel Excel, onglet T_TrancheAge) : Enfants (1-13), Jeunes (14-20), Adultes (21-55), Seniors (56-99), Non réparti. Reliée à F_Licences[GrandeTrancheAge].
 table T_TrancheAge
 	lineageTag: 7c21cbbe-7fa6-472f-ab73-0e1b65e655f5
 
+	/// Grande tranche d'âge (clé, libellé source).
 	column TrancheAge
 		dataType: string
 		lineageTag: 9a9e8248-4241-46e1-a667-7230ff035ae2
@@ -9,22 +11,17 @@ table T_TrancheAge
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Ordre d'affichage.
 	column Ordre
 		dataType: string
+		isHidden
 		lineageTag: de3862ac-03e4-4c4c-8138-787ccd8e043e
 		summarizeBy: none
 		sourceColumn: Ordre
 
 		annotation SummarizationSetBy = Automatic
 
-	column EnBase
-		dataType: string
-		lineageTag: e3beb8d0-d24e-417e-b875-3e41d492fac6
-		summarizeBy: none
-		sourceColumn: EnBase
-
-		annotation SummarizationSetBy = Automatic
-
+	/// Libellé affiché (sans le préfixe numérique).
 	column 'Catégorie d''âge' = VAR L = T_TrancheAge[TrancheAge] VAR P = SEARCH("(", L, 1, 0) RETURN IF(P = 0, "Non réparti", TRIM(MID(L, 5, P - 5)) & " (" & MID(L, P + 1, LEN(L) - P - 1) & " ans)")
 		dataType: string
 		lineageTag: 6678e332-8e0f-4c19-a15d-9b0fab6f8b4e
@@ -37,16 +34,11 @@ table T_TrancheAge
 		mode: import
 		queryGroup: 'Tables de dimensions'
 		source =
+				// Onglet T_TrancheAge du référentiel : grandes tranches d'âge (clé = libellé source) et Ordre.
 				let
-				    Source     = Excel.Workbook(File.Contents(Dossier & "Referentiel_Excel.xlsx"), null, true),
-				    #"Filtered Rows" = Table.SelectRows(Source, each ([Kind] = "Sheet")),
-				    Navigation = #"Filtered Rows"{[Item = "T_TrancheAge", Kind = "Sheet"]}[Data],
-				    Entetes    = Table.PromoteHeaders(Navigation, [PromoteAllScalars = true]),
-				    Colonnes   = Table.ColumnNames(Entetes),
-				    SansErreur = Table.ReplaceErrorValues(Entetes, List.Transform(Colonnes, each {_, null})),
-				    SansNA     = Table.ReplaceValue(SansErreur, each _, each _, (v, a, b) => if List.Contains({"NA", "N/A", "#N/A", "n.d", ""}, v) then null else v, Colonnes)
+				    Source = fnLireReferentiel("T_TrancheAge", {"EnBase"})
 				in
-				    SansNA
+				    Source
 
 	annotation PBI_NavigationStepName = Navigation
 

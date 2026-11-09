@@ -2,26 +2,31 @@
 table T_CarteAffichage
 	lineageTag: f109b634-e7c0-4efe-ad1c-a426df21d88b
 
+	/// Territoire du segment (relation vers P_TerrChoix).
 	column 'Id territoire'
 		lineageTag: b8327b0c-475b-44e2-8d74-6b4d1805f473
 		isNameInferred
 		sourceColumn: [Id territoire]
 
+	/// 1 = régions, 2 = départements.
 	column 'Niveau affiché'
 		lineageTag: 4b518782-e2e0-49f7-8420-03087a0dc838
 		isNameInferred
 		sourceColumn: [Niveau affiché]
 
+	/// Zone du GeoJSON à dessiner.
 	column 'Id carte'
 		lineageTag: bd44b730-3921-4bbd-a539-f3ef0065d49b
 		isNameInferred
 		sourceColumn: [Id carte]
 
+	/// Zone, Sélection ou Contour.
 	column Rôle
 		lineageTag: 02950370-f454-4215-8c36-27a8a21104c4
 		isNameInferred
 		sourceColumn: [Rôle]
 
+	/// Point intérieur de la zone (Azure Maps).
 	column Latitude
 		lineageTag: 1b80ff29-8e0c-4610-a804-62280e2a9bc6
 		dataCategory: Latitude
@@ -29,6 +34,7 @@ table T_CarteAffichage
 		isNameInferred
 		sourceColumn: [Latitude]
 
+	/// Point intérieur de la zone (Azure Maps).
 	column Longitude
 		lineageTag: ba4a63a8-21f0-407c-935d-93baad95e8aa
 		dataCategory: Longitude
@@ -39,20 +45,45 @@ table T_CarteAffichage
 	partition T_CarteAffichage = calculated
 		mode: import
 		source =
-				-- Territoires couverts par la carte : TOT, MDR, MET et les régions de métropole (R + code région)
-				VAR Totaux = {"TOT", "MDR", "MET"}
-				VAR Choix  = UNION(SELECTCOLUMNS(Totaux, "Id territoire", [Value]), SELECTCOLUMNS(FILTER(T_CarteZone, T_CarteZone[Ordre niveau] = 1), "Id territoire", "R" & T_CarteZone[Code_GDEREG]))
-				VAR Zones  = SELECTCOLUMNS(T_CarteZone, "Id carte", T_CarteZone[Id carte], "@niv", T_CarteZone[Ordre niveau], "@reg", "R" & T_CarteZone[Code_GDEREG], "Latitude", T_CarteZone[Latitude], "Longitude", T_CarteZone[Longitude])
-				-- Niveau affiché 1 : toutes les régions ; la région choisie a le rôle Sélection
+				-- Territoires du segment : TOT, MDR, MET, DROM, COM, AUT et les régions de métropole (R + code région)
+				-- Groupe d'une zone : METRO, DROM, COM ou AUT (Monaco, Étranger, Non réparti)
+				-- Zones affichées selon le territoire choisi :
+				--   TOT = tout | MDR = métropole + DROM | MET = métropole seule | une région de métropole = métropole seule
+				--   DROM = DROM seuls | COM = COM seuls | AUT = Autres seuls (Monaco, Étranger, Non réparti)
+				-- Outre-mer : toujours dessiné par territoire (D-97x, D-98x) avec son propre indicateur, y compris les COM sur TOT ;
+				--   seul l'encart Autres est un carré unique (R-AUT) au niveau région sur TOT ; au niveau département, 3 carrés (D-980, D-ETR, D-NR)
+				VAR Totaux  = {"TOT", "MDR", "MET"}
+				VAR Groupes = {"DROM", "COM", "AUT"}
+				VAR Zones0  = SELECTCOLUMNS(T_CarteZone, "Id carte", T_CarteZone[Id carte], "@niv", T_CarteZone[Ordre niveau], "@code", T_CarteZone[Code_GDEREG], "Latitude", T_CarteZone[Latitude], "Longitude", T_CarteZone[Longitude])
+				VAR Zones   =
+				    ADDCOLUMNS(Zones0,
+				        "@reg", "R" & [@code],
+				        "@grp", SWITCH(TRUE(), [@code] IN {"01", "02", "03", "04", "05", "06"}, "DROM", [@code] = "COM", "COM", [@code] IN {"980", "ETR", "NR", "AUT"}, "AUT", "METRO"))
+				VAR Choix   =
+				    UNION(
+				        SELECTCOLUMNS(UNION(Totaux, Groupes), "Id territoire", [Value]),
+				        SELECTCOLUMNS(FILTER(Zones, [@niv] = 1 && [@grp] = "METRO"), "Id territoire", [@reg]))
+				VAR Combi   =
+				    FILTER(CROSSJOIN(Choix, Zones),
+				        SWITCH([Id territoire],
+				            "TOT", TRUE(),
+				            "MDR", [@grp] IN {"METRO", "DROM"},
+				            "MET", [@grp] = "METRO",
+				            "DROM", [@grp] = "DROM",
+				            "COM", [@grp] = "COM",
+				            "AUT", [@grp] = "AUT",
+				            [@grp] = "METRO"))
+				-- Niveau affiché 1 : régions de métropole ; DROM et COM par territoire ; Autres en R-AUT sur TOT, par territoire sinon ; le territoire choisi (région ou groupe) a le rôle Sélection
 				VAR NivRegion =
-				    SELECTCOLUMNS(FILTER(CROSSJOIN(Choix, Zones), [@niv] = 1),
+				    SELECTCOLUMNS(
+				        FILTER(Combi, IF([@grp] = "METRO" || ([Id territoire] = "TOT" && [@grp] IN {"DROM", "AUT"}), [@niv] = 1, [@niv] = 2)),
 				        "Id territoire", [Id territoire], "Niveau affiché", 1, "Id carte", [Id carte],
-				        "Rôle", IF([@reg] = [Id territoire], "Sélection", "Zone"),
+				        "Rôle", IF([@reg] = [Id territoire] || [@grp] = [Id territoire], "Sélection", "Zone"),
 				        "Latitude", [Latitude], "Longitude", [Longitude])
-				-- Niveau affiché 2 : uniquement des départements (tous pour les totaux, ceux de la région choisie sinon) ; pas de contour de région
+				-- Niveau affiché 2 : uniquement des départements (tous les visibles pour les totaux, ceux du territoire choisi sinon) ; pas de contour de région
 				VAR NivDep =
 				    SELECTCOLUMNS(
-				        FILTER(CROSSJOIN(Choix, Zones), [@niv] = 2 && ([Id territoire] IN Totaux || [@reg] = [Id territoire])),
+				        FILTER(Combi, [@niv] = 2 && ([Id territoire] IN Totaux || [@reg] = [Id territoire] || [@grp] = [Id territoire])),
 				        "Id territoire", [Id territoire], "Niveau affiché", 2, "Id carte", [Id carte],
 				        "Rôle", "Zone",
 				        "Latitude", [Latitude], "Longitude", [Longitude])

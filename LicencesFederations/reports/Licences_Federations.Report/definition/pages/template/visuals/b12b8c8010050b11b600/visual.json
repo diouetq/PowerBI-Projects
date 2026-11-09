@@ -1,0 +1,16 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "b12b8c8010050b11b600",
+  "position": {
+    "x": 358.72755018194624,
+    "y": 473.29498767460967,
+    "z": 3000,
+    "height": 416.95034628477521,
+    "width": 779.43420589271045,
+    "tabOrder": 4000
+  },
+  "visualGroup": {
+    "displayName": "Bloc Evolution",
+    "groupMode": "ScaleMode"
+  }
+}

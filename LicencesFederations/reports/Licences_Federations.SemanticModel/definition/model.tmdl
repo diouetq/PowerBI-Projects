@@ -10,7 +10,7 @@ model Model
 
 queryGroup 'Tables de dimensions'
 
-	annotation PBI_QueryGroupOrder = 1
+	annotation PBI_QueryGroupOrder = 2
 
 queryGroup Paramètres
 
@@ -18,11 +18,19 @@ queryGroup Paramètres
 
 queryGroup 'Tables de faits'
 
-	annotation PBI_QueryGroupOrder = 2
+	annotation PBI_QueryGroupOrder = 4
+
+queryGroup Fonctions
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup 'Tables de paramètres'
+
+	annotation PBI_QueryGroupOrder = 3
 
 annotation __PBI_TimeIntelligenceEnabled = 1
 
-annotation PBI_QueryOrder = ["Dossier","T_Federation","T_Territoire","T_Sexe","T_TrancheAge","T_Annee","F_Licences","P_Federation","P_Niveaux","P_Appartenance","Code_Param_Federation"]
+annotation PBI_QueryOrder = ["Dossier","fnLireReferentiel","T_Federation","T_Territoire","T_Sexe","T_TrancheAge","T_Annee","F_Licences","F_Population","P_Federation","P_Niveaux","P_Appartenance","Code_Param_Federation"]
 
 annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
 
@@ -39,10 +47,8 @@ ref table Param_Niveau
 ref table P_Appartenance
 ref table _Mesures
 ref table Comparaison
-ref table T_FedNuage
 ref table T_AnneeAxe
 ref table T_CarteIndicateur
-ref table T_VueQui
 ref table T_VueEvol
 ref table P_TerrChoix
 ref table P_TerrAppartenance
@@ -52,6 +58,9 @@ ref table T_NiveauGeo
 ref table T_CarteZone
 ref table T_CarteZoneDep
 ref table T_CarteAffichage
+ref table F_Population
+ref table T_MAJ
+ref table T_Assistant_Bloc
 
 ref cultureInfo fr-FR
 

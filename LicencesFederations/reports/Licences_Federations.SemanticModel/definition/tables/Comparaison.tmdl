@@ -1,3 +1,4 @@
+/// Groupe de calcul (3 éléments) appliqué aux mesures d'évolution : Sélection (mesure telle quelle), Regroupement (famille, sous-famille ou groupe de la sélection selon Param_Niveau), Ensemble (toutes les fédérations). Utilisé par Evo Indice sélection / regroupement / ensemble.
 table Comparaison
 	lineageTag: 05bb9c36-f832-4ada-9516-d0975c765e43
 
@@ -29,6 +30,7 @@ table Comparaison
 
 		calculationItem Ensemble = CALCULATE(SELECTEDMEASURE(), REMOVEFILTERS(T_Federation), REMOVEFILTERS(P_Federation), REMOVEFILTERS(P_Niveaux), REMOVEFILTERS(P_Appartenance), REMOVEFILTERS(Param_Federation))
 
+	/// Élément du groupe de calcul : Sélection, Regroupement ou Ensemble.
 	column Comparaison
 		dataType: string
 		lineageTag: 212582dd-d2b2-4867-aee1-6aad3bf47382
@@ -38,6 +40,7 @@ table Comparaison
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Ordre des éléments du groupe de calcul.
 	column Ordinal
 		dataType: int64
 		isHidden

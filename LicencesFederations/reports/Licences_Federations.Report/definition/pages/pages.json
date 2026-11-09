@@ -2,10 +2,9 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
   "pageOrder": [
     "template",
-    "portrait",
-    "comparer",
-    "3338d82a396b788178b2",
-    "territoires"
+    "cce71786646190a350d8",
+    "1f045ca30c030a9ae47d"
   ],
-  "activePageName": "template"
+  "activePageName": "template",
+  "landingPageName": "template"
 }

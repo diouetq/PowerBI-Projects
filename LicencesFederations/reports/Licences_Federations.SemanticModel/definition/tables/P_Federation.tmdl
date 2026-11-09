@@ -1,6 +1,8 @@
+/// Colonnes du segment Fédération : une ligne par fédération (CodeReference), une colonne par regroupement (« F · », « SF · », « G · » + nom) contenant le nom court si la fédération en fait partie, sinon vide. Construite en Power Query (pivot de T_Federation). Param_Federation pointe vers ces colonnes.
 table P_Federation
 	lineageTag: 0b138431-1784-4f44-8615-92f4eea02e04
 
+	/// Code fédération (clé, relation 1-1 bidirectionnelle avec T_Federation).
 	column CodeReference
 		dataType: string
 		lineageTag: 0efb43cc-5264-4fb8-b7a4-13e000d09d0e
@@ -9,6 +11,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court de chaque fédération (toutes les fédérations).
 	column Ensemble
 		dataType: string
 		lineageTag: 8cba8872-a670-48cf-9f66-cfdd71f88565
@@ -17,6 +20,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Activités d'expression, de la forme et de la force » (vide sinon).
 	column 'F · Activités d''expression, de la forme et de la force'
 		dataType: string
 		lineageTag: 988d6f77-90b3-4e4b-8a99-7455abc2a90f
@@ -25,6 +29,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Généraliste » (vide sinon).
 	column 'F · Généraliste'
 		dataType: string
 		lineageTag: 91194183-9f5a-4276-b550-b358ce802f70
@@ -33,6 +38,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Para-sport » (vide sinon).
 	column 'F · Para-sport'
 		dataType: string
 		lineageTag: 49144dde-68bc-4d32-9a7a-04432ae7c010
@@ -41,6 +47,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Sport scolaire et universitaire » (vide sinon).
 	column 'F · Sport scolaire et universitaire'
 		dataType: string
 		lineageTag: 7e0c759e-82da-4681-a1ad-b54c63031b4b
@@ -49,6 +56,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Sports Individuels » (vide sinon).
 	column 'F · Sports Individuels'
 		dataType: string
 		lineageTag: 7435c2e7-7e3f-40ec-ba0b-c05113f9efc4
@@ -57,6 +65,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Sports collectifs » (vide sinon).
 	column 'F · Sports collectifs'
 		dataType: string
 		lineageTag: c1c551a6-eba1-49f0-b19d-e3ef4f5b8de3
@@ -65,6 +74,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Sports d'opposition » (vide sinon).
 	column 'F · Sports d''opposition'
 		dataType: string
 		lineageTag: c95e4333-65e8-41c7-a758-4fc1e72a15ad
@@ -73,6 +83,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « F · Sports de nature » (vide sinon).
 	column 'F · Sports de nature'
 		dataType: string
 		lineageTag: c3cad8fa-ee30-43e9-87e0-86d63e633e83
@@ -81,6 +92,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « G · Affinitaire » (vide sinon).
 	column 'G · Affinitaire'
 		dataType: string
 		lineageTag: d2fe239c-fc75-402d-9e38-ad0db57f0071
@@ -89,6 +101,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « G · Délégataire non-olympique » (vide sinon).
 	column 'G · Délégataire non-olympique'
 		dataType: string
 		lineageTag: 8b55a10a-cb5a-475a-aef2-9132e1762119
@@ -97,6 +110,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « G · Olympique » (vide sinon).
 	column 'G · Olympique'
 		dataType: string
 		lineageTag: e67a4719-6caf-4794-90d9-c32f840b8568
@@ -105,6 +119,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « G · Para-sport » (vide sinon).
 	column 'G · Para-sport'
 		dataType: string
 		lineageTag: 50b8504d-0b7c-4ff9-9175-ae35d3d88b60
@@ -113,6 +128,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « G · Scolaire » (vide sinon).
 	column 'G · Scolaire'
 		dataType: string
 		lineageTag: 787219c9-633d-45f4-aa3c-563954228089
@@ -121,6 +137,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités Aériennes » (vide sinon).
 	column 'SF · Activités Aériennes'
 		dataType: string
 		lineageTag: b6e6e33e-0a29-436d-864e-6b3ce3b1286a
@@ -129,6 +146,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités Nautiques » (vide sinon).
 	column 'SF · Activités Nautiques'
 		dataType: string
 		lineageTag: e3f66c15-6f6b-4fbc-9928-4ad0b8964cd3
@@ -137,6 +155,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités Terrestres » (vide sinon).
 	column 'SF · Activités Terrestres'
 		dataType: string
 		lineageTag: ff3c577d-0024-4f33-8796-04ba2b622c69
@@ -145,6 +164,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités aquatiques » (vide sinon).
 	column 'SF · Activités aquatiques'
 		dataType: string
 		lineageTag: 06bea256-c345-4efa-8ec5-ba60477a943f
@@ -153,6 +173,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités athlétiques  » (vide sinon).
 	column 'SF · Activités athlétiques '
 		dataType: string
 		lineageTag: 9637afc0-f2c3-4710-b938-5acbd250ba87
@@ -161,6 +182,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités d'adresse, précision » (vide sinon).
 	column 'SF · Activités d''adresse, précision'
 		dataType: string
 		lineageTag: 767a969d-9101-4331-89dd-47ba447e7fec
@@ -169,6 +191,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités de la forme et de la force » (vide sinon).
 	column 'SF · Activités de la forme et de la force'
 		dataType: string
 		lineageTag: 83544a6e-d7a4-45da-af76-fc9d0a7a4790
@@ -177,6 +200,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Activités gymniques et d'expression » (vide sinon).
 	column 'SF · Activités gymniques et d''expression'
 		dataType: string
 		lineageTag: 1d907445-a3e3-430f-8c06-a9022ee10e55
@@ -185,6 +209,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Arts martiaux » (vide sinon).
 	column 'SF · Arts martiaux'
 		dataType: string
 		lineageTag: b28970fd-9f53-4fdb-9bb6-fd77f1eaf2e1
@@ -193,6 +218,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Généraliste » (vide sinon).
 	column 'SF · Généraliste'
 		dataType: string
 		lineageTag: 7093f933-d97f-4383-a1dd-7ab8ae1e04db
@@ -201,6 +227,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Para-sport » (vide sinon).
 	column 'SF · Para-sport'
 		dataType: string
 		lineageTag: 6cce135b-a025-4d30-9239-6df99cf6868b
@@ -209,6 +236,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sport scolaire » (vide sinon).
 	column 'SF · Sport scolaire'
 		dataType: string
 		lineageTag: a54d217c-80ed-41bd-8163-e0f5c484d38d
@@ -217,6 +245,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sport universitaire » (vide sinon).
 	column 'SF · Sport universitaire'
 		dataType: string
 		lineageTag: ae86d3f6-6f78-4c69-b4dc-d34d62b3757e
@@ -225,6 +254,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports collectif Glace » (vide sinon).
 	column 'SF · Sports collectif Glace'
 		dataType: string
 		lineageTag: 7cf79ff2-3ebd-48b7-bbba-e68577dd3363
@@ -233,6 +263,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports collectifs Grands Terrains » (vide sinon).
 	column 'SF · Sports collectifs Grands Terrains'
 		dataType: string
 		lineageTag: f6c3acf9-2d92-49c3-9541-3a14c4903aa2
@@ -241,6 +272,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports collectifs Petits Terrains et salles » (vide sinon).
 	column 'SF · Sports collectifs Petits Terrains et salles'
 		dataType: string
 		lineageTag: 6fc44210-dd25-4a1b-b506-81224d63170e
@@ -249,6 +281,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports de combats » (vide sinon).
 	column 'SF · Sports de combats'
 		dataType: string
 		lineageTag: 0db09d3b-f0de-425f-904c-7ce799969915
@@ -257,6 +290,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports duels » (vide sinon).
 	column 'SF · Sports duels'
 		dataType: string
 		lineageTag: 32a11e9e-ac71-4b9f-9b7e-1f0610671e08
@@ -265,6 +299,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports mécaniques » (vide sinon).
 	column 'SF · Sports mécaniques'
 		dataType: string
 		lineageTag: f424bb52-ee7e-4f7d-baf2-ec2eeb0f4413
@@ -273,6 +308,7 @@ table P_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Nom court des fédérations du regroupement « SF · Sports raquettes » (vide sinon).
 	column 'SF · Sports raquettes'
 		dataType: string
 		lineageTag: 29f62639-d82b-4b46-80c8-a9c15b20c2c0
@@ -283,6 +319,7 @@ table P_Federation
 
 	partition P_Federation = m
 		mode: import
+		queryGroup: 'Tables de paramètres'
 		source =
 				let
 				    Source   = T_Federation,

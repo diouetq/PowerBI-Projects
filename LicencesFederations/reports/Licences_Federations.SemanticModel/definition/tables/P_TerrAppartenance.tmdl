@@ -3,11 +3,13 @@ table P_TerrAppartenance
 	isHidden
 	lineageTag: f563f41b-bc6d-4f33-9da0-ad9d2e773f75
 
+	/// Territoire du segment (TOT, MDR, MET, R + code région, DROM, COM, AUT).
 	column 'Id territoire'
 		lineageTag: 05bef83e-0282-4ad4-a881-e9c329dcde4b
 		isNameInferred
 		sourceColumn: [Id territoire]
 
+	/// Département appartenant au territoire.
 	column Code_DEP
 		lineageTag: 670280e2-7922-4e63-bfec-42b91be445c3
 		isNameInferred

@@ -2,6 +2,7 @@
 table Param_Federation
 	lineageTag: 01052b55-913a-47f6-8cce-de0c448d9d96
 
+	/// Regroupement affiché par le segment.
 	column Paramètre
 		lineageTag: 8c927ba7-43b5-48df-b373-8806ed226438
 		summarizeBy: none
@@ -13,6 +14,7 @@ table Param_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Colonne de P_Federation pointée (NAMEOF).
 	column 'Paramètre Champs'
 		isHidden
 		lineageTag: 2d06f144-c2bd-4dc6-a3d3-0f858eb7f6ce
@@ -28,6 +30,7 @@ table Param_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Ordre d'affichage.
 	column 'Paramètre Commande'
 		isHidden
 		formatString: 0
@@ -37,6 +40,7 @@ table Param_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Niveau du regroupement : Ensemble, Famille, Sous-famille ou Groupe.
 	column Niveau
 		lineageTag: fd970144-e112-48e1-a007-b83172996469
 		summarizeBy: none
@@ -44,6 +48,7 @@ table Param_Federation
 
 		annotation SummarizationSetBy = Automatic
 
+	/// Clé du regroupement, relation 1-1 avec P_Niveaux.
 	column Cle
 		lineageTag: e6136072-cffa-4a07-9cb5-de346f375515
 		summarizeBy: none
