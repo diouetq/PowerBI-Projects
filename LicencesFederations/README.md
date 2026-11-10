@@ -12,7 +12,7 @@
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-lightgrey)](LICENSE)
 
 <p align="center">
-  <a href="https://app.powerbi.com/view?r=eyJrIjoiZGIwYjIyYzAtMjg0Ni00MDQxLTljOTgtN2RhMDBjM2U3NjJiIiwidCI6ImIwMDI3NmM5LTJiNmYtNDVmYS1iYzYxLTA3YTAyY2JmNjQ2ZSJ9"><img src="https://img.shields.io/badge/%E2%96%B6%20Voir%20le%20rapport%20en%20ligne-Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black" alt="Voir le rapport en ligne"></a>
+  <a href="https://diouetq.github.io/portfolio/rapport_PBI_licences_federations_vf"><img src="https://img.shields.io/badge/%E2%96%B6%20Voir%20le%20rapport%20en%20ligne-Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black" alt="Voir le rapport en ligne"></a>
 </p>
 
 ![Page Portrait du rapport](docs/images/rapport/portrait.png)
@@ -66,7 +66,7 @@ Trois pages au format 1960 × 1530. Un **panneau de gauche** commun porte les se
 | ![Comparer les fédérations](docs/images/rapport/comparer_federations.png)<br>*Comparer les fédérations* | ![Comparer les territoires](docs/images/rapport/comparer_territoires.png)<br>*Comparer les territoires* |
 | ![Carte des évolutions](docs/images/rapport/carte_evolution.png)<br>*Carte des évolutions depuis 2019* | |
 
-👉 **[Ouvrir le rapport en ligne](https://app.powerbi.com/view?r=eyJrIjoiZGIwYjIyYzAtMjg0Ni00MDQxLTljOTgtN2RhMDBjM2U3NjJiIiwidCI6ImIwMDI3NmM5LTJiNmYtNDVmYS1iYzYxLTA3YTAyY2JmNjQ2ZSJ9)** (publication web, aucune connexion requise).
+👉 **[Ouvrir le rapport en ligne](https://diouetq.github.io/portfolio/rapport_PBI_licences_federations_vf)** (publication web, aucune connexion requise).
 
 **Segments** : Année · Public (genre, âge) · Niveau (famille, sous-famille, groupe) → Regroupement → Fédération · Territoire → Département · Indicateur et niveau géographique de la carte.
 
@@ -93,20 +93,20 @@ Trois pages au format 1960 × 1530. Un **panneau de gauche** commun porte les se
 
 ```mermaid
 flowchart LR
-    subgraph Sources publiques
+    subgraph SRC["Sources publiques"]
         A[INJEP-MEDES<br/>10 CSV 2016-2025<br/>~1,4 Go]
         B[Insee<br/>estimations de population<br/>départements x sexe x âge]
     end
-    subgraph SQL Server « diouet » / BDD
+    subgraph SQL["SQL Server « diouet » / BDD"]
         C[stg.Licences_Brut<br/>zone tampon texte]
         D[(dbo.Licences_Federation<br/>8,2 M lignes, columnstore)]
         E[vw_Dim_Federation<br/>vw_Dim_Territoire<br/>vw_Dim_Sexe · vw_Dim_TrancheAge · vw_Dim_Annee]
         J[dbo.Journal_Chargement]
     end
-    subgraph Référentiel Excel
+    subgraph REF["Référentiel Excel"]
         F[Referentiel_Excel.xlsx<br/>fnSynchro + enrichissements manuels<br/>familles · groupes · logos · zones]
     end
-    subgraph Power BI - PBIP
+    subgraph PBI["Power BI - PBIP"]
         G[Power Query<br/>F_Licences · F_Population<br/>dimensions via fnLireReferentiel]
         H[Modèle en étoile<br/>27 tables · 17 relations · 114 mesures]
         I[Rapport 3 pages<br/>natif + Azure Maps + HTML/JS]
@@ -264,6 +264,6 @@ La procédure complète de mise à jour d'un millésime est dans [docs/05_Mainte
 
 **Quentin Diouet**, consultant indépendant · Data Analyst · Power BI
 
-[Rapport en ligne](https://app.powerbi.com/view?r=eyJrIjoiZGIwYjIyYzAtMjg0Ni00MDQxLTljOTgtN2RhMDBjM2U3NjJiIiwidCI6ImIwMDI3NmM5LTJiNmYtNDVmYS1iYzYxLTA3YTAyY2JmNjQ2ZSJ9) · [LinkedIn](https://www.linkedin.com/in/quentin-diouet) · [GitHub](https://github.com/diouetq/PowerBI-Projects/tree/main/LicencesFederations) · diouet.pro@gmail.com
+[Rapport en ligne](https://diouetq.github.io/portfolio/rapport_PBI_licences_federations_vf) · [LinkedIn](https://www.linkedin.com/in/quentin-diouet) · [GitHub](https://github.com/diouetq/PowerBI-Projects/tree/main/LicencesFederations) · diouet.pro@gmail.com
 
 Code sous licence [MIT](LICENSE). Données : INJEP-MEDES et Insee, selon leurs conditions de réutilisation. Les logos restent la propriété des fédérations.

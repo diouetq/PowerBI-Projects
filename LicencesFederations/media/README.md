@@ -8,4 +8,4 @@ Supports utilisés pour présenter le projet (LinkedIn, portfolio). Les images u
 | [`video/`](video/) | Démonstration vidéo du rapport : miniature et lien (la vidéo elle-même n'est pas versionnée) |
 | [`linkedin/`](linkedin/) | Texte du post et éléments associés |
 
-**Rapport en ligne** : [ouvrir le rapport Power BI](https://app.powerbi.com/view?r=eyJrIjoiZGIwYjIyYzAtMjg0Ni00MDQxLTljOTgtN2RhMDBjM2U3NjJiIiwidCI6ImIwMDI3NmM5LTJiNmYtNDVmYS1iYzYxLTA3YTAyY2JmNjQ2ZSJ9)
+**Rapport en ligne** : [ouvrir le rapport Power BI](https://diouetq.github.io/portfolio/rapport_PBI_licences_federations_vf)
